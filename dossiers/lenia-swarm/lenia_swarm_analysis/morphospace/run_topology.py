@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyConnection
 
-from .export_legacy import compute_and_store_topology
+from .warehouse_packets import compute_and_store_topology
 
 
 def run_topology(

@@ -34,18 +34,6 @@ public struct WarehouseRefreshResult: Codable {
     }
 }
 
-public struct WarehouseTopologyResult: Codable {
-    public let warehousePath: String
-    public let studyId: String
-    public let topologyStudyId: String
-
-    public init(warehousePath: String, studyId: String, topologyStudyId: String) {
-        self.warehousePath = warehousePath
-        self.studyId = studyId
-        self.topologyStudyId = topologyStudyId
-    }
-}
-
 public enum WarehouseBridgeError: LocalizedError {
     case commandFailed(command: [String], output: String)
     case invalidResponse(String)
@@ -154,84 +142,4 @@ public func refreshWarehouseFromCompendium(
     }
     let data = try runWarehouseCLI(arguments: arguments)
     return try decodeWarehouseJSON(data, as: WarehouseRefreshResult.self)
-}
-
-public func runWarehouseTopology(
-    warehousePath: String,
-    studyId: String,
-    sourcePacketKind: String = "focal",
-    minGroupSize: Int = 2,
-    maxHomologyDim: Int = 1
-) throws -> WarehouseTopologyResult {
-    let data = try runWarehouseCLI(arguments: [
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
-        "run-topology",
-        "--warehouse",
-        warehousePath,
-        "--study-id",
-        studyId,
-        "--source-packet-kind",
-        sourcePacketKind,
-        "--min-group-size",
-        String(minGroupSize),
-        "--max-homology-dim",
-        String(maxHomologyDim),
-        "--json",
-    ])
-    return try decodeWarehouseJSON(data, as: WarehouseTopologyResult.self)
-}
-
-public func exportWarehouseBiologicalPacket(
-    warehousePath: String,
-    studyId: String,
-    contextStudyId: String? = nil
-) throws -> [String: AnyCodable] {
-    var arguments = [
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
-        "export-biological",
-        "--warehouse",
-        warehousePath,
-        "--study-id",
-        studyId,
-        "--json",
-    ]
-    if let contextStudyId, !contextStudyId.isEmpty {
-        arguments.append(contentsOf: ["--context-study-id", contextStudyId])
-    }
-    let data = try runWarehouseCLI(arguments: arguments)
-    return try decodeWarehouseJSON(data, as: [String: AnyCodable].self)
-}
-
-public func exportWarehouseCreatureDiscoveryPacket(
-    warehousePath: String,
-    studyId: String? = nil,
-    lens: String? = nil
-) throws -> [String: AnyCodable] {
-    var arguments = [
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
-        "export-creature-discovery",
-        "--warehouse",
-        warehousePath,
-        "--json",
-    ]
-    if let studyId, !studyId.isEmpty {
-        arguments.append(contentsOf: ["--study-id", studyId])
-    }
-    if let lens, !lens.isEmpty {
-        arguments.append(contentsOf: ["--lens", lens])
-    }
-    let data = try runWarehouseCLI(arguments: arguments)
-    return try decodeWarehouseJSON(data, as: [String: AnyCodable].self)
 }

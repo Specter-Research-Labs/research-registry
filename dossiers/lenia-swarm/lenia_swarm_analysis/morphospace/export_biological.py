@@ -9,7 +9,7 @@ from typing import Any
 
 from duckdb import DuckDBPyConnection
 
-from .export_legacy import export_topology_packet
+from .warehouse_packets import export_topology_packet
 
 CONTEXT_SUMMARY_METRICS = (
     "meanFragilityScore",

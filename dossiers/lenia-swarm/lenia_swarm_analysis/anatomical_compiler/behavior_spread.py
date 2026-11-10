@@ -46,7 +46,6 @@ RADIAL_EDGES = (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 16.0 * np.sqrt(2.0)
 MOMENT_KEYS = ("hu1", "hu2", "hu3", "hu4", "hu5", "hu6", "hu7", "flusser1", "flusser2", "flusser3",
                "flusser4")
 RIDGE_ALPHAS = (0.01, 0.1, 1.0, 10.0, 100.0, 1000.0)
-ARMS = ("mates", "neighbours", "replicates")
 
 
 def metric_matrix(metrics: list[dict[str, Any]], keys: tuple[str, ...]) -> np.ndarray:

@@ -117,7 +117,7 @@ public struct LeniaCampaignPhaseResult: Sendable {
     }
 }
 
-// MARK: - Legacy Preset System
+// MARK: - Preset System
 
 public enum LeniaCampaignPreset: String, Codable, CaseIterable, Sendable {
     case discovery

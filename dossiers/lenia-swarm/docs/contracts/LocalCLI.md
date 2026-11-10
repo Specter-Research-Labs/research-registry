@@ -8,7 +8,7 @@ summary: "How to build LeniaCLI and run a local Flow Lenia sweep, what the run d
 
 ## Build
 
-MLX Metal shaders are required. The checked-in metallib cache lets `swift build` and `swift test` reuse one compiled shader bundle instead of rebuilding it for each regenerated app or test bundle.
+MLX Metal shaders are required. The metallib cache under `.build/lenia-metal-cache` lets `swift build` and `swift test` reuse one compiled shader bundle instead of rebuilding it for each regenerated app or test bundle.
 
 ```bash
 cd dossiers/lenia-swarm

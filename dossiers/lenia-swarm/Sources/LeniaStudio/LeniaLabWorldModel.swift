@@ -882,9 +882,7 @@ private func bundleLabMissionPreset(
     subtitle: String,
     detail: String
 ) -> LabMissionPreset {
-    guard let resourceURL = Bundle.module.url(forResource: resourceName, withExtension: "json", subdirectory: "Presets")
-        ?? Bundle.module.url(forResource: resourceName, withExtension: "json")
-    else {
+    guard let resourceURL = Bundle.module.url(forResource: resourceName, withExtension: "json") else {
         fatalError("Missing lab preset resource: \(resourceName).json")
     }
     do {

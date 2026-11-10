@@ -33,6 +33,22 @@ final class PathResolutionTests: XCTestCase {
         XCTAssertEqual(try resolvePath("runs/session-a", dossier: dossierName), "runs/session-a")
     }
 
+    func testRequireArtifactRootPathResolvesUnderConfiguredRoot() throws {
+        setenv("SPECTER_ARTIFACT_ROOT", "/tmp/remote-artifacts", 1)
+        XCTAssertEqual(
+            try requireArtifactRootPath("artifacts/configs", dossier: dossierName),
+            "/tmp/remote-artifacts/lenia-swarm/artifacts/configs"
+        )
+    }
+
+    func testRequireArtifactRootPathThrowsWhenRootIsUnset() {
+        unsetenv("SPCTR_LOCAL_ARTIFACT_ROOT")
+        unsetenv("SPECTER_ARTIFACT_ROOT")
+        XCTAssertThrowsError(try requireArtifactRootPath("artifacts/configs", dossier: dossierName)) { error in
+            XCTAssertEqual(error.localizedDescription, "SPECTER_ARTIFACT_ROOT is not set.")
+        }
+    }
+
     func testResolveArtifactPathUsesRemoteRootForCanonicalOutputs() throws {
         setenv("SPECTER_ARTIFACT_ROOT", "/tmp/remote-artifacts", 1)
         XCTAssertEqual(

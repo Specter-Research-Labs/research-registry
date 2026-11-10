@@ -23,7 +23,6 @@ final class CLISurfaceTests: XCTestCase {
                 "publish",
                 "tt",
                 "benchmark",
-                "export-reference",
             ])
         )
     }

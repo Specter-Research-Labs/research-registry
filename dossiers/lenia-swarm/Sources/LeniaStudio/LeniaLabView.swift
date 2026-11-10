@@ -1451,8 +1451,10 @@ struct LeniaLabView: View {
         }
         .task(id: track1ConfigRoot) {
             if track1ConfigRoot.isEmpty {
-                if let defaultRoot = defaultTrack1ConfigRoot() {
-                    track1ConfigRoot = defaultRoot
+                do {
+                    track1ConfigRoot = try defaultTrack1ConfigRoot()
+                } catch {
+                    track1Catalog.reportRootResolutionFailure(error)
                 }
                 return
             }

@@ -14,11 +14,14 @@ private let repoRootURL = URL(fileURLWithPath: #filePath)
 
 public enum RuntimePathResolutionError: LocalizedError {
     case emptyEnvVar(String)
+    case unsetEnvVar(String)
 
     public var errorDescription: String? {
         switch self {
         case .emptyEnvVar(let name):
             return "\(name) is set but empty."
+        case .unsetEnvVar(let name):
+            return "\(name) is not set."
         }
     }
 }
@@ -61,6 +64,13 @@ private func configuredPersistentRoot(envNames: [String], dossier: String) throw
             .appendingPathComponent(dossier, isDirectory: true)
     }
     return nil
+}
+
+public func requireArtifactRootPath(_ relativePath: String, dossier: String) throws -> String {
+    guard let root = try configuredPersistentRoot(envNames: [localArtifactRootEnv, artifactRootEnv], dossier: dossier) else {
+        throw RuntimePathResolutionError.unsetEnvVar(artifactRootEnv)
+    }
+    return root.appendingPathComponent(relativePath, isDirectory: true).path
 }
 
 private func dossierRoot(dossier: String) -> URL {
