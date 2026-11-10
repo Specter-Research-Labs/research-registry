@@ -47,7 +47,12 @@ pub fn discover_reports(
             href: publication.path.clone(),
             title: page.title,
             finding: page.description,
-            image: card_image(repo_root, &document, publication.card_image.as_ref(), page.image)?,
+            image: card_image(
+                repo_root,
+                &document,
+                publication.card_image.as_ref(),
+                page.image,
+            )?,
             label: format!("Report · revision {}", publication.revision),
         });
     }
@@ -69,7 +74,12 @@ pub fn discover_reports(
             href: format!("/{}", post.href),
             title: post.title.clone(),
             finding: post.summary.clone(),
-            image: card_image(repo_root, &post.href, post.card_image.as_ref(), cover.src.clone())?,
+            image: card_image(
+                repo_root,
+                &post.href,
+                post.card_image.as_ref(),
+                cover.src.clone(),
+            )?,
             label: format!("Report · {series}"),
         });
     }

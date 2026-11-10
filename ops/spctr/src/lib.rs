@@ -1,5 +1,4 @@
 pub mod brand;
-pub mod ci;
 pub mod cli;
 pub mod config;
 pub mod design_tokens;
@@ -22,11 +21,9 @@ pub mod report;
 pub mod series;
 pub mod site;
 pub mod surface;
-pub mod sync;
 pub mod tokens;
 pub mod updates;
 pub mod updates_archive;
-pub mod workspace;
 
 use std::process::ExitCode;
 

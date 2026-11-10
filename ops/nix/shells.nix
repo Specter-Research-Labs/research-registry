@@ -75,7 +75,6 @@ PY
   mkBootstrapHook =
     {
       uvSync ? false,
-      cargoFetch ? false,
       swiftResolve ? false,
       lakeUpdate ? false,
       extraHook ? "",
@@ -84,11 +83,6 @@ PY
       ${lib.optionalString uvSync ''
         if [ -f pyproject.toml ] && command -v uv >/dev/null 2>&1 && command -v python >/dev/null 2>&1; then
           uv sync --python "$(command -v python)"
-        fi
-      ''}
-      ${lib.optionalString cargoFetch ''
-        if [ -f Cargo.toml ] && command -v cargo >/dev/null 2>&1; then
-          cargo fetch --locked
         fi
       ''}
       ${lib.optionalString swiftResolve ''
@@ -131,12 +125,6 @@ PY
 in
 rec {
   pkgs = pinnedPkgs;
-
-  rustPackages = with pinnedPkgs; [
-    cargo
-    rustc
-    pkg-config
-  ];
 
   wontonPackages = with pinnedPkgs; [
     duckdb
@@ -185,18 +173,6 @@ rec {
     mkProjectShell {
       inherit pythonVersion extraPackages extraShellHook;
       bootstrap = bootstrap // { uvSync = true; };
-    };
-
-  mkRustProjectShell =
-    {
-      extraPackages ? [ ],
-      bootstrap ? { },
-      extraShellHook ? "",
-    }:
-    mkProjectShell {
-      extraPackages = rustPackages ++ extraPackages;
-      inherit extraShellHook;
-      bootstrap = bootstrap // { cargoFetch = true; };
     };
 
   mkLeanProjectShell =

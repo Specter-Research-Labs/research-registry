@@ -53,7 +53,10 @@ pub fn render_doc(
         ])
         .args(["--standalone", "--wrap=none"])
         .arg(format!("--template={}", template))
-        .arg(format!("--lua-filter={}", repo_root.join(shell::TABLES_FILTER)))
+        .arg(format!(
+            "--lua-filter={}",
+            repo_root.join(shell::TABLES_FILTER)
+        ))
         .args(["--metadata", "table-style=log"])
         .args(["--toc", "--toc-depth=3", "--mathml"])
         .args(["--metadata", "lang=en"])
@@ -67,7 +70,10 @@ pub fn render_doc(
             "--variable=site-header:{}",
             shell::header(repo_root, Some(shell::Section::Cabinet))?
         ))
-        .arg(format!("--variable=site-footer:{}", shell::footer(repo_root)?))
+        .arg(format!(
+            "--variable=site-footer:{}",
+            shell::footer(repo_root)?
+        ))
         .args(["--metadata", &format!("slug={}", entry.slug)])
         .args(["--metadata", &format!("doc_id={}", entry.doc_id)])
         .args(["--metadata", &format!("dossier={}", entry.project_display)])
@@ -275,7 +281,12 @@ pub fn build_index(entries: &[DocEntry], repo_root: &Utf8Path, site_root: &Utf8P
         let mut sorted_indices = indices.clone();
         sorted_indices.sort_by(|&a, &b| entries[a].doc_id.cmp(&entries[b].doc_id));
         let start_here = start_here_order(entries, &sorted_indices)?;
-        sorted_indices.sort_by_key(|idx| start_here.iter().position(|s| s == idx).unwrap_or(usize::MAX));
+        sorted_indices.sort_by_key(|idx| {
+            start_here
+                .iter()
+                .position(|s| s == idx)
+                .unwrap_or(usize::MAX)
+        });
 
         let mut items_html = String::new();
         for &idx in &sorted_indices {
@@ -332,7 +343,12 @@ pub fn build_index(entries: &[DocEntry], repo_root: &Utf8Path, site_root: &Utf8P
         &shell::header(repo_root, Some(shell::Section::Cabinet))?,
         template_path,
     )?;
-    let index_html = replace_region(&index_html, "SITE_FOOTER", &shell::footer(repo_root)?, template_path)?;
+    let index_html = replace_region(
+        &index_html,
+        "SITE_FOOTER",
+        &shell::footer(repo_root)?,
+        template_path,
+    )?;
     let index_html = index_html.replace(DRAWERS_MARKER, &drawers_html);
     let out = site_root.join("cabinet/index.html");
     std::fs::write(&out, &index_html).with_context(|| format!("failed to write {out}"))?;
@@ -360,10 +376,14 @@ fn start_here_order(entries: &[DocEntry], indices: &[usize]) -> Result<Vec<usize
     };
     let mut order = vec![readme];
     for target in section.split("](").skip(1) {
-        let Some(end) = target.find(')') else { continue };
+        let Some(end) = target.find(')') else {
+            continue;
+        };
         let href = &target[..end];
         let path = href.split('#').next().unwrap_or(href);
-        let Some(rel) = path.strip_suffix(".md") else { continue };
+        let Some(rel) = path.strip_suffix(".md") else {
+            continue;
+        };
         let slug = rel.trim_start_matches("./");
         let Some(&idx) = indices.iter().find(|&&i| entries[i].slug == slug) else {
             bail!(
@@ -461,14 +481,21 @@ mod start_here_tests {
             entry(&docs, "b/two", "D-001.003"),
             entry(&docs, "c", "D-001.004"),
         ];
-        assert_eq!(start_here_order(&entries, &[0, 1, 2, 3]).unwrap(), vec![0, 2, 1]);
+        assert_eq!(
+            start_here_order(&entries, &[0, 1, 2, 3]).unwrap(),
+            vec![0, 2, 1]
+        );
     }
 
     #[test]
     fn rejects_start_here_link_to_unknown_doc() {
         let tmp = tempfile::tempdir().unwrap();
         let docs = Utf8Path::from_path(tmp.path()).unwrap().to_owned();
-        std::fs::write(docs.join("README.md"), "# Docs\n\n## Start here\n\n- [X](x.md)\n").unwrap();
+        std::fs::write(
+            docs.join("README.md"),
+            "# Docs\n\n## Start here\n\n- [X](x.md)\n",
+        )
+        .unwrap();
         let entries = vec![entry(&docs, "README", "D-001.001")];
         assert!(start_here_order(&entries, &[0]).is_err());
     }

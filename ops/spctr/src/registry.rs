@@ -3,7 +3,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use crate::manifest::{self, ProjectManifest};
+use crate::manifest::ProjectManifest;
 
 const REGISTRY_FILE: &str = "spctr-registry.json";
 
@@ -229,59 +229,6 @@ pub fn allocate_series(
     );
 
     Ok(series_id)
-}
-
-#[derive(Debug, Serialize)]
-struct SeriesAssignResult {
-    series_id: String,
-    kind: String,
-    slug: String,
-}
-
-pub fn series_assign(repo_root: &Utf8Path, kind: &str, slug: &str, json: bool) -> Result<()> {
-    let parent_dir = match kind {
-        "dossier" => "dossiers",
-        "addendum" => "addenda",
-        _ => bail!("unknown project kind '{kind}'"),
-    };
-
-    let manifest_path = repo_root.join(parent_dir).join(slug).join("spctr.toml");
-    if !manifest_path.is_file() {
-        bail!("manifest not found: {}", manifest_path);
-    }
-
-    let loaded = manifest::load_project_manifest(&manifest_path, None)?;
-
-    if loaded.series.is_some() {
-        bail!(
-            "{} already has series = {:?}",
-            manifest_path,
-            loaded.series.unwrap()
-        );
-    }
-
-    let mut reg = load_registry(repo_root)?;
-    let series_id = allocate_series(&mut reg, kind, slug, &loaded.title)?;
-    save_registry(repo_root, &reg)?;
-
-    let toml_text = std::fs::read_to_string(&manifest_path)?;
-    let patched = crate::series::patch_toml_series(&toml_text, &series_id)?;
-    std::fs::write(&manifest_path, &patched)?;
-
-    if json {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&SeriesAssignResult {
-                series_id: series_id.clone(),
-                kind: kind.to_owned(),
-                slug: slug.to_owned(),
-            })?
-        );
-    } else {
-        eprintln!("assigned {series_id} to {parent_dir}/{slug}");
-        println!("{series_id}");
-    }
-    Ok(())
 }
 
 pub fn allocate_doc_id(registry: &mut Registry, series_id: &str, doc_slug: &str) -> Result<String> {

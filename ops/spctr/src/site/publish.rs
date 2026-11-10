@@ -8,7 +8,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::Serialize;
 use tempfile::Builder;
 
-use crate::site::{archive, blog, cabinet, finalize, fingerprint, pdf, status};
+use crate::site::{archive, blog, cabinet, finalize, fingerprint, pdf};
 use crate::{lake, registry_sync, site, tokens};
 
 const REMOTE_PORTAL_BIN: &str = "/tmp/spctr-portal";
@@ -119,7 +119,7 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
     let stage_root = runtime_root(repo_root)?
         .join("site-publish")
         .join(&release_id);
-    let site_publish_plan = stage_site(repo_root, &stage_root, &release_id)?;
+    let site_publish_plan = stage_site(repo_root, &stage_root)?;
 
     publish_current_site(
         repo_root,
@@ -149,11 +149,7 @@ pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()
 
 /// Build the site and copy exactly the public file set into `stage_root`, where
 /// it is finalized and minified. Publishing uploads this directory unchanged.
-pub fn stage_site(
-    repo_root: &Utf8Path,
-    stage_root: &Utf8Path,
-    release_id: &str,
-) -> Result<SitePublishPlan> {
+pub fn stage_site(repo_root: &Utf8Path, stage_root: &Utf8Path) -> Result<SitePublishPlan> {
     let site_root = repo_root.join("site");
 
     registry_sync::ensure_clean(repo_root)?;
@@ -166,7 +162,6 @@ pub fn stage_site(
     pdf::build_all_pdfs_for_posts(repo_root, &blog_posts)?;
     cabinet::build_cabinet(repo_root, true)?;
     build_wonton_dashboard(repo_root)?;
-    status::write_status_page(repo_root, release_id)?;
 
     let site_publish_plan = site_publish_plan(repo_root)?;
     copy_public_site(&site_root, stage_root, &site_publish_plan.excludes)?;
@@ -1170,9 +1165,7 @@ mod tests {
                 "{path}"
             );
         }
-        assert!(plan
-            .remote_prunes
-            .contains(&"templates/".to_owned()));
+        assert!(plan.remote_prunes.contains(&"templates/".to_owned()));
     }
 
     #[test]
@@ -1259,8 +1252,12 @@ release: "published"
                 .remote_prunes
                 .contains(&format!("{section}/draft-note/")));
         }
-        assert!(plan.excludes.contains(&"/assets/blog/draft-note/".to_owned()));
-        assert!(!plan.excludes.contains(&"/assets/blog/public-note/".to_owned()));
+        assert!(plan
+            .excludes
+            .contains(&"/assets/blog/draft-note/".to_owned()));
+        assert!(!plan
+            .excludes
+            .contains(&"/assets/blog/public-note/".to_owned()));
         assert!(!plan
             .excludes
             .contains(&"/assets/research-notes/draft-note/".to_owned()));

@@ -127,7 +127,10 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
             "--template={}",
             site_root.join("blog/pandoc-template.html")
         ))
-        .arg(format!("--lua-filter={}", repo_root.join(shell::TABLES_FILTER)))
+        .arg(format!(
+            "--lua-filter={}",
+            repo_root.join(shell::TABLES_FILTER)
+        ))
         .arg(format!(
             "--resource-path={}:{}",
             md.parent().context("article has no parent")?,
@@ -137,7 +140,10 @@ fn render_blog(repo_root: &Utf8Path, post: &discover::BlogPostRecord) -> Result<
             "--variable=site-header:{}",
             shell::header(repo_root, Some(shell::Section::Writing))?
         ))
-        .arg(format!("--variable=site-footer:{}", shell::footer(repo_root)?))
+        .arg(format!(
+            "--variable=site-footer:{}",
+            shell::footer(repo_root)?
+        ))
         .args([
             "--metadata",
             "lang=en",
@@ -225,7 +231,10 @@ pub(crate) fn build_research_notes(repo_root: &Utf8Path, write: bool) -> Result<
                 "--metadata=reference-section-title:References",
             ])
             .arg(format!("--template={}", template))
-            .arg(format!("--lua-filter={}", repo_root.join(shell::TABLES_FILTER)))
+            .arg(format!(
+                "--lua-filter={}",
+                repo_root.join(shell::TABLES_FILTER)
+            ))
             .args(["--toc", "--toc-depth=2", "--mathml"])
             .arg(format!("--variable=site-header:{site_header}"))
             .arg(format!("--variable=site-footer:{site_footer}"))
@@ -354,12 +363,6 @@ pub(crate) fn build_blog_for_posts(
 
 fn is_published_post(post: &discover::BlogPostRecord) -> bool {
     post.release == discover::RELEASE_PUBLISHED
-}
-
-pub(crate) fn load_published_posts(repo_root: &Utf8Path) -> Result<Vec<discover::BlogPostRecord>> {
-    let graph =
-        graph::build_with_options(repo_root, None, graph::GraphBuildOptions::site_records())?;
-    load_published_posts_from_graph(&graph)
 }
 
 pub(crate) fn load_published_posts_from_graph(

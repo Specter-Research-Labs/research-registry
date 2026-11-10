@@ -48,7 +48,13 @@ pub fn fingerprint_site(stage_root: &Utf8Path) -> Result<()> {
 
     let mut hashes = BTreeMap::new();
     for relative in files.iter().filter(|path| is_asset(path.as_str())) {
-        hash_asset(stage_root, relative, &patterns, &mut hashes, &mut Vec::new())?;
+        hash_asset(
+            stage_root,
+            relative,
+            &patterns,
+            &mut hashes,
+            &mut Vec::new(),
+        )?;
     }
 
     let mut errors = Vec::new();
@@ -77,7 +83,10 @@ fn is_asset(path: &str) -> bool {
 }
 
 fn collect(root: &Utf8Path, dir: &Utf8Path, out: &mut Vec<Utf8PathBuf>) -> Result<()> {
-    for entry in dir.read_dir_utf8().with_context(|| format!("failed to read {dir}"))? {
+    for entry in dir
+        .read_dir_utf8()
+        .with_context(|| format!("failed to read {dir}"))?
+    {
         let entry = entry?;
         let path = entry.path();
         if entry.file_type()?.is_dir() {
@@ -172,11 +181,7 @@ fn strip_query(reference: &str) -> &str {
 }
 
 /// The staged file a reference points to, or `None` for external URLs.
-fn resolve(
-    stage_root: &Utf8Path,
-    from: &Utf8Path,
-    reference: &str,
-) -> Result<Option<Utf8PathBuf>> {
+fn resolve(stage_root: &Utf8Path, from: &Utf8Path, reference: &str) -> Result<Option<Utf8PathBuf>> {
     if reference.contains("://") || reference.starts_with("//") || reference.starts_with("data:") {
         return Ok(None);
     }

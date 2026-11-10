@@ -5,9 +5,9 @@ use std::fs;
 use std::process::Command;
 
 use crate::markdown;
-use crate::site::{blog, discover};
+use crate::site::discover;
 
-pub fn build_pdf(repo_root: &Utf8Path, slug: &str) -> Result<Utf8PathBuf> {
+fn build_pdf(repo_root: &Utf8Path, slug: &str) -> Result<Utf8PathBuf> {
     let md_path = discover::blog_markdown_path(repo_root, slug);
     if !md_path.is_file() {
         bail!("blog post not found: site/blog/{slug}/index.md");
@@ -53,11 +53,6 @@ pub fn build_pdf(repo_root: &Utf8Path, slug: &str) -> Result<Utf8PathBuf> {
 
     eprintln!("built blog/{slug}/{slug}.pdf");
     Ok(pdf_path)
-}
-
-pub fn build_all_pdfs(repo_root: &Utf8Path) -> Result<()> {
-    let posts = blog::load_published_posts(repo_root)?;
-    build_all_pdfs_for_posts(repo_root, &posts)
 }
 
 pub(crate) fn build_all_pdfs_for_posts(

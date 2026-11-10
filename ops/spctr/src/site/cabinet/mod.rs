@@ -18,13 +18,11 @@ pub fn build_cabinet(repo_root: &Utf8Path, write: bool) -> Result<()> {
         bail!("missing template: {}", template);
     }
 
-    let graph = graph::build_with_options(
+    let graph = graph::build(
         repo_root,
-        None,
         GraphBuildOptions {
             include_docs: true,
             include_evidence: false,
-            include_updates: false,
         },
     )?;
     let mut entries = docs::find_published_docs_from_graph(repo_root, &graph)?;

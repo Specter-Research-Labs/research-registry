@@ -952,10 +952,10 @@ local_source = "artifacts/site-data"
 }
 
 #[test]
-fn export_project_feeds_writes_catalog_and_artifacts_without_templates() {
+fn site_build_writes_catalog_and_artifacts() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
-    minimal_design_tokens(root);
+    minimal_templates(root);
     write(
         root,
         "dossiers/alpha/spctr.toml",
@@ -1054,7 +1054,7 @@ local_source = "artifacts/site-data"
 "#,
     );
 
-    spctr::site::export_project_feeds(root, true).unwrap();
+    spctr::site::build(root, true).unwrap();
 
     let catalog_text = fs::read_to_string(root.join("site/projects/catalog.json")).unwrap();
     let artifacts_text = fs::read_to_string(root.join("site/projects/artifacts.json")).unwrap();
@@ -1137,7 +1137,7 @@ fn catalog_marks_docs_presence_from_graph_backed_site_records() {
 }
 
 #[test]
-fn site_records_ignore_invalid_updates_and_evidence_cards() {
+fn site_records_ignore_invalid_evidence_cards() {
     let tmp = tempfile::tempdir().unwrap();
     let root = Utf8Path::from_path(tmp.path()).expect("temp dir is valid UTF-8");
     minimal_templates(root);
@@ -1146,7 +1146,6 @@ fn site_records_ignore_invalid_updates_and_evidence_cards() {
         "dossiers/alpha/spctr.toml",
         &dossier_manifest("Alpha", "active", true, true, Some(1), None),
     );
-    write(root, "site/updates/entries/bad.json", "{ not valid json\n");
     write(
         root,
         "dossiers/alpha/artifacts/evidence/check.json",
@@ -1391,13 +1390,11 @@ publish = true
     );
     write(root, "dossiers/alpha/docs/README.md", "# Alpha Docs\n");
 
-    let graph = spctr::graph::build_with_options(
+    let graph = spctr::graph::build(
         root,
-        None,
         spctr::graph::GraphBuildOptions {
             include_docs: true,
             include_evidence: false,
-            include_updates: false,
         },
     )
     .unwrap();

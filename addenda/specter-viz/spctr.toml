@@ -85,12 +85,6 @@ requires = ["rust"]
 network = "off"
 cache_paths = ["target"]
 
-[spctr.ci]
-runner = "ubuntu-latest"
-pull_request = ["check"]
-push_main = []
-nightly = []
-
 [spctr.evidence]
 card_path = "artifacts/evidence/latest.json"
 

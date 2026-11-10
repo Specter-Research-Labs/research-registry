@@ -45,12 +45,6 @@ requires = ["python3"]
 network = "off"
 cache_paths = ["artifacts"]
 
-[spctr.ci]
-runner = "ubuntu-latest"
-pull_request = ["check"]
-push_main = []
-nightly = []
-
 [spctr.evidence]
 card_path = "artifacts/evidence/latest.json"
 

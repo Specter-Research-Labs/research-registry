@@ -17,7 +17,6 @@ pub mod records;
 pub mod regions;
 pub mod reports;
 pub mod shell;
-pub mod status;
 pub mod tokens;
 
 use anyhow::{bail, Context, Result};
@@ -150,13 +149,16 @@ fn build_from_projection(
         PageRegion {
             template_path: "site/templates/blog/index.html".into(),
             output_path: "site/blog/index.html".into(),
-            regions: vec![(
-                "BLOG_INDEX_POSTS",
-                regions::render_blog_index_posts(&blog_posts, "blog/index.html")?,
-            ), (
-                "BLOG_INDEX_NOTES",
-                regions::render_blog_index_notes(&research_notes)?,
-            )],
+            regions: vec![
+                (
+                    "BLOG_INDEX_POSTS",
+                    regions::render_blog_index_posts(&blog_posts, "blog/index.html")?,
+                ),
+                (
+                    "BLOG_INDEX_NOTES",
+                    regions::render_blog_index_notes(&research_notes)?,
+                ),
+            ],
         },
         PageRegion {
             template_path: "site/templates/404.html".into(),
@@ -166,12 +168,10 @@ fn build_from_projection(
         PageRegion {
             template_path: "site/templates/sitemap/index.html".into(),
             output_path: "site/sitemap/index.html".into(),
-            regions: vec![
-                (
-                    "SITEMAP_SECTIONS",
-                    regions::render_sitemap_sections(repo_root, &records, &blog_posts)?,
-                ),
-            ],
+            regions: vec![(
+                "SITEMAP_SECTIONS",
+                regions::render_sitemap_sections(repo_root, &records, &blog_posts)?,
+            )],
         },
     ];
 
@@ -286,14 +286,12 @@ fn build_from_projection(
         write_project_feeds(repo_root, &records, &project_feeds)?;
         data::link_local(repo_root)?;
         let research_notes = blog::build_research_notes(repo_root, write)?;
-        build_updates_archive_if_present(repo_root, write)?;
         eprintln!(
             "site build: wrote {} files",
             pages.len() + 2 + research_notes
         );
     } else {
         let research_notes = blog::build_research_notes(repo_root, write)?;
-        build_updates_archive_if_present(repo_root, write)?;
         eprintln!(
             "site build: validated {} pages",
             pages.len() + research_notes
@@ -303,38 +301,17 @@ fn build_from_projection(
     Ok(blog_posts)
 }
 
-fn build_updates_archive_if_present(repo_root: &Utf8Path, write: bool) -> Result<()> {
-    if repo_root.join("site/updates/entries").is_dir() {
-        let _ = crate::updates_archive::apply_or_check(repo_root, write, false)?;
-    }
-    Ok(())
-}
-
-pub fn export_project_feeds(repo_root: &Utf8Path, write: bool) -> Result<()> {
-    let projection = load_site_projection(repo_root)?;
-    if write {
-        write_project_feeds(repo_root, &projection.records, &projection.project_feeds)?;
-        eprintln!("site project-feeds: wrote 2 files");
-    } else {
-        eprintln!("site project-feeds: validated 2 feeds");
-    }
-    Ok(())
-}
-
 fn build_project_feeds(
     graph: &crate::graph::RegistryGraph,
     records: &[records::SiteRecord],
 ) -> Result<ProjectFeeds> {
-    let _ = catalog::build_catalog_json(records);
     let artifacts_report = artifacts::build_report_from_graph(graph, records)?;
-    let _ = artifacts::render_json(&artifacts_report)?;
     Ok(ProjectFeeds { artifacts_report })
 }
 
 fn load_site_projection(repo_root: &Utf8Path) -> Result<SiteProjection> {
-    let graph = crate::graph::build_with_options(
+    let graph = crate::graph::build(
         repo_root,
-        None,
         crate::graph::GraphBuildOptions::site_projection(),
     )?;
     let blog_posts = blog::load_published_posts_from_graph(&graph)?;

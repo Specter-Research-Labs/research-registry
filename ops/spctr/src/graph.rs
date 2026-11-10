@@ -4,29 +4,26 @@ use crate::{exec, registry, release};
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct RegistryGraph {
-    pub version: u32,
     pub generated_at: String,
-    pub repo_root: String,
-    pub scope_project: Option<String>,
     pub nodes: Vec<GraphNode>,
     pub edges: Vec<GraphEdge>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct GraphNode {
     pub id: String,
     pub kind: String,
     pub attrs: BTreeMap<String, Value>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct GraphEdge {
     pub src: String,
     pub kind: String,
@@ -38,29 +35,13 @@ pub struct GraphEdge {
 pub struct GraphBuildOptions {
     pub include_docs: bool,
     pub include_evidence: bool,
-    pub include_updates: bool,
-}
-
-impl Default for GraphBuildOptions {
-    fn default() -> Self {
-        Self::full()
-    }
 }
 
 impl GraphBuildOptions {
-    pub const fn full() -> Self {
-        Self {
-            include_docs: true,
-            include_evidence: true,
-            include_updates: true,
-        }
-    }
-
     pub const fn site_projection() -> Self {
         Self {
             include_docs: true,
             include_evidence: true,
-            include_updates: false,
         }
     }
 
@@ -68,7 +49,6 @@ impl GraphBuildOptions {
         Self {
             include_docs: false,
             include_evidence: false,
-            include_updates: false,
         }
     }
 }
@@ -134,12 +114,6 @@ struct GraphDocRecord {
 }
 
 #[derive(Clone, Debug)]
-struct UpdateRecord {
-    id: String,
-    attrs: BTreeMap<String, Value>,
-}
-
-#[derive(Clone, Debug)]
 struct ExecEvidenceRecord {
     action: String,
     attrs: BTreeMap<String, Value>,
@@ -192,7 +166,7 @@ impl GraphBuilder {
         }
     }
 
-    fn finish(self, repo_root: &Utf8Path, scope_project: Option<String>) -> RegistryGraph {
+    fn finish(self) -> RegistryGraph {
         let mut nodes = self.nodes.into_values().collect::<Vec<_>>();
         nodes.sort_by(|left, right| left.id.cmp(&right.id));
 
@@ -205,35 +179,19 @@ impl GraphBuilder {
         });
 
         RegistryGraph {
-            version: 1,
             generated_at: Utc::now().to_rfc3339(),
-            repo_root: repo_root.as_str().to_owned(),
-            scope_project,
             nodes,
             edges,
         }
     }
 }
 
-pub fn build(repo_root: &Utf8Path, project: Option<&str>) -> Result<RegistryGraph> {
-    build_with_options(repo_root, project, GraphBuildOptions::full())
-}
-
-pub fn build_with_options(
-    repo_root: &Utf8Path,
-    project: Option<&str>,
-    options: GraphBuildOptions,
-) -> Result<RegistryGraph> {
-    let manifests = discover_manifests(repo_root, project)?;
+pub fn build(repo_root: &Utf8Path, options: GraphBuildOptions) -> Result<RegistryGraph> {
+    let manifests = release::discover_release_manifests(repo_root)?;
     let docs = if options.include_docs {
         load_docs(&manifests)?
     } else {
         Vec::new()
-    };
-    let updates = if project.is_some() || !options.include_updates {
-        Vec::new()
-    } else {
-        load_updates(repo_root)?
     };
     let registry = if registry::registry_path(repo_root).is_file() {
         Some(registry::load_registry(repo_root)?)
@@ -257,38 +215,11 @@ pub fn build_with_options(
         )?;
     }
 
-    for update in updates {
-        builder.upsert_node(update_node_id(&update.id), "update", update.attrs);
-    }
+    let article_ids = add_article_subgraph(repo_root, &mut builder, registry.as_ref())?;
+    add_site_output_subgraph(repo_root, &mut builder, options, &article_ids)?;
+    add_archive_surface_subgraph(&mut builder);
 
-    if project.is_none() {
-        let article_ids = add_article_subgraph(repo_root, &mut builder, registry.as_ref())?;
-        add_site_output_subgraph(repo_root, &mut builder, options, &article_ids)?;
-        add_archive_surface_subgraph(&mut builder);
-    }
-
-    let scope_project = match project {
-        Some(_) => manifests.first().map(project_node_id),
-        None => None,
-    };
-    Ok(builder.finish(repo_root, scope_project))
-}
-
-pub fn write(graph: &RegistryGraph, output: &Utf8Path) -> Result<()> {
-    if let Some(parent) = output.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("failed to create graph output dir {parent}"))?;
-    }
-    let rendered = serde_json::to_string_pretty(graph)? + "\n";
-    fs::write(output, rendered).with_context(|| format!("failed to write graph to {output}"))?;
-    Ok(())
-}
-
-fn discover_manifests(repo_root: &Utf8Path, project: Option<&str>) -> Result<Vec<ProjectManifest>> {
-    match project {
-        Some(slug) => Ok(vec![release::lookup_project(repo_root, slug)?]),
-        None => release::discover_release_manifests(repo_root),
-    }
+    Ok(builder.finish())
 }
 
 fn load_docs(manifests: &[ProjectManifest]) -> Result<Vec<GraphDocRecord>> {
@@ -301,86 +232,6 @@ fn load_docs(manifests: &[ProjectManifest]) -> Result<Vec<GraphDocRecord>> {
         .collect::<Vec<_>>();
     records.sort_by(|left, right| left.entry.path.cmp(&right.entry.path));
     Ok(records)
-}
-
-fn load_updates(repo_root: &Utf8Path) -> Result<Vec<UpdateRecord>> {
-    let updates_root = repo_root.join("site/updates/entries");
-    if !updates_root.is_dir() {
-        return Ok(Vec::new());
-    }
-    let mut paths = Vec::new();
-    for entry in
-        fs::read_dir(&updates_root).with_context(|| format!("failed to read {updates_root}"))?
-    {
-        let entry = entry.with_context(|| format!("failed to read entry in {updates_root}"))?;
-        let path: Utf8PathBuf = entry
-            .path()
-            .try_into()
-            .context("non-UTF-8 update entry path")?;
-        if path.extension().is_some_and(|ext| ext == "json") {
-            paths.push(path);
-        }
-    }
-    paths.sort();
-
-    let mut updates = Vec::new();
-    for path in paths {
-        let text = fs::read_to_string(&path).with_context(|| format!("failed to read {path}"))?;
-        let raw: Value =
-            serde_json::from_str(&text).with_context(|| format!("invalid JSON in {path}"))?;
-        let Some(object) = raw.as_object() else {
-            anyhow::bail!("{path}: update entry must be a JSON object");
-        };
-        let id = require_string(object.get("id"), "id", &path)?;
-        let mut attrs = base_attrs("update_entry", repo_rel(repo_root, &path)?);
-        attrs.insert("id".to_owned(), json!(id));
-        attrs.insert(
-            "kind".to_owned(),
-            json!(require_string(object.get("kind"), "kind", &path)?),
-        );
-        attrs.insert(
-            "label".to_owned(),
-            json!(require_string(object.get("label"), "label", &path)?),
-        );
-        attrs.insert(
-            "date".to_owned(),
-            json!(require_string(object.get("date"), "date", &path)?),
-        );
-        attrs.insert(
-            "published_at".to_owned(),
-            json!(require_string(
-                object.get("published_at"),
-                "published_at",
-                &path
-            )?),
-        );
-        attrs.insert(
-            "topic".to_owned(),
-            json!(require_string(object.get("topic"), "topic", &path)?),
-        );
-        if let Some(window) = object.get("window").and_then(Value::as_object) {
-            attrs.insert(
-                "window_start".to_owned(),
-                json!(require_string(window.get("start"), "window.start", &path)?),
-            );
-            attrs.insert(
-                "window_end".to_owned(),
-                json!(require_string(window.get("end"), "window.end", &path)?),
-            );
-        }
-        insert_optional_u64_attr(&mut attrs, "series_number", object.get("series_number"));
-        insert_optional_string_attr(&mut attrs, "ledger_entry_id", object.get("ledger_entry_id"));
-        insert_optional_u64_attr(
-            &mut attrs,
-            "zulip_message_id",
-            object.get("zulip_message_id"),
-        );
-        if let Some(sections) = object.get("sections") {
-            attrs.insert("sections".to_owned(), sections.clone());
-        }
-        updates.push(UpdateRecord { id, attrs });
-    }
-    Ok(updates)
 }
 
 fn group_docs_by_project(
@@ -1022,7 +873,6 @@ fn add_site_output_subgraph(
             BTreeMap::new(),
         );
     }
-    let doc_ids = collect_edge_targets(builder, &visible_project_ids, "project_has_doc");
     let durable_surface_ids = collect_edge_targets(
         builder,
         &visible_project_ids,
@@ -1266,21 +1116,6 @@ fn add_site_output_subgraph(
         "project_artifacts_json",
     );
     add_output_dependencies(builder, &artifacts_json_id, artifact_data_ids);
-
-    let status_page_id = upsert_site_output(builder, "site/status/index.html", "status_page");
-    let status_source_id = ensure_source_file_node(builder, "ops/spctr/src/site/status.rs");
-    let panel_source_id = ensure_source_file_node(builder, "ops/spctr/src/panel.rs");
-    add_output_dependencies(
-        builder,
-        &status_page_id,
-        visible_project_ids
-            .iter()
-            .cloned()
-            .chain(article_ids.iter().cloned())
-            .chain(doc_ids)
-            .chain(research_note_source_ids)
-            .chain([status_source_id, panel_source_id]),
-    );
 
     Ok(())
 }
@@ -1861,10 +1696,6 @@ fn release_evidence_node_id(manifest: &ProjectManifest, card_path: &str) -> Stri
     )
 }
 
-fn update_node_id(id: &str) -> String {
-    format!("update:{id}")
-}
-
 fn site_output_node_id(path: &str) -> String {
     format!("site_output:{path}")
 }
@@ -1941,16 +1772,4 @@ fn insert_optional_u64_attr(attrs: &mut BTreeMap<String, Value>, key: &str, valu
     if let Some(number) = value.and_then(Value::as_u64) {
         attrs.insert(key.to_owned(), json!(number));
     }
-}
-
-fn require_string(value: Option<&Value>, field_name: &str, path: &Utf8Path) -> Result<String> {
-    let text = value
-        .and_then(Value::as_str)
-        .ok_or_else(|| anyhow::anyhow!("{path}: {field_name} must be a non-empty string"))?
-        .trim()
-        .to_owned();
-    if text.is_empty() {
-        anyhow::bail!("{path}: {field_name} must be a non-empty string");
-    }
-    Ok(text)
 }

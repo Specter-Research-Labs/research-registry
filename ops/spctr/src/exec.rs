@@ -61,15 +61,6 @@ pub struct ExecValidatedOutput {
 }
 
 #[derive(Clone, Debug, Serialize)]
-pub struct ExecValidationReport {
-    pub project: String,
-    pub kind: String,
-    pub action: String,
-    pub ok: bool,
-    pub outputs: Vec<ExecValidatedOutput>,
-}
-
-#[derive(Clone, Debug, Serialize)]
 pub struct ExecRunReport {
     pub project: String,
     pub kind: String,
@@ -165,20 +156,6 @@ struct ExecCommandOutcome {
     error: Option<String>,
 }
 
-pub fn plan(repo_root: &Utf8Path, project: Option<&str>, action: &str) -> Result<ExecPlan> {
-    let manifest = lookup_project(repo_root, project)?;
-    build_plan(repo_root, &manifest, action)
-}
-
-pub fn validate(
-    repo_root: &Utf8Path,
-    project: Option<&str>,
-    action: &str,
-) -> Result<ExecValidationReport> {
-    let manifest = lookup_project(repo_root, project)?;
-    validate_action(repo_root, &manifest, action)
-}
-
 pub fn run(repo_root: &Utf8Path, project: Option<&str>, action: &str) -> Result<ExecRunReport> {
     let manifest = lookup_project(repo_root, project)?;
     run_action(repo_root, &manifest, action)
@@ -244,25 +221,6 @@ pub fn build_plan(
         requires,
         expected_outputs,
         runtime,
-    })
-}
-
-pub(crate) fn validate_action(
-    repo_root: &Utf8Path,
-    manifest: &ProjectManifest,
-    action_name: &str,
-) -> Result<ExecValidationReport> {
-    let plan = build_plan(repo_root, manifest, action_name)?;
-    let outputs = validated_outputs_from_plan(manifest, &plan)?;
-    let ok = outputs
-        .iter()
-        .all(|output| !output.required || !output.matches.is_empty());
-    Ok(ExecValidationReport {
-        project: plan.project,
-        kind: plan.kind,
-        action: plan.action,
-        ok,
-        outputs,
     })
 }
 
@@ -959,7 +917,10 @@ fn repo_relative(repo_root: &Utf8Path, path: &Utf8Path, label: &str) -> Result<S
 
 #[cfg(test)]
 mod tests {
-    use super::{action_evidence_card_path, run_action, truncate_diagnostics, validate_action};
+    use super::{
+        action_evidence_card_path, build_plan, run_action, truncate_diagnostics,
+        validated_outputs_from_plan,
+    };
     use camino::Utf8Path;
     use serde_json::Value;
     use std::fs;
@@ -1011,9 +972,9 @@ required = true
         );
 
         let manifest = crate::manifest::load_project_manifest(&manifest_path, None).unwrap();
-        let report = validate_action(repo_root, &manifest, "check").unwrap();
-        assert!(!report.ok);
-        assert!(report.outputs[0].matches.is_empty());
+        let plan = build_plan(repo_root, &manifest, "check").unwrap();
+        let outputs = validated_outputs_from_plan(&manifest, &plan).unwrap();
+        assert!(outputs[0].matches.is_empty());
     }
 
     #[test]
@@ -1057,9 +1018,9 @@ required = true
         );
 
         let manifest = crate::manifest::load_project_manifest(&manifest_path, None).unwrap();
-        let report = validate_action(repo_root, &manifest, "check").unwrap();
-        assert!(report.ok);
-        assert_eq!(report.outputs[0].matches, vec!["artifacts/report.json"]);
+        let plan = build_plan(repo_root, &manifest, "check").unwrap();
+        let outputs = validated_outputs_from_plan(&manifest, &plan).unwrap();
+        assert_eq!(outputs[0].matches, vec!["artifacts/report.json"]);
     }
 
     #[test]
@@ -1103,9 +1064,9 @@ required = true
         );
 
         let manifest = crate::manifest::load_project_manifest(&manifest_path, None).unwrap();
-        let report = validate_action(repo_root, &manifest, "check").unwrap();
-        assert!(report.ok);
-        assert_eq!(report.outputs[0].matches, vec!["dist/alpha-0.1.0.whl"]);
+        let plan = build_plan(repo_root, &manifest, "check").unwrap();
+        let outputs = validated_outputs_from_plan(&manifest, &plan).unwrap();
+        assert_eq!(outputs[0].matches, vec!["dist/alpha-0.1.0.whl"]);
     }
 
     #[test]

@@ -402,16 +402,3 @@ fn repo_aware_cabinet_page_accepts_doc_change() {
         assert!(violations.is_empty());
     });
 }
-
-#[test]
-fn repo_aware_status_page_accepts_status_source_change() {
-    with_repo(|root| {
-        let violations = spctr::site::provenance::find_provenance_violations_for_repo(
-            root,
-            ["site/status/index.html", "ops/spctr/src/site/status.rs"],
-        )
-        .unwrap();
-
-        assert!(violations.is_empty());
-    });
-}
