@@ -24,7 +24,6 @@ python-version = "3.13"
 [tool.ty.src]
 include = [
     "modules",
-    "visualization",
     "exp10_ablation_goal_adjustment.py",
     "exp14_cellview_vs_traditional.py",
     "exp16_movable_frozen.py",
