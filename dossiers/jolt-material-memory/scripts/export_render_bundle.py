@@ -67,10 +67,10 @@ def _vector_field(step: dict[str, object], key: str, *, expected_size: int) -> n
     return array
 
 
-def _float_field(step: dict[str, object], key: str) -> float:
-    value = step.get(key)
+def _float_field(record: dict[str, object], key: str) -> float:
+    value = record.get(key)
     if isinstance(value, bool) or not isinstance(value, int | float | str):
-        raise ValueError(f"step record missing numeric {key}")
+        raise ValueError(f"record missing numeric {key}")
     return float(value)
 
 
@@ -79,14 +79,6 @@ def _int_field(record: dict[str, object], key: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int | float | str):
         raise ValueError(f"record missing integer-like {key}")
     return int(float(value))
-
-
-def _float_like(value: object, *, fallback: float) -> float:
-    if isinstance(value, bool):
-        return fallback
-    if isinstance(value, int | float | str):
-        return float(value)
-    return fallback
 
 
 def _compute_rest_positions(layout: str, body_count: int) -> list[list[float]]:
@@ -178,11 +170,11 @@ def export_render_bundle(
     body_count = _int_field(meta, "body_count")
     layout = str(meta.get("layout", "line"))
     raw_memory_params = meta.get("memory_params")
-    memory_params: dict[str, object]
     if not isinstance(raw_memory_params, dict):
-        memory_params = {}
-    else:
-        memory_params = {str(key): value for key, value in raw_memory_params.items()}
+        raise ValueError("meta record missing memory_params")
+    memory_params: dict[str, object] = {
+        str(key): value for key, value in raw_memory_params.items()
+    }
     run = {
         "scenario": str(meta.get("scenario", "")),
         "policy": str(meta.get("policy", "")),
@@ -200,7 +192,7 @@ def export_render_bundle(
         },
         "run": run,
         "timeline": {
-            "dt": _float_like(meta.get("dt"), fallback=0.0),
+            "dt": _float_field(meta, "dt"),
             "step_count": _int_field(meta, "steps"),
             "frame_count": len(sampled_steps),
             "stride": stride,
@@ -222,20 +214,20 @@ def export_render_bundle(
         "channels": {
             "body_plasticity": {
                 "display": "Memory trace",
-                "range": [0.0, _float_like(memory_params.get("max_plastic"), fallback=1.0)],
+                "range": [0.0, _float_field(memory_params, "max_plastic")],
             },
             "body_stiffness": {
                 "display": "Local stiffness",
                 "range": [
-                    _float_like(memory_params.get("min_stiffness"), fallback=0.0),
-                    _float_like(memory_params.get("max_stiffness"), fallback=1.0),
+                    _float_field(memory_params, "min_stiffness"),
+                    _float_field(memory_params, "max_stiffness"),
                 ],
             },
             "body_friction": {
                 "display": "Local friction",
                 "range": [
-                    _float_like(memory_params.get("min_friction"), fallback=0.0),
-                    _float_like(memory_params.get("max_friction"), fallback=1.0),
+                    _float_field(memory_params, "min_friction"),
+                    _float_field(memory_params, "max_friction"),
                 ],
             },
             "body_contact": {
@@ -269,7 +261,7 @@ def export_render_bundle(
 def main() -> int:
     from paths import resolve_artifact_dir
 
-    parser = argparse.ArgumentParser(description="Export a Blender render bundle from run NDJSON")
+    parser = argparse.ArgumentParser(description="Export a render bundle from run NDJSON")
     parser.add_argument("--ndjson", required=True)
     parser.add_argument("--out-dir", default="")
     parser.add_argument("--name", default="")

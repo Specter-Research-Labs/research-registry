@@ -1,8 +1,8 @@
 """
 Generate group-based cell type distribution data.
 
-Used by analysis/cell_type_distribution_change.py to test whether cells
-cluster by algorithm type within groups more than random chance.
+Tests whether cells cluster by algorithm type within groups more than random
+chance.
 
 This is a statistical test over 1000 experiments to determine significance.
 

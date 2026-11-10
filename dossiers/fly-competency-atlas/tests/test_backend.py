@@ -1,9 +1,12 @@
 from pathlib import Path
 
+from typer.testing import CliRunner
+
 from fly_competency_atlas.backend import (
+    BACKEND_APP,
+    HostReport,
     detect_host,
     docker_run_command,
-    format_docker_run_command,
 )
 from fly_competency_atlas.backend_runtime import extract_datasets_from_error, valid_datasets
 
@@ -43,13 +46,57 @@ def test_docker_run_command_exposes_processor_port() -> None:
     assert "-p" in command
     assert "8081:8081" in command
     assert f"{database_dir}:/home/ffbo/orientdb/databases" in command
-    rendered = format_docker_run_command(
-        name="fbl-test",
-        ui_port=9999,
-        processor_port=8081,
-        database_dir=database_dir,
+    assert command[-1] == "fruitflybrain/fbl:latest"
+
+
+def _host_report(blocker: str | None) -> HostReport:
+    return HostReport(
+        system="linux",
+        machine="x86_64",
+        docker_available=True,
+        docker_version="Docker 28",
+        nvidia_smi_available=True,
+        execution_capable_local_backend=blocker is None,
+        recommended_processor_url=None,
+        recommended_path="local",
+        blocker=blocker,
     )
-    assert "fruitflybrain/fbl:latest" in rendered
+
+
+def test_start_execs_docker_with_requested_ports(monkeypatch, tmp_path: Path) -> None:
+    calls: list[tuple[str, list[str]]] = []
+    monkeypatch.setattr(
+        "fly_competency_atlas.backend.detect_host",
+        lambda: _host_report(None),
+    )
+    monkeypatch.setattr(
+        "fly_competency_atlas.backend.os.execvp",
+        lambda file, args: calls.append((file, list(args))),
+    )
+    database_dir = tmp_path / "db"
+    result = CliRunner().invoke(
+        BACKEND_APP,
+        ["start", "--name", "fbl", "--processor-port", "9000", "--database-dir", str(database_dir)],
+    )
+    assert result.exit_code == 0, result.output
+    assert database_dir.is_dir()
+    assert calls[0][0] == "docker"
+    assert "9000:8081" in calls[0][1]
+    assert f"{database_dir.resolve()}:/home/ffbo/orientdb/databases" in calls[0][1]
+
+
+def test_start_refuses_blocked_host(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "fly_competency_atlas.backend.detect_host",
+        lambda: _host_report("no CUDA"),
+    )
+    monkeypatch.setattr(
+        "fly_competency_atlas.backend.os.execvp",
+        lambda file, args: (_ for _ in ()).throw(AssertionError("must not launch")),
+    )
+    result = CliRunner().invoke(BACKEND_APP, ["start"])
+    assert result.exit_code == 1
+    assert "no CUDA" in result.output
 
 
 def test_valid_datasets_requires_na_and_nlp() -> None:

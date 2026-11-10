@@ -39,6 +39,7 @@ probes the `jupyter` executable on `PATH` during import.
 
 - `doctor`: report FlyBrainLab-related package availability
 - `backend doctor`: check whether this host can run a local execution backend
+- `backend start`: launch the upstream FlyBrainLab Docker image on an execution-capable host
 - `backend probe`: connect to an FFBO processor and report datasets plus Neurokernel availability
 - `catalog`: print the tracked motif and dataset panel
 - `inventory`: query upstream tutorials and dataset catalog
