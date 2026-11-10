@@ -87,19 +87,6 @@ class ProofGraph:
         )
 
     @classmethod
-    def for_external_proof(
-        cls,
-        *,
-        backend: str,
-        provenance: str = "proof_object",
-    ) -> "ProofGraph":
-        return cls(
-            graph_family=GRAPH_FAMILY_EXTERNAL_PROOF,
-            graph_backend=backend,
-            graph_provenance=provenance,
-        )
-
-    @classmethod
     def for_proof_term_dag(
         cls,
         *,
@@ -227,23 +214,6 @@ class ProofGraph:
             )
 
         return canonical
-
-    def extract_subgraph(self, mvar_ids: set[str]) -> "ProofGraph":
-        subgraph = self.graph.subgraph(mvar_ids).copy()
-        return ProofGraph(
-            graph=subgraph,
-            expansion_count=self.expansion_count,
-            graph_family=self.graph_family,
-            graph_backend=self.graph_backend,
-            graph_provenance=self.graph_provenance,
-            graph_schema_version=self.graph_schema_version,
-        )
-
-    def get_ancestors(self, mvar_id: str) -> set[str]:
-        return nx.ancestors(self.graph, mvar_id)
-
-    def get_descendants(self, mvar_id: str) -> set[str]:
-        return nx.descendants(self.graph, mvar_id)
 
     def serialize(self) -> dict:
         return {

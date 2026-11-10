@@ -894,41 +894,6 @@ def rank_theorem_candidates(
     return out
 
 
-def _top_k_for_a(
-    a: list[GraphSignature],
-    b: list[GraphSignature],
-    *,
-    top_k: int,
-) -> dict[str, list[PairDistance]]:
-    out: dict[str, list[PairDistance]] = {}
-    for sig_a in a:
-        pairs: list[PairDistance] = []
-        for sig_b in b:
-            pairs.append(pair_distance(sig_a, sig_b))
-        pairs.sort(key=lambda p: (p.distance, p.theorem_b, p.variant_b, p.proof_id_b))
-        out[sig_a.proof_id] = pairs[:top_k]
-    return out
-
-
-def _one_to_one_assignment(
-    all_pairs: list[PairDistance],
-    *,
-    max_matches: int,
-) -> list[PairDistance]:
-    used_a: set[str] = set()
-    used_b: set[str] = set()
-    chosen: list[PairDistance] = []
-    for pair in sorted(all_pairs, key=lambda p: (p.distance, p.theorem_a, p.theorem_b)):
-        if pair.proof_id_a in used_a or pair.proof_id_b in used_b:
-            continue
-        used_a.add(pair.proof_id_a)
-        used_b.add(pair.proof_id_b)
-        chosen.append(pair)
-        if len(chosen) >= max_matches:
-            break
-    return chosen
-
-
 def align_runs(
     run_a_dir: Path,
     run_b_dir: Path,

@@ -93,12 +93,7 @@ BASIN_DEEP_SAMPLE="${BASIN_DEEP_SAMPLE:-120}"
 BASIN_DEEP_SELECTION_SEED="${BASIN_DEEP_SELECTION_SEED:-20260311}"
 
 ENABLE_EXTERNAL_PILOTS="${ENABLE_EXTERNAL_PILOTS:-0}"
-TPTP_ROOT="${TPTP_ROOT:-}"
-SMTLIB_ROOT="${SMTLIB_ROOT:-}"
 ENABLE_COQ_STDLIB="${ENABLE_COQ_STDLIB:-0}"
-EXTERNAL_SAMPLE="${EXTERNAL_SAMPLE:-100}"
-EXTERNAL_SELECTION_SEED="${EXTERNAL_SELECTION_SEED:-20260321}"
-EXTERNAL_TIMEOUT="${EXTERNAL_TIMEOUT:-20}"
 COQ_LIMIT_TOTAL="${COQ_LIMIT_TOTAL:-100}"
 COQ_LIMIT_PER_MODULE="${COQ_LIMIT_PER_MODULE:-50}"
 DEEPSEEK_ARTIFACT_ROOT="${DEEPSEEK_ARTIFACT_ROOT:-${SPECTER_ARTIFACT_ROOT:-}}"
@@ -317,34 +312,6 @@ run_p5_external_backends() {
   if [[ "${ENABLE_EXTERNAL_PILOTS}" != "1" ]]; then
     echo "Skipping P5 because ENABLE_EXTERNAL_PILOTS=${ENABLE_EXTERNAL_PILOTS}"
     return
-  fi
-
-  if [[ -n "${TPTP_ROOT}" ]]; then
-    run_cmd uv run python wonton.py e \
-      --tptp-root "${TPTP_ROOT}" \
-      --sample "${EXTERNAL_SAMPLE}" \
-      --seed "${EXTERNAL_SELECTION_SEED}" \
-      --timeout "${EXTERNAL_TIMEOUT}" \
-      --log-dir "${PROGRAM_LOGS_DIR}/p5-external/e"
-    run_cmd uv run python wonton.py vampire \
-      --tptp-root "${TPTP_ROOT}" \
-      --sample "${EXTERNAL_SAMPLE}" \
-      --seed "${EXTERNAL_SELECTION_SEED}" \
-      --timeout "${EXTERNAL_TIMEOUT}" \
-      --log-dir "${PROGRAM_LOGS_DIR}/p5-external/vampire"
-  else
-    echo "Skipping E/Vampire: set TPTP_ROOT to enable."
-  fi
-
-  if [[ -n "${SMTLIB_ROOT}" ]]; then
-    run_cmd uv run python wonton.py z3 \
-      --smtlib-root "${SMTLIB_ROOT}" \
-      --sample "${EXTERNAL_SAMPLE}" \
-      --seed "${EXTERNAL_SELECTION_SEED}" \
-      --timeout "${EXTERNAL_TIMEOUT}" \
-      --log-dir "${PROGRAM_LOGS_DIR}/p5-external/z3"
-  else
-    echo "Skipping Z3: set SMTLIB_ROOT to enable."
   fi
 
   if [[ "${ENABLE_COQ_STDLIB}" == "1" ]]; then

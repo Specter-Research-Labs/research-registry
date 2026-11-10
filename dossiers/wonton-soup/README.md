@@ -46,8 +46,8 @@ uv run python setup_lean.py
 On shared lab storage, the better split is:
 
 ```
-export LEAN_PROJECT_PATH=/shared/specter-runtime/common/wonton-soup/lean_project
-export LEAN_REPL_EXE=/shared/specter-runtime/machines/<machine>/wonton-soup/bin/repl
+export LEAN_PROJECT_PATH="$SPECTER_RUNTIME_ROOT/common/wonton-soup/lean_project"
+export LEAN_REPL_EXE="$SPECTER_RUNTIME_ROOT/machines/<machine>/wonton-soup/bin/repl"
 ```
 
 The full setup and verification path is in `docs/ops/setup.md`.

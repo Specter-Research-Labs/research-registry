@@ -1,17 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from atp.sexp import sexpr_to_string
 from prover.expr import ExprDAG, ExprNode
 from prover.proof import ProofGraph
-
-
-@dataclass
-class CoqDagResult:
-    dag: ExprDAG
-    graph: ProofGraph
 
 
 class CoqExprBuilder:

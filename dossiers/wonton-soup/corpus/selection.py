@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import heapq
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, TypeVar
+from typing import Callable, Iterable, TypeVar
 
 T = TypeVar("T")
 
@@ -16,17 +16,6 @@ class SelectionMeta:
     limit: int | None
     sample: int | None
     selected_count: int
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "method": self.method,
-            "seed": self.seed,
-            "offset": self.offset,
-            "limit": self.limit,
-            "sample": self.sample,
-            "selected_count": self.selected_count,
-        }
-
 
 def _score(seed: int, item_id: str) -> int:
     payload = f"{seed}:{item_id}".encode("utf-8", errors="strict")

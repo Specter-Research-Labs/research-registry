@@ -185,21 +185,6 @@ class MCTSNode:
             return candidates[0]
         return rng.choice(candidates)
 
-    def best_child_by_visits(self) -> tuple[str, MCTSNode] | None:
-        if not self.children:
-            return None
-
-        best: tuple[str, MCTSNode] | None = None
-        best_visits = -1
-
-        for tactic, child_nodes in self.children.items():
-            for node in child_nodes:
-                if node.visit_count > best_visits:
-                    best_visits = node.visit_count
-                    best = (tactic, node)
-
-        return best
-
     def serialize(self) -> dict:
         return {
             "mvar_id": self.mvar_id,

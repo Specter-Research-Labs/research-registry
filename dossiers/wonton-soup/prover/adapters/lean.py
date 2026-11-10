@@ -259,9 +259,6 @@ class LeanAdapter:
             await self.env.__aexit__(*args)
             self.env = None
 
-    async def send_imports(self, imports: str):
-        await self.env.send_command_async(imports)
-
     async def initialize(self, theorem_with_sorry: str) -> list[str]:
         self.states.clear()
         self.completed_proof_term = None

@@ -58,9 +58,6 @@ Canonical mapping from backend capabilities to artifact families.
 |---|---|---|---|---|
 | Lean | Yes (`*_graph.json`) | Optional derived proof subgraph | n/a | Interactive REPL + tactic-level search |
 | Coq | No true search graph in external mode | Yes | Yes (`serapi_replay`) | Replay emits `*_process_trace.json.gz` plus `*_search_trace_graph.json` |
-| E prover | No true interactive search graph | Yes | Optional | Trace/proof outputs are proxy surfaces for search behavior |
-| Vampire | No true interactive search graph | Yes | Optional | Typically proof-object oriented |
-| Z3 | No true interactive search graph | Yes | Optional | Proof/trace surfaces are solver-internal projections |
 
 ### GED family selection rules
 

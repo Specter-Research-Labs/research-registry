@@ -47,7 +47,6 @@ include = [
     "corpus",
     "experiments",
     "prover",
-    "tools",
     "orchestrator",
     "wonton.py",
     "setup_lean.py",

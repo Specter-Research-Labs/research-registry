@@ -85,18 +85,6 @@ uv run python wonton.py corpus sweep-lean-capability \
 
 Resume an incomplete sweep with `--resume`.
 
-External backend sweeps:
-
-```bash
-uv run python wonton.py corpus sweep-tptp-capability \
-  --ref tptp:<corpus_id>@<build_id> \
-  --timeout 10
-
-uv run python wonton.py corpus sweep-smtlib-capability \
-  --ref smtlib:<corpus_id>@<build_id> \
-  --timeout 10
-```
-
 ## Manifest
 
 `manifest.json` is the source of truth. It records format version, backend,

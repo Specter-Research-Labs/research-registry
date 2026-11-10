@@ -70,7 +70,7 @@ def sorting():
 
 def proof():
     directory = ROOT / "dossiers/wonton-soup/docs/figures/poster"
-    data = json.loads((directory / "out/wonton-real-log-block-exact-take-03-coral-reroute.manifest.json").read_text())
+    data = json.loads((directory / "out/wonton-real-log-block-exact-take-05-blueprint-ledger.manifest.json").read_text())
     elements = [text(45, 43, "LEAN / RECORDED SEARCH", 19), text(955, 43, "hf00795", 17, text_anchor="end")]
     elements.append('<path d="M310 84V532" stroke="#d1cabe" stroke-width="1"/>')
     for name, filename, left, width in [

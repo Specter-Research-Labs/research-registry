@@ -487,10 +487,6 @@ def _normalize_run_status_payload(status: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _write_run_status(log_dir: Path, status: dict[str, Any]) -> None:
-    _write_json_atomic(log_dir / "run_status.json", _normalize_run_status_payload(status))
-
-
 def _write_latest_run(
     run_dir: Path, providers: list[str], provider: str | None, multi_provider: bool
 ) -> None:

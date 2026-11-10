@@ -28,21 +28,15 @@ def _base_args(*, backend):
     [
         (
             "_validate_backend_args",
-            "z3",
-            {"domains": ["arith"]},
-            "--domains is not valid for --backend z3",
+            "coq",
+            {"limit": 5},
+            "--limit is not valid for --backend coq",
         ),
         (
             "_validate_backend_args",
-            "z3",
+            "coq",
             {"sample": 10},
             "--seed is required when --sample is set",
-        ),
-        (
-            "_validate_backend_args",
-            "z3",
-            {"sample": 10, "seed": 123, "limit": 5},
-            "Use --sample or --limit, not both",
         ),
         (
             "_validate_backend_args",

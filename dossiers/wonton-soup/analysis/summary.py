@@ -98,29 +98,6 @@ def load_corpus_run(log_dir: Path | str) -> CorpusRun:
     return CorpusRun.load(Path(log_dir))
 
 
-def tactic_replaceability(run: CorpusRun) -> dict[str, dict[str, list[str]]]:
-    matrix = run.aggregates.get("goal_type_tactic_matrix", {})
-    result: dict[str, dict[str, list[str]]] = {}
-
-    for goal_type, tactics in matrix.items():
-        result[goal_type] = {}
-        blocked_tactics = set()
-        successful_tactics = []
-
-        for tactic, counts in tactics.items():
-            if counts.get("blocked", 0) > 0:
-                blocked_tactics.add(tactic)
-            if counts.get("success", 0) > 0:
-                successful_tactics.append(tactic)
-
-        for blocked in blocked_tactics:
-            replacements = [t for t in successful_tactics if t != blocked]
-            if replacements:
-                result[goal_type][blocked] = replacements
-
-    return result
-
-
 def structure_vs_semantics(run: CorpusRun) -> dict:
     categories = {
         "same_structure_axiom_same": [],
@@ -166,22 +143,6 @@ def structure_vs_semantics(run: CorpusRun) -> dict:
 
     totals = {k: len(v) for k, v in categories.items()}
     return {"categories": categories, "counts": totals}
-
-
-def goal_type_patterns(run: CorpusRun) -> dict[str, dict[str, float]]:
-    matrix = run.aggregates.get("goal_type_tactic_matrix", {})
-    result: dict[str, dict[str, float]] = {}
-
-    for goal_type, tactics in matrix.items():
-        result[goal_type] = {}
-        for tactic, counts in tactics.items():
-            success = counts.get("success", 0)
-            failure = counts.get("failure", 0)
-            total = success + failure
-            if total > 0:
-                result[goal_type][tactic] = success / total
-
-    return result
 
 
 def proof_term_clusters(run: CorpusRun) -> list[list[str]]:
