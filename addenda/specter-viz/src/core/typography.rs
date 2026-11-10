@@ -1,4 +1,4 @@
-use egui::{FontData, FontDefinitions, FontFamily, FontId, TextStyle};
+use egui::{FontFamily, FontId, TextStyle};
 
 pub const SIZE_CAPTION: f32 = 13.0;
 pub const SIZE_BODY: f32 = 15.0;
@@ -25,50 +25,7 @@ pub const fn font_id_title() -> FontId {
     FontId::new(SIZE_TITLE, FontFamily::Monospace)
 }
 
-#[allow(clippy::missing_panics_doc)]
 pub fn configure_fonts(ctx: &egui::Context) {
-    let mut fonts = FontDefinitions::default();
-
-    fonts.font_data.insert(
-        "berkeley_mono".to_owned(),
-        std::sync::Arc::new(FontData::from_static(include_bytes!(
-            "../fonts/BerkeleyMono-Regular.ttf"
-        ))),
-    );
-
-    fonts.font_data.insert(
-        "jetbrains_mono".to_owned(),
-        std::sync::Arc::new(FontData::from_static(include_bytes!(
-            "../fonts/JetBrainsMono-Regular.ttf"
-        ))),
-    );
-
-    fonts
-        .families
-        .get_mut(&FontFamily::Monospace)
-        .expect("monospace family exists")
-        .insert(0, "berkeley_mono".to_owned());
-
-    fonts
-        .families
-        .get_mut(&FontFamily::Monospace)
-        .expect("monospace family exists")
-        .insert(1, "jetbrains_mono".to_owned());
-
-    fonts
-        .families
-        .get_mut(&FontFamily::Proportional)
-        .expect("proportional family exists")
-        .insert(0, "berkeley_mono".to_owned());
-
-    fonts
-        .families
-        .get_mut(&FontFamily::Proportional)
-        .expect("proportional family exists")
-        .insert(1, "jetbrains_mono".to_owned());
-
-    ctx.set_fonts(fonts);
-
     let mut style = (*ctx.style()).clone();
     style.text_styles = [
         (TextStyle::Small, font_id_caption()),

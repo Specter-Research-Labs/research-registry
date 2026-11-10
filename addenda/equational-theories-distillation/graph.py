@@ -4,9 +4,6 @@ from pathlib import Path
 
 TRUE_STATUSES = frozenset({1, 3, 5, 7})
 FALSE_STATUSES = frozenset({0, 2, 4, 6})
-PROOF_STATUSES = frozenset({2, 3, 6, 7})
-CONJECTURE_STATUSES = frozenset({0, 1, 4, 5})
-UNKNOWN_STATUS = 8
 
 STATUS_NAMES = {
     0: "explicit_conjecture_false",

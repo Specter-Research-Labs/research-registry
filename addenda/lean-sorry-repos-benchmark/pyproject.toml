@@ -18,7 +18,6 @@ Source = "https://github.com/Specter-Research-Labs/research-registry/tree/main/a
 
 [project.scripts]
 lean-sorry-repos-benchmark = "lean_sorry_repos_benchmark.cli:main"
-lean-sorry-split-artifacts = "lean_sorry_repos_benchmark.split_artifacts_cli:main"
 lean-sorry-suite-runner = "lean_sorry_repos_benchmark.suite_runner:main"
 
 [dependency-groups]

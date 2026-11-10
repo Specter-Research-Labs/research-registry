@@ -42,14 +42,12 @@ When source code and prose notes disagree, the executable source wins.
 
 ## Check
 
+Requires Julia 1.11.
+
 ```bash
-cd /path/to/research-registry
-nix develop .#poly-morphogenesis
 cd addenda/poly-morphogenesis
 julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.test()'
 ```
-
-The shell pins Julia 1.11 via `julia_111-bin`.
 
 Optional upstream oracle:
 

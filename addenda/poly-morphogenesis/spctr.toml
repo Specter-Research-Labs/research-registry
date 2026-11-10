@@ -29,17 +29,15 @@ landing = "docs/report-draft.md"
 require_frontmatter = false
 
 [spctr.exec.check]
-description = "Run the Julia parity and CLI test suite in the pinned root flake shell"
-command = ["bash", "-lc", '''set -euo pipefail
-nix develop ../../../#poly-morphogenesis -c julia --project=. -e 'using Pkg; Pkg.test()'
-''']
+description = "Run the Julia parity and CLI test suite"
+command = ["julia", "--project=.", "-e", "using Pkg; Pkg.test()"]
 timeout_sec = 3600
 network = "bootstrap"
-requires = ["nix"]
+requires = ["julia"]
 
 [spctr.runtime]
 platforms = ["linux", "macos"]
-requires = ["nix"]
+requires = ["julia"]
 network = "bootstrap"
 cache_paths = ["Manifest.toml"]
 

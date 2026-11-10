@@ -1,6 +1,6 @@
 # Cortical-engagement scoring contract
 
-This contract pins the experimental commitments of A-013, the lenia-swarm
+This contract pins the experimental commitments of A-014, the lenia-swarm
 TRIBE overlay addendum. Changes to it require an addendum-internal review.
 
 ## Frame

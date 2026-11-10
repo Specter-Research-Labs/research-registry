@@ -5,12 +5,8 @@ description = "Score Lenia creatures by TRIBE-predicted cortical engagement; a c
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=2.1.0,<2.3",
-    "torch>=2.5.1,<2.7",
-    "transformers>=4.45.0",
-    "huggingface-hub>=0.25.0",
     "imageio[ffmpeg]>=2.35.0",
     "pillow>=10.4.0",
-    "pyarrow>=17.0.0",
     "nilearn>=0.10.4",
     "duckdb>=1.0.0",
     "tribev2 @ git+https://github.com/facebookresearch/tribev2.git",

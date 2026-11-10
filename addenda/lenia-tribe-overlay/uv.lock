@@ -917,14 +917,10 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "duckdb" },
-    { name = "huggingface-hub" },
     { name = "imageio", extra = ["ffmpeg"] },
     { name = "nilearn" },
     { name = "numpy" },
     { name = "pillow" },
-    { name = "pyarrow" },
-    { name = "torch" },
-    { name = "transformers" },
     { name = "tribev2" },
 ]
 
@@ -938,14 +934,10 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "duckdb", specifier = ">=1.0.0" },
-    { name = "huggingface-hub", specifier = ">=0.25.0" },
     { name = "imageio", extras = ["ffmpeg"], specifier = ">=2.35.0" },
     { name = "nilearn", specifier = ">=0.10.4" },
     { name = "numpy", specifier = ">=2.1.0,<2.3" },
     { name = "pillow", specifier = ">=10.4.0" },
-    { name = "pyarrow", specifier = ">=17.0.0" },
-    { name = "torch", specifier = ">=2.5.1,<2.7" },
-    { name = "transformers", specifier = ">=4.45.0" },
     { name = "tribev2", git = "https://github.com/facebookresearch/tribev2.git" },
 ]
 

@@ -142,9 +142,7 @@
     "A-008": {
       "next_counter": 4,
       "entries": {
-        "README": "A-008.003",
-        "kitchen-sink-001": "A-008.001",
-        "kitchen-sink-002": "A-008.002"
+        "README": "A-008.003"
       }
     },
     "A-009": {
@@ -158,9 +156,7 @@
       "next_counter": 5,
       "entries": {
         "approach": "A-010.004",
-        "external-review-notes": "A-010.001",
-        "public-benchmark-notes": "A-010.002",
-        "review-package": "A-010.003"
+        "public-benchmark-notes": "A-010.002"
       }
     },
     "A-013": {

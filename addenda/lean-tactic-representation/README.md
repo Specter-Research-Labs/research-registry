@@ -14,7 +14,6 @@ The runnable code is a toy interpreter and visualizer for calculus fragments.
 
 ```bash
 cd addenda/lean-tactic-representation
-nix develop
 uv run ruff check .
 uv run ty check .
 uv run python -m pytest

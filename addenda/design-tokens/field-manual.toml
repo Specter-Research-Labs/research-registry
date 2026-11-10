@@ -1,7 +1,7 @@
 [fonts]
 body = ["IBM Plex Serif"]
-heading = ["IBM Plex Sans"]
-display = ["IBM Plex Sans"]
+heading = ["IBM Plex Serif"]
+display = ["IBM Plex Serif"]
 mono = ["IBM Plex Mono"]
 
 [colors]

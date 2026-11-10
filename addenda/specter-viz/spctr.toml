@@ -29,7 +29,6 @@ support_paths = [
     "addenda/specter-viz/Cargo.lock",
     "addenda/specter-viz/LICENSE",
     "addenda/specter-viz/README.md",
-    "addenda/specter-viz/flake.nix",
     "addenda/specter-viz/spctr.toml",
 ]
 

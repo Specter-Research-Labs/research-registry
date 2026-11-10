@@ -16,14 +16,11 @@ Read `docs/benchmark-card.md` for the row contract and
 
 ```bash
 cd addenda/tinygrad-benchmarks
-nix develop
 uv run ruff check .
 uv run ty check .
 uv run python -m pytest
 uv run python -m tinygrad_benchmarks --help
 ```
-
-`direnv allow` enters the same shell.
 
 ## Workflow
 

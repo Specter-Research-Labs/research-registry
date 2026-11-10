@@ -6,19 +6,11 @@ summary: "WASM-first egui components for research visualization dashboards, with
 
 WASM-first `egui` dashboard components for research visualization.
 
+This library is not under active development.
+
 The crate is UI-focused and works inside any `egui` app. A native desktop app will typically use `eframe`, but `specter-viz` itself only depends on `egui`/`egui_plot`.
 
 MSRV: Rust 1.87.
-
-## Environment
-
-Enter the local project shell from `addenda/specter-viz/`:
-
-```bash
-nix develop
-```
-
-If you use direnv, `direnv allow` is equivalent. The shell auto-runs `cargo fetch --locked`.
 
 ## Install (in this repo)
 
