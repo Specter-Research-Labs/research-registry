@@ -20,7 +20,6 @@ include = [
   "cli.py",
   "core",
   "examples",
-  "lean_tactic_representation.py",
   "render.py",
   "tests",
 ]

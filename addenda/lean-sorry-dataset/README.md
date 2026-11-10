@@ -19,14 +19,10 @@ and materializes a deterministic benchmark index for downstream use in
 ## Install / Check
 ```bash
 cd addenda/lean-sorry-dataset
-nix develop
 uv run ruff check .
 uv run ty check
 uv run python -m pytest
 ```
-
-If you use direnv, `direnv allow` from `addenda/lean-sorry-dataset/` is equivalent. The shell
-auto-runs `uv sync`.
 
 ## Build Benchmark Index
 Example using the public SorryDB deduplicated snapshot:

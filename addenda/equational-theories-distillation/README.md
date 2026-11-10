@@ -18,13 +18,10 @@ Runtime data goes under `../../tmp/equational-theories-distillation/`, unless
 
 ```bash
 cd addenda/equational-theories-distillation
-nix develop
 uv run ruff check .
 uv run ty check .
 uv run python -m pytest
 ```
-
-`direnv allow` enters the same shell and runs `uv sync`.
 
 ## Fetch
 

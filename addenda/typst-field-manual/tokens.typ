@@ -1,8 +1,8 @@
 #let tokens = (
   fonts: (
     body: "IBM Plex Serif",
-    display: "IBM Plex Sans",
-    heading: "IBM Plex Sans",
+    display: "IBM Plex Serif",
+    heading: "IBM Plex Serif",
     mono: "IBM Plex Mono",
   ),
 

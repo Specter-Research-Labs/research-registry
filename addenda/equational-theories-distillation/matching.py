@@ -28,10 +28,6 @@ def find_substitution_instance(source: Equation, target: Equation) -> Substituti
     return None
 
 
-def is_substitution_instance(source: Equation, target: Equation) -> bool:
-    return find_substitution_instance(source, target) is not None
-
-
 def find_contextual_instance(source: Equation, target: Equation) -> SubstitutionMatch | None:
     hole_pair = _extract_hole_pair(target.left, target.right)
     if hole_pair is None:

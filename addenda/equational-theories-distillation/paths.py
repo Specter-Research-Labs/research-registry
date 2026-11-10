@@ -9,10 +9,6 @@ def repository_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
-def addendum_root() -> Path:
-    return Path(__file__).resolve().parents[1]
-
-
 def _env_path(name: str) -> Path | None:
     value = os.environ.get(name)
     if value is None:

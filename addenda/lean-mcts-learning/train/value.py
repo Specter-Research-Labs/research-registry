@@ -3,20 +3,11 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
-import math
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-
-
-def _sigmoid(x: float) -> float:
-    if x >= 0:
-        z = math.exp(-x)
-        return 1.0 / (1.0 + z)
-    z = math.exp(x)
-    return z / (1.0 + z)
 
 
 @dataclass(frozen=True)
