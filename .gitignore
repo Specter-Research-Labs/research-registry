@@ -148,9 +148,6 @@ site/updates/*/index.html
 # Cabinet build output (generated from dossiers/*/docs/ by spctr site cabinet)
 site/cabinet/index.html
 site/cabinet/*/
-site/atlas/public/projects/
-site/atlas/public/published/
-site/atlas/data/published/
 
 # Site data mounts (symlinks to dossier artifact directories)
 site/dossiers/lenia-swarm/compendium/data

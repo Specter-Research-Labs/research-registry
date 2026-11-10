@@ -5,50 +5,11 @@ import XCTest
 import LeniaArchive
 import LeniaCore
 
-final class AtlasPublishTests: XCTestCase {
-    func testAtlasPublishRejectsPendingTaxonomyByDefault() throws {
+final class CompendiumPublishTests: XCTestCase {
+    func testTaxonomyAssignsIDsAndStoresMotionMetrics() throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-atlas-pending-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-
-        let runDir = root.appendingPathComponent("run-001", isDirectory: true)
-        try makeAtlasRunLayout(at: runDir)
-        try writeAtlasJSONL([
-            makeAtlasLibraryEntry(
-                creature: makeAtlasCreature(
-                    id: UUID(uuidString: "41414141-4141-4141-4141-414141414141")!,
-                    name: "pending-taxonomy",
-                    seed: 7
-                ),
-                runID: "run-001"
-            ),
-        ], to: runDir.appendingPathComponent("library/index.jsonl"))
-
-        let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        var index = try IndexCommand.parseAsRoot([
-            "--run-dir", runDir.path,
-            "--db", dbPath,
-            "--rebuild",
-        ])
-        try index.run()
-
-        let outputDir = root.appendingPathComponent("atlas-published", isDirectory: true)
-        var publish = try AtlasPublishCommand.parseAsRoot([
-            "--db", dbPath,
-            "--output", outputDir.path,
-            "--skip-media",
-        ])
-
-        XCTAssertThrowsError(try publish.run()) { error in
-            XCTAssertTrue(String(describing: error).contains("requires taxonomy"))
-        }
-    }
-
-    func testTaxonomyAndAtlasPublishWriteCatalogWithMotionMetrics() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-atlas-publish-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("lenia-taxonomy-\(UUID().uuidString)", isDirectory: true)
         defer { try? fm.removeItem(at: root) }
 
         let runDir = root.appendingPathComponent("run-001", isDirectory: true)
@@ -58,7 +19,7 @@ final class AtlasPublishTests: XCTestCase {
             makeAtlasLibraryEntry(
                 creature: makeAtlasCreature(
                     id: UUID(uuidString: "51515151-5151-5151-5151-515151515151")!,
-                    name: "atlas-glider",
+                    name: "taxonomy-glider",
                     seed: 13
                 ),
                 runID: "run-001"
@@ -95,130 +56,6 @@ final class AtlasPublishTests: XCTestCase {
         XCTAssertEqual(sqlite3_column_double(stmt, 5), 0.012, accuracy: 1e-6)
         XCTAssertEqual(sqlite3_column_double(stmt, 6), -0.004, accuracy: 1e-6)
         XCTAssertEqual(sqlite3_column_double(stmt, 7), -0.32175055, accuracy: 1e-6)
-
-        let outputDir = root.appendingPathComponent("atlas-published", isDirectory: true)
-        var publish = try AtlasPublishCommand.parseAsRoot([
-            "--db", dbPath,
-            "--output", outputDir.path,
-            "--skip-media",
-        ])
-        try publish.run()
-
-        let catalogURL = outputDir.appendingPathComponent("catalog.json")
-        XCTAssertTrue(fm.fileExists(atPath: outputDir.appendingPathComponent("catalog.sqlite").path))
-        let rawCatalog = try Data(contentsOf: catalogURL)
-        let catalog = try XCTUnwrap(JSONSerialization.jsonObject(with: rawCatalog) as? [String: Any])
-        let revision = try XCTUnwrap(catalog["revision"] as? [String: Any])
-        XCTAssertEqual(revision["creatureCount"] as? Int, 1)
-
-        let taxa = try XCTUnwrap(catalog["taxa"] as? [[String: Any]])
-        XCTAssertEqual(taxa.count, 3)
-
-        let runs = try XCTUnwrap(catalog["runs"] as? [[String: Any]])
-        XCTAssertEqual(runs.count, 1)
-
-        let creatures = try XCTUnwrap(catalog["creatures"] as? [[String: Any]])
-        XCTAssertEqual(creatures.count, 1)
-        let creature = try XCTUnwrap(creatures.first)
-        XCTAssertEqual(creature["id"] as? String, "51515151-5151-5151-5151-515151515151")
-        XCTAssertEqual(creature["familyId"] as? String, "fam-translator-soliton")
-        XCTAssertEqual(creature["genusId"] as? String, "fam-translator-soliton.speed-fast.path-meander.cx-mid.mass-small")
-
-        let metrics = try XCTUnwrap(creature["metrics"] as? [String: Any])
-        let velocityX = try XCTUnwrap(metrics["velocityX"] as? Double)
-        let velocityY = try XCTUnwrap(metrics["velocityY"] as? Double)
-        let headingRad = try XCTUnwrap(metrics["headingRad"] as? Double)
-        XCTAssertEqual(velocityX, 0.012, accuracy: 1e-6)
-        XCTAssertEqual(velocityY, -0.004, accuracy: 1e-6)
-        XCTAssertEqual(headingRad, -0.32175055, accuracy: 1e-6)
-    }
-
-    func testAtlasPublishWithMediaWritesSQLiteCatalogAndAnatomyAssets() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("lenia-atlas-media-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-
-        let runDir = root.appendingPathComponent("run-001", isDirectory: true)
-        try makeAtlasRunLayout(at: runDir)
-        try installAtlasRenderConfigs(at: runDir)
-
-        try writeAtlasJSONL([
-            makeAtlasLibraryEntry(
-                creature: makeAtlasCreature(
-                    id: UUID(uuidString: "61616161-6161-6161-6161-616161616161")!,
-                    name: "atlas-render",
-                    seed: 17,
-                    patches: [PatchConfig(center: [64, 64], size: 40)],
-                    aUniform: UniformRange(low: 0, high: 1)
-                ),
-                runID: "run-001"
-            ),
-        ], to: runDir.appendingPathComponent("library/index.jsonl"))
-
-        let dbPath = root.appendingPathComponent("compendium.sqlite").path
-        var index = try IndexCommand.parseAsRoot([
-            "--run-dir", runDir.path,
-            "--db", dbPath,
-            "--rebuild",
-        ])
-        try index.run()
-
-        var taxonomy = try TaxonomyCommand.parseAsRoot([
-            "--db", dbPath,
-        ])
-        try taxonomy.run()
-
-        let outputDir = root.appendingPathComponent("atlas-published", isDirectory: true)
-        let creatureDir = outputDir
-            .appendingPathComponent("media/creatures", isDirectory: true)
-            .appendingPathComponent("61616161-6161-6161-6161-616161616161", isDirectory: true)
-        let mediaRoot = outputDir.appendingPathComponent("media", isDirectory: true)
-        try fm.createDirectory(at: creatureDir, withIntermediateDirectories: true)
-
-        let baseConfigData = try Data(contentsOf: runDir.appendingPathComponent("config.json"))
-        let runtimeConfig = try loadRuntimeConfig(from: baseConfigData)
-        let frames = makeSyntheticFrames(width: runtimeConfig.sx, height: runtimeConfig.sy, count: 6)
-        let creature = makeAtlasCreature(
-            id: UUID(uuidString: "61616161-6161-6161-6161-616161616161")!,
-            name: "atlas-render",
-            seed: 17,
-            patches: [PatchConfig(center: [64, 64], size: 40)],
-            aUniform: UniformRange(low: 0, high: 1)
-        )
-        let parsedPublisher = try AtlasPublishCommand.parseAsRoot([
-            "--db", dbPath,
-            "--output", outputDir.path,
-            "--frame-budget", "6",
-            "--fps", "12",
-        ])
-        let publisher = try XCTUnwrap(parsedPublisher as? AtlasPublishCommand)
-        let rendered = try publisher.writeAtlasRenderedMedia(
-            creatureId: creature.id.uuidString,
-            genotype: creature.genotype,
-            runtimeConfig: runtimeConfig,
-            selectedFrames: frames,
-            mediaRoot: mediaRoot,
-            creatureDir: creatureDir,
-            fps: 12
-        )
-
-        for fileName in [
-            "poster.png",
-            "field.png",
-            "delta.png",
-            "neighbor.png",
-            "kernel.png",
-            "frames.bin",
-            "replay.json",
-        ] {
-            XCTAssertTrue(fm.fileExists(atPath: creatureDir.appendingPathComponent(fileName).path), "Missing \(fileName)")
-        }
-        XCTAssertEqual(rendered.media.anatomy.fieldPath, "media/creatures/61616161-6161-6161-6161-616161616161/field.png")
-        XCTAssertEqual(rendered.media.anatomy.kernelPath, "media/creatures/61616161-6161-6161-6161-616161616161/kernel.png")
-        XCTAssertFalse(rendered.telemetry.trail.isEmpty)
-        XCTAssertGreaterThan(rendered.telemetry.centroid.x, 0)
-        XCTAssertLessThan(rendered.telemetry.centroid.x, 1)
     }
 
     func testCompendiumPublishWritesStageMediaAndReplayPayloads() throws {
@@ -678,31 +515,3 @@ private let leniaSwarmPackageRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
     .deletingLastPathComponent()
-
-private func makeSyntheticFrames(width: Int, height: Int, count: Int) -> [Data] {
-    var frames: [Data] = []
-    frames.reserveCapacity(count)
-
-    for frameIndex in 0..<count {
-        var bytes = [UInt8](repeating: 0, count: width * height)
-        let centerX = Float(width) * (0.36 + 0.06 * Float(frameIndex))
-        let centerY = Float(height) * (0.56 - 0.035 * Float(frameIndex))
-        let tailX = centerX - 18
-        let tailY = centerY + 10
-
-        for y in 0..<height {
-            let fy = Float(y)
-            for x in 0..<width {
-                let fx = Float(x)
-                let core = exp(-((fx - centerX) * (fx - centerX) + (fy - centerY) * (fy - centerY)) / 180)
-                let tail = exp(-((fx - tailX) * (fx - tailX) + (fy - tailY) * (fy - tailY)) / 320)
-                let wake = exp(-((fx - (centerX - 10)) * (fx - (centerX - 10)) + (fy - (centerY - 12)) * (fy - (centerY - 12))) / 420)
-                let value = min(core * 0.9 + tail * 0.45 + wake * 0.3, 1.0)
-                bytes[y * width + x] = UInt8(max(0, min(255, Int(value * 255 + 0.5))))
-            }
-        }
-        frames.append(Data(bytes))
-    }
-
-    return frames
-}

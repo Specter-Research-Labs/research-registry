@@ -245,7 +245,7 @@ struct DiscoverCommands: AsyncParsableCommand {
     )
 }
 
-// Media, ecology, atlas and compendium commands render through Metal and ImageIO, so Linux builds leave them out.
+// Media, ecology and compendium commands render through Metal and ImageIO, so Linux builds leave them out.
 #if canImport(Metal)
 private let analyzeSubcommands: [any ParsableCommand.Type] = [
     AnalyzeWarehouseCommand.self,
@@ -256,7 +256,6 @@ private let publishSubcommands: [any ParsableCommand.Type] = [
     ReplayCommand.self,
     MediaCommand.self,
     CompendiumPublishCommand.self,
-    AtlasPublishCommand.self,
 ]
 #else
 private let analyzeSubcommands: [any ParsableCommand.Type] = [
@@ -314,7 +313,7 @@ struct InterveneCommands: AsyncParsableCommand {
 struct PublishCommands: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "publish",
-        abstract: "Replay, media, compendium, and atlas export surfaces",
+        abstract: "Replay, media, and compendium export surfaces",
         subcommands: publishSubcommands
     )
 }

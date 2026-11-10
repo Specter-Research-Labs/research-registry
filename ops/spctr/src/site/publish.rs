@@ -86,17 +86,14 @@ fn emit_archived_publish_result(
 // in the repository but never reach the public site or its sitemaps.
 pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
     "assets/blog/lenia-morphospace-obstacle-response",
-    "atlas",
     "dashboards/wonton-soup/dist",
     "dashboards/wonton-soup/node_modules",
     "dashboards/wonton-soup/src",
     "cabinet/jolt-material-memory",
     "dossiers/jolt-material-memory",
     "dossiers/lenia-swarm/compendium",
-    "dossiers/lenia-swarm/fiber-theory",
     "review",
     "status",
-    "style-study",
     "templates",
     "updates",
 ];
@@ -104,14 +101,14 @@ pub(crate) const UNPUBLISHED_SITE_DIRS: &[&str] = &[
 // Build inputs, orphans, and withdrawn figures that sit next to published
 // pages. Only the built dashboard ships.
 pub(crate) const UNPUBLISHED_SITE_FILES: &[&str] = &[
-    "assets/research-material.svg",
+    "assets/logo-witch-compact.ascii.txt",
     "assets/wonton-soup/dossier-evidence.json",
     "dashboards/wonton-soup/package-lock.json",
     "dashboards/wonton-soup/package.json",
     "dashboards/wonton-soup/tsconfig.json",
     "dashboards/wonton-soup/validate_manifest.py",
     "dashboards/wonton-soup/vite.config.ts",
-    "dossiers/wonton-soup/paper.pdf",
+    "publications.json",
 ];
 
 pub fn publish_site(repo_root: &Utf8Path, release_id: Option<&str>) -> Result<()> {
@@ -1143,7 +1140,6 @@ mod tests {
         let root = Utf8Path::from_path(root.path()).unwrap();
         let plan = site_publish_plan(root).unwrap();
         for path in [
-            "/atlas/",
             "/assets/blog/lenia-morphospace-obstacle-response/",
             "/dashboards/wonton-soup/dist/",
             "/dashboards/wonton-soup/node_modules/",
@@ -1152,15 +1148,13 @@ mod tests {
             "/dashboards/wonton-soup/tsconfig.json",
             "/dashboards/wonton-soup/validate_manifest.py",
             "/dashboards/wonton-soup/vite.config.ts",
+            "/publications.json",
+            "/assets/logo-witch-compact.ascii.txt",
             "/cabinet/jolt-material-memory/",
             "/dossiers/jolt-material-memory/",
-            "/assets/research-material.svg",
-            "/dossiers/wonton-soup/paper.pdf",
             "/dossiers/lenia-swarm/compendium/",
-            "/dossiers/lenia-swarm/fiber-theory/",
             "/review/",
             "/status/",
-            "/style-study/",
             "/templates/",
             "/updates/",
             "*-template.html",
