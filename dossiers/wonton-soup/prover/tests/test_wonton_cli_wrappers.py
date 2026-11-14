@@ -517,32 +517,25 @@ def test_postprocess_single_run_dry_run_skips_processing(
     assert not (run_dir / "postprocess_metrics.json").exists()
 
 
-def test_verify_run_local_wrapper_passes_args(monkeypatch, tmp_path) -> None:
+def test_verify_run_local_wrapper_passes_args(monkeypatch, tmp_path, capsys) -> None:
     import analysis.verify_run_local as verify_mod
     import wonton
+    from analysis.logs import ProviderRun
 
     captured: dict[str, object] = {}
 
-    def fake_verify_run_local(run_dir, *, theorem_names, limit, lean_project, force):
+    def fake_verify_run_local(run_dir, *, theorem_names, limit, lean_project):
         captured["run_dir"] = run_dir
         captured["theorem_names"] = theorem_names
         captured["limit"] = limit
         captured["lean_project"] = lean_project
-        captured["force"] = force
+        check = SimpleNamespace(status="checked")
         return [
-            {
-                "run_dir": str(run_dir),
-                "provider": None,
-                "counts": {
-                    "eligible": 1,
-                    "verified": 1,
-                    "candidate_failed": 0,
-                    "replay_failed": 0,
-                    "input_failed": 0,
-                    "skipped_existing": 0,
-                    "skipped_unsolved": 0,
-                },
-            }
+            verify_mod.ProviderVerdicts(
+                provider_run=ProviderRun(run_dir=run_dir, provider=None),
+                verdicts_path=run_dir / verify_mod.VERDICTS_NAME,
+                checks=[(None, check), (None, check)],
+            )
         ]
 
     monkeypatch.setattr(verify_mod, "verify_run_local", fake_verify_run_local)
@@ -552,14 +545,13 @@ def test_verify_run_local_wrapper_passes_args(monkeypatch, tmp_path) -> None:
         theorem=["t1", "t2"],
         limit=5,
         lean_project=str(tmp_path / "lean_project"),
-        force=True,
     )
 
     assert captured["run_dir"] == tmp_path.resolve()
     assert captured["theorem_names"] == ["t1", "t2"]
     assert captured["limit"] == 5
     assert captured["lean_project"] == (tmp_path / "lean_project").resolve()
-    assert captured["force"] is True
+    assert "provider=single: variants=2 checked=2" in capsys.readouterr().out
 
 
 def test_inspect_proof_ir_wrapper_passes_configs_and_writes_output(monkeypatch, tmp_path) -> None:

@@ -1143,48 +1143,35 @@ def verify_run_local_command(
     limit: int | None = typer.Option(
         None,
         "--limit",
-        help="Maximum solved theorems to verify per provider",
+        help="Maximum theorems with a closed search tree to verify per provider",
     ),
     lean_project: str | None = typer.Option(
         None,
         "--lean-project",
         help="Override Lean project path recorded in run_config.json",
     ),
-    force: bool = typer.Option(
-        False,
-        "--force",
-        help="Overwrite existing theorem-level verification artifacts",
-    ),
 ) -> None:
-    from analysis.verify_run_local import VERIFY_LOCAL_SUMMARY_NAME, verify_run_local
+    """Kernel-check every tree-solved variant and write kernel_verdicts.parquet."""
+    from collections import Counter
+
+    from analysis.verify_run_local import verify_run_local
 
     target = Path(os.path.expanduser(run_dir)).resolve()
     if not target.exists():
         _die(f"Run dir not found: {target}")
 
-    reports = verify_run_local(
+    results = verify_run_local(
         target,
         theorem_names=theorem,
         limit=limit,
         lean_project=Path(lean_project).expanduser().resolve() if lean_project else None,
-        force=force,
     )
-    for report in reports:
-        counts = report.get("counts") if isinstance(report, dict) else None
-        run_dir_value = report.get("run_dir") if isinstance(report, dict) else None
-        provider = report.get("provider") if isinstance(report, dict) else None
-        if not isinstance(counts, dict) or not isinstance(run_dir_value, str):
-            raise ValueError("verify-run-local produced an invalid report payload")
-        label = _provider_label(provider)
+    for result in results:
+        counts = Counter(check.status for _, check in result.checks)
+        statuses = " ".join(f"{status}={n}" for status, n in sorted(counts.items()))
         typer.echo(
-            f"{label}: "
-            f"verified={counts.get('verified', 0)}/{counts.get('eligible', 0)} "
-            f"candidate_failed={counts.get('candidate_failed', 0)} "
-            f"replay_failed={counts.get('replay_failed', 0)} "
-            f"input_failed={counts.get('input_failed', 0)} "
-            f"skipped_existing={counts.get('skipped_existing', 0)} "
-            f"skipped_unsolved={counts.get('skipped_unsolved', 0)} "
-            f"-> {Path(run_dir_value) / VERIFY_LOCAL_SUMMARY_NAME}"
+            f"{_provider_label(result.provider_run.provider)}: "
+            f"variants={len(result.checks)} {statuses} -> {result.verdicts_path}"
         )
 
 
