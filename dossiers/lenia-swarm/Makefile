@@ -17,6 +17,7 @@ typecheck:
 
 test-python:
 	uv run pytest
+	cd tt_backend && uv run pytest
 
 smoke-deterministic:
 	./ops/deterministic-smoke.sh

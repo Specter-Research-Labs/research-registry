@@ -115,7 +115,7 @@ make check
 Useful individual targets:
 
 - `make check-swift`: package-level Swift tests.
-- `make check-python`: Ruff, Ty, and Pytest over `lenia_swarm_analysis/` and `Tests/`.
+- `make check-python`: Ruff and Ty over `lenia_swarm_analysis/` and `Tests/`, then Pytest there and in `tt_backend/`.
 - `make smoke-deterministic`: fixed-seed local determinism check.
 - `make smoke-cluster`: controller+worker smoke run.
 
