@@ -388,6 +388,89 @@ fn term_in_heading_is_an_error() {
     );
 }
 
+fn build_with_claims(body: &str) -> anyhow::Result<String> {
+    use sha2::{Digest, Sha256};
+    let temp = tempfile::tempdir().unwrap();
+    let dir = Utf8Path::from_path(temp.path()).unwrap();
+    let artifact = r#"{"closed": 367, "total": 1064}"#;
+    let sha = format!("{:x}", Sha256::digest(artifact.as_bytes()));
+    write(dir, "assets/derived.json", artifact);
+    write(
+        dir,
+        "claims.json",
+        &format!(
+            r#"{{"recovered": {{"value": "367 of 1,064", "display": "{{0}} of {{1}}",
+              "sources": [{{"path": "assets/derived.json", "pointer": "/closed", "sha256": "{sha}"}},
+                          {{"path": "assets/derived.json", "pointer": "/total", "sha256": "{sha}", "format": {{"thousands": true}}}}],
+              "run": "wonton-postfix-001", "engine_ids": ["reprover-7f3a"], "verified": "2026-11-14", "status": "current"}}}}"#
+        ),
+    );
+    write(
+        dir,
+        "report.md",
+        &report(body).replace(
+            "the pair *arrested*",
+            "the pair *arrested* in {claim:recovered} runs",
+        ),
+    );
+    write(dir, "refs.bib", BIB);
+    spctr::doc::build(&repo_root(), &[dir.to_owned()], Target::Lab, None)?;
+    Ok(fs::read_to_string(dir.join("report.html")).unwrap())
+}
+
+#[test]
+fn claims_render_as_notes_and_receipts() {
+    let html = build_with_claims(
+        "# One\n\nWe recovered {claim:recovered}.[^n]\n\n[^n]: Again {claim:recovered}.\n",
+    )
+    .unwrap();
+    let note = r#"<span class="rk-term rk-claim" tabindex="0" data-claim="RPT-001:recovered">367 of 1,064<span class="rk-term-note rk-claim-note" role="tooltip"><span class="rk-claim-row"><span>Claim</span>recovered</span><span class="rk-claim-row"><span>Run</span>wonton-postfix-001</span><span class="rk-claim-row"><span>Engine</span>reprover-7f3a</span><span class="rk-claim-row"><span>Source</span>assets/derived.json#/closed</span><span class="rk-claim-row"><span>Source</span>assets/derived.json#/total</span><span class="rk-claim-row"><span>Verified</span>2026-11-14</span></span></span>"#;
+    assert!(html.contains(&format!("We recovered {note}.")), "{html}");
+    assert!(html.contains(&format!("<li id=\"note-1\">Again {note}.")));
+    let abstract_start = html.find(r#"<section class="rk-abstract""#).unwrap();
+    assert!(html[abstract_start..].contains(&format!("in {note} runs")));
+    assert!(html.contains(r##"<li><a href="#data">Data and receipts</a></li>"##));
+    assert!(html.contains(r#"<li><span>367 of 1,064 <span class="rk-claim-key">recovered</span></span> <span class="rk-path">wonton-postfix-001 · reprover-7f3a · assets/derived.json#/closed, assets/derived.json#/total · verified 2026-11-14</span></li>"#));
+    assert_eq!(html.matches("rk-claim-key\">recovered").count(), 1);
+    assert!(!html.contains("{claim"));
+    assert!(!html.contains("<script"));
+}
+
+#[test]
+fn claim_in_heading_is_an_error() {
+    let error = format!(
+        "{:#}",
+        build_with_claims("# Recovered {claim:recovered}\n\nText.\n").unwrap_err()
+    );
+    assert!(
+        error.contains("claims are not allowed in headings"),
+        "{error}"
+    );
+}
+
+#[test]
+fn claim_in_raw_html_or_code_is_an_error() {
+    for body in [
+        "# One\n\n<abbr title=\"{claim:recovered}\">n</abbr>\n",
+        "# One\n\n`{claim:recovered}`\n",
+    ] {
+        let error = format!("{:#}", build_with_claims(body).unwrap_err());
+        assert!(
+            error.contains("a claim sits in raw HTML or code"),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn stale_claim_stops_the_build() {
+    let error = format!(
+        "{:#}",
+        build_with_claims("# One\n\n{claim:recoverd}\n").unwrap_err()
+    );
+    assert!(error.contains("has no key 'recoverd'"), "{error}");
+}
+
 #[test]
 fn malformed_glossary_entries_are_errors() {
     let missing = term_error(
