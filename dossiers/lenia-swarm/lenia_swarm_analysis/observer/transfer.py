@@ -9,7 +9,7 @@ D_dyn[a, b] = L_dyn[a, b] - L_dyn[b, b].
 
 Writes transfer_<observer>.npz (L, L_dyn, campaigns) into the measure directory.
 
-Usage: lenia-swarm-observer transfer --measure <measure dir> --observer <name> --device mps
+Usage: lenia-swarm-analysis observer transfer --measure <measure dir> --observer <name> --device mps
 """
 
 from __future__ import annotations
@@ -58,7 +58,7 @@ def pair_losses(params: list[torch.Tensor], x: torch.Tensor, target: torch.Tenso
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="lenia-swarm-observer transfer", description=__doc__,
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis observer transfer", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--measure", type=Path, required=True)
     parser.add_argument("--observer", required=True)

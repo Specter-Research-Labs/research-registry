@@ -553,7 +553,10 @@ def safe_filename(code: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Extract Chakazul Lenia preset taxonomy and cells")
+    parser = argparse.ArgumentParser(
+        prog="lenia-swarm-analysis chakazul-presets",
+        description="Extract Chakazul Lenia preset taxonomy and cells",
+    )
     parser.add_argument("--input", type=Path, help="Local Lenia-LifeForms.js source")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--qd-config-dir", type=Path)
@@ -593,7 +596,3 @@ def main(argv: list[str] | None = None) -> int:
         )
     print(f"wrote {len(presets)} presets to {args.output_dir}")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

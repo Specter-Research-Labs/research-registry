@@ -16,7 +16,11 @@ from typing import Any
 import numpy as np
 from duckdb import DuckDBPyConnection
 
-from lenia_swarm_analysis.transformation_metrics import robust_center_scale, zscore
+from lenia_swarm_analysis.transformation_metrics import (
+    label_bodies,
+    robust_center_scale,
+    zscore,
+)
 
 from .ingest_dryad_fish import SOURCE_ID as DRYAD_FISH_SOURCE_ID
 from .ingest_embryomaker import (
@@ -321,44 +325,8 @@ def _rasterized_projected_shape(
 
 
 def _component_cells(mask: np.ndarray) -> list[np.ndarray]:
-    visited = np.zeros(mask.shape, dtype=bool)
-    components: list[np.ndarray] = []
-    height, width = mask.shape
-    neighbor_offsets = (
-        (-1, -1),
-        (-1, 0),
-        (-1, 1),
-        (0, -1),
-        (0, 1),
-        (1, -1),
-        (1, 0),
-        (1, 1),
-    )
-    for start_y, start_x in np.argwhere(mask):
-        if visited[start_y, start_x]:
-            continue
-        stack = [(int(start_y), int(start_x))]
-        visited[start_y, start_x] = True
-        cells: list[tuple[int, int]] = []
-        while stack:
-            y, x = stack.pop()
-            cells.append((y, x))
-            for dy, dx in neighbor_offsets:
-                next_y = y + dy
-                next_x = x + dx
-                if (
-                    next_y < 0
-                    or next_x < 0
-                    or next_y >= height
-                    or next_x >= width
-                    or visited[next_y, next_x]
-                    or not mask[next_y, next_x]
-                ):
-                    continue
-                visited[next_y, next_x] = True
-                stack.append((next_y, next_x))
-        components.append(np.asarray(cells, dtype=np.int64))
-    return components
+    labels, count = label_bodies(mask)
+    return [np.argwhere(labels == label) for label in range(1, count + 1)]
 
 
 def _interior_background_component_count(mask: np.ndarray) -> int:
@@ -1029,14 +997,15 @@ def _collect_all_fish_rows(
     return [row for row in metadata_rows if row.study_id != study_id] + selected_rows
 
 
-def _axis_stats(rows: list[_CommonMorphologyRow]) -> dict[str, dict[str, float]]:
-    stats: dict[str, dict[str, float]] = {}
+def _axis_stats(rows: list[_CommonMorphologyRow]) -> dict[str, dict[str, Any]]:
+    stats: dict[str, dict[str, Any]] = {}
     for axis_id in AXIS_IDS:
         values = [row.values[axis_id] for row in rows]
-        center, scale = robust_center_scale(values)
+        robust = robust_center_scale(values)
         stats[axis_id] = {
-            "center": center,
-            "scale": scale,
+            "center": robust.center,
+            "scale": robust.scale,
+            "estimator": robust.estimator,
             "min": min(values),
             "max": max(values),
         }
@@ -1045,7 +1014,7 @@ def _axis_stats(rows: list[_CommonMorphologyRow]) -> dict[str, dict[str, float]]
 
 def _existing_axis_stats(
     connection: DuckDBPyConnection,
-) -> dict[str, dict[str, float]] | None:
+) -> dict[str, dict[str, Any]] | None:
     rows = connection.execute(
         """
         SELECT axis_id, metadata_json
@@ -1057,7 +1026,7 @@ def _existing_axis_stats(
     if len(rows) < len(AXIS_IDS):
         return None
 
-    stats: dict[str, dict[str, float]] = {}
+    stats: dict[str, dict[str, Any]] = {}
     for axis_id, metadata_json in rows:
         axis_id = str(axis_id)
         if axis_id not in AXIS_IDS:
@@ -1066,6 +1035,7 @@ def _existing_axis_stats(
         try:
             center = float(metadata["robustCenter"])
             scale = float(metadata["robustScale"])
+            estimator = str(metadata["robustScaleEstimator"])
             raw_min = float(metadata["rawMin"])
             raw_max = float(metadata["rawMax"])
         except (KeyError, TypeError, ValueError):
@@ -1075,6 +1045,7 @@ def _existing_axis_stats(
         stats[axis_id] = {
             "center": center,
             "scale": scale,
+            "estimator": estimator,
             "min": raw_min,
             "max": raw_max,
         }
@@ -1383,6 +1354,7 @@ def derive_common_morphology(
                     "positiveMeaning": spec["positiveMeaning"],
                     "robustCenter": stats[str(spec["id"])]["center"],
                     "robustScale": stats[str(spec["id"])]["scale"],
+                    "robustScaleEstimator": stats[str(spec["id"])]["estimator"],
                     "rawMin": stats[str(spec["id"])]["min"],
                     "rawMax": stats[str(spec["id"])]["max"],
                 },

@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
+from lenia_swarm_analysis import DOSSIER_ROOT
 
 _HARVEST = DOSSIER_ROOT / ("artifacts/flow-universe-runs/track1-20260520/"
                           "track1b-2c10-r7-10-initshift-8192-s4090112/results.jsonl")
@@ -74,7 +74,8 @@ def _scatter(scores: np.ndarray, color_by: np.ndarray, out_png: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis anatomical-compiler functional-morphospace",
+                                     description=__doc__)
     parser.add_argument("--harvest", type=Path, default=_HARVEST)
     parser.add_argument(
         "--output", type=Path, default=DOSSIER_ROOT / "outputs/anatomical-compiler/functional-morphospace"
@@ -106,7 +107,3 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {pc}: {top}")
     print(f"wrote {out_dir}/functional_morphospace.png")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

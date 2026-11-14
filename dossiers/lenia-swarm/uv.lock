@@ -505,9 +505,9 @@ observer = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "lenia-swarm-analysis", extra = ["observer"] },
     { name = "pytest" },
     { name = "ruff" },
-    { name = "torch" },
     { name = "ty" },
 ]
 
@@ -526,9 +526,9 @@ provides-extras = ["observer"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "lenia-swarm-analysis", extras = ["observer"] },
     { name = "pytest", specifier = ">=8.3.0" },
     { name = "ruff", specifier = ">=0.11.0" },
-    { name = "torch", specifier = ">=2.2" },
     { name = "ty", specifier = ">=0.0.1a14" },
 ]
 

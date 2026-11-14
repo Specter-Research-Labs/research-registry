@@ -24,17 +24,20 @@ from pathlib import Path
 
 import numpy as np
 
+from .. import LENIA_CLI
 from ..trace_codec import state_patch as build_state_patch
 from ..trace_codec import state_patch_values
-from .family_pipeline import CLI, CONFIG_ROOT
+from .family_pipeline import CONFIG_ROOT
 from .study import FIGURES_DIR, STUDY_ROOT
 
 # scutidae-S4-a is a verified stable, localized, non-spreading single-channel Flow-Lenia soliton
 # (one component, occupancy ~0.06, unchanged from 600 to 1200 steps), unlike the orbium-parity
 # config which fragments. Its growth knobs (m~0.42, s~0.088) sit on the thin soliton tongue between
 # the explode and dead regimes, the right place to look for the cusp where those two folds meet.
-BASE_CONFIG = next(
-    CONFIG_ROOT.glob("**/Scutidae-S4-a-qd24-additive-native-parity-mlx.json")
+BASE_CONFIG = (
+    CONFIG_ROOT
+    / "track1_section2_scutidae_s3s4_species_panel_20260525"
+    / "Scutidae-S4-a-qd24-additive-native-parity-mlx.json"
 )
 M_RANGE = (0.30, 0.55)
 S_RANGE = (0.03, 0.13)
@@ -85,7 +88,7 @@ def _run_point(base: dict, m: float, s: float, amp: float, work: Path, search: P
     out = work / "o"
     shutil.rmtree(out, ignore_errors=True)
     subprocess.run(
-        [str(CLI), "discover", "local", "--config", str(cfg_path), "--search", str(search),
+        [str(LENIA_CLI), "discover", "local", "--config", str(cfg_path), "--search", str(search),
          "--backend", "mlx", "--no-promotion", "--output", str(out)],
         capture_output=True, text=True,
     )
@@ -121,7 +124,7 @@ def sweep() -> None:
         for f in fields:
             save[f"{f}__{amp}"] = data[amp][f]
     STUDY_ROOT.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(RESULT, **save)
+    np.savez_compressed(RESULT, allow_pickle=False, **save)
     print(f"wrote {RESULT}")
 
 
@@ -171,7 +174,7 @@ def render() -> None:
     show(ax[1, 1], np.ma.masked_invalid(speed), "speed (movers)", cmap="inferno")
     im = ax[1, 2].imshow(bistable, origin="lower", extent=ext, aspect="auto", cmap="Reds",
                          vmin=0, vmax=1)
-    ax[1, 2].contour(np.linspace(*ext[:2], len(ms)), np.linspace(*ext[2:], len(ss)),
+    ax[1, 2].contour(np.linspace(ext[0], ext[1], len(ms)), np.linspace(ext[2], ext[3], len(ss)),
                      reg_full, levels=[0.5, 1.5], colors="cyan", linewidths=1.0)
     ax[1, 2].set_title("bistable wedge: full seed lives, half seed dies\n(cyan = full-seed regime "
                        "boundaries; a narrowing wedge = cusp)", fontsize=11)

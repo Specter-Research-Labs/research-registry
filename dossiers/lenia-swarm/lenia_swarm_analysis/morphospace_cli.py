@@ -684,7 +684,7 @@ def summarize_track1_raw_packet(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="lenia-swarm-morphospace",
+        prog="lenia-swarm-analysis morphospace",
         description="Canonical warehouse lifecycle for lenia-swarm morphospace analysis",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1359,7 +1359,3 @@ def main(argv: list[str] | None = None) -> int:
     payload = args.handler(args)
     _print_payload(payload, as_json=bool(args.json))
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

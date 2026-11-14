@@ -65,7 +65,7 @@ def build() -> None:
     conn.execute("SET memory_limit='8GB'")
     conn.execute("SET threads=4")
 
-    colors = plt.cm.tab10(np.linspace(0, 1, TOP_BASINS))
+    colors = matplotlib.colormaps["tab10"](np.linspace(0, 1, TOP_BASINS))
     fig = plt.figure(figsize=(15, 5.2 * len(CONFIGS)))
     label_field_pts = np.stack([mesh_x, mesh_y], axis=-1)  # (GRID, GRID, 2)
 
@@ -131,7 +131,7 @@ def build() -> None:
 
     fig.suptitle("Computed Waddington landscape per rule: 3D quasi-potential with population "
                  "(left), top-down basins + drift flow + occupancy (right)", fontsize=13)
-    fig.tight_layout(rect=[0, 0, 1, 0.99])
+    fig.tight_layout(rect=(0, 0, 1, 0.99))
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT, dpi=130)
     plt.close(fig)

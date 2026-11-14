@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
+from lenia_swarm_analysis import DOSSIER_ROOT
 from lenia_swarm_analysis.anatomical_compiler.functional_morphospace import _HARVEST, _pca
 
 _SHAPE_METRICS = (
@@ -76,7 +76,8 @@ def _scatter(actual: np.ndarray, pred: np.ndarray, r2: float, out_png: Path) -> 
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis anatomical-compiler shape-function-coupling",
+                                     description=__doc__)
     parser.add_argument("--harvest", type=Path, default=_HARVEST)
     parser.add_argument(
         "--output", type=Path, default=DOSSIER_ROOT / "outputs/anatomical-compiler/functional-morphospace"
@@ -122,7 +123,3 @@ def main(argv: list[str] | None = None) -> int:
     print("  per metric: " + "  ".join(f"{k}={v:.2f}" for k, v in metric_r2.items()))
     print(f"wrote {out_dir}/shape_predicts_function.png")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

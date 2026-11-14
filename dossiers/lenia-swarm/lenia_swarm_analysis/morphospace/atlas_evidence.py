@@ -178,16 +178,12 @@ def build_atlas_evidence_packet(
     if not isinstance(validation_rows, list):
         validation_rows = []
 
-    common_summary = (
-        common_tda.get("summary")
-        if isinstance(common_tda.get("summary"), dict)
-        else {}
-    )
-    terminal_summary = (
-        terminal_tda.get("summary")
-        if terminal_tda is not None and isinstance(terminal_tda.get("summary"), dict)
-        else {}
-    )
+    common_summary = common_tda.get("summary")
+    if not isinstance(common_summary, dict):
+        common_summary = {}
+    terminal_summary = None if terminal_tda is None else terminal_tda.get("summary")
+    if not isinstance(terminal_summary, dict):
+        terminal_summary = {}
 
     return {
         "packetKind": "fl2c20_motion_atlas_evidence_v1",

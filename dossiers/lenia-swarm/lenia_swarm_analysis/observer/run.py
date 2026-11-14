@@ -24,6 +24,7 @@ class MeasureRun:
         raw = json.loads((path / "config.json").read_text())
         replay = Path(raw.pop("replay"))
         raw.pop("device")
+        raw.pop("held_out_replay")
         config = Config.from_dict(raw)
         campaigns = [json.loads(line)["campaign"] for line in (path / "creatures.jsonl").read_text().splitlines()]
         return cls(path, config, replay, campaigns)

@@ -210,8 +210,11 @@ def render(
     return summary
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="lenia-swarm-analysis anatomical-compiler render-trajectory-inverse",
+        description=__doc__,
+    )
     parser.add_argument("--experiment-root", required=True, type=Path)
     parser.add_argument("--target-config", required=True, type=Path)
     parser.add_argument(
@@ -223,7 +226,7 @@ def main() -> None:
     parser.add_argument("--refinement-root", type=Path)
     parser.add_argument("--refinement-media-root", type=Path)
     parser.add_argument("--output", required=True, type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     summary = render(
         args.experiment_root,
         args.target_config,
@@ -233,7 +236,4 @@ def main() -> None:
         refinement_media_root=args.refinement_media_root,
     )
     print(json.dumps(summary, indent=2))
-
-
-if __name__ == "__main__":
-    main()
+    return 0

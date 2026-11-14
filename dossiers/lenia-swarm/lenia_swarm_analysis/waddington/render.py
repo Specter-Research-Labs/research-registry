@@ -1,7 +1,7 @@
 """Render the four-config endpoint and dynamic Waddington landscapes to PNG.
 
-Reads landscapes.npz / landscape_summary.json. Run with matplotlib available, e.g.
-uv run --with matplotlib python -m lenia_swarm_analysis.waddington.render
+Reads landscapes.npz / landscape_summary.json. Run with
+uv run lenia-swarm-analysis waddington render
 """
 
 from __future__ import annotations

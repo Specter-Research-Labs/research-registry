@@ -4,6 +4,8 @@ import argparse
 from importlib import import_module
 from typing import NamedTuple
 
+ROOT_PROG = "lenia-swarm-analysis"
+
 
 class Subcommand(NamedTuple):
     name: str
@@ -15,7 +17,6 @@ class CommandGroup(NamedTuple):
     name: str
     module: str
     help: str
-    prog: str
     description: str
     package: str
     commands: tuple[Subcommand, ...]
@@ -35,18 +36,14 @@ def dispatch_subcommands(
         subparsers.add_parser(command.name, add_help=False, help=command.help)
 
     args, remaining = parser.parse_known_args(argv)
-    modules_by_command = {command.name: command.module for command in commands}
-    module_name = modules_by_command.get(str(args.command))
-    if module_name is None:
-        raise SystemExit(f"unknown command: {args.command}")
-    run = import_module(f"{package}.{module_name}").main
-    return run(remaining)
+    module_name = {command.name: command.module for command in commands}[args.command]
+    return import_module(f"{package}.{module_name}").main(remaining)
 
 
 def dispatch_command_group(argv: list[str] | None, group: CommandGroup) -> int:
     return dispatch_subcommands(
         argv,
-        prog=group.prog,
+        prog=f"{ROOT_PROG} {group.name}",
         description=group.description,
         package=group.package,
         commands=group.commands,

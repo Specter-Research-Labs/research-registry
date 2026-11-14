@@ -31,7 +31,7 @@ def _string_or_none(value: Any) -> str | None:
 
 def _string_list_or_none(value: Any) -> list[str] | None:
     if isinstance(value, list) and all(isinstance(entry, str) and entry for entry in value):
-        return sorted(set(value))
+        return sorted({str(entry) for entry in value})
     return None
 
 

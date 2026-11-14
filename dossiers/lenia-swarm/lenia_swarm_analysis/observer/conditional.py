@@ -9,7 +9,7 @@ Pairs are a JSONL file of {"source": <campaign>, "target": <campaign>}; choosing
 transfer distance, random controls, within/between groups) belongs to the study. Writes
 conditional_<observer>_<pairs file stem>.jsonl into the measure directory.
 
-Usage: lenia-swarm-observer conditional --measure <dir> --observer <name> --pairs <pairs.jsonl> --device mps
+Usage: lenia-swarm-analysis observer conditional --measure <dir> --observer <name> --pairs <pairs.jsonl> --device mps
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from .states import load_states
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="lenia-swarm-observer conditional", description=__doc__,
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis observer conditional", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--measure", type=Path, required=True)
     parser.add_argument("--observer", required=True)

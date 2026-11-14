@@ -99,7 +99,7 @@ def build() -> None:
         ax.set_title(f"{fam}  (order {p['peak_symmetry_order']}, {p['motion']})", fontsize=10)
     fig.suptitle("One canonical Flow-Lenia representative per family "
                  "(nearest-to-family-median TDA; motion class labelled)", fontsize=13)
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     out = FIGURES_DIR / "family_representatives.png"
     fig.savefig(out, dpi=130)

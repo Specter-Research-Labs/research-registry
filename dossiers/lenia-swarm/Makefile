@@ -7,13 +7,13 @@ check: check-python check-swift
 check-swift:
 	swift test
 
-check-python: lint test-python
+check-python: lint typecheck test-python
 
 lint:
 	uv run ruff check lenia_swarm_analysis Tests
 
 typecheck:
-	uv run ty check
+	uv run ty check lenia_swarm_analysis Tests
 
 test-python:
 	uv run pytest

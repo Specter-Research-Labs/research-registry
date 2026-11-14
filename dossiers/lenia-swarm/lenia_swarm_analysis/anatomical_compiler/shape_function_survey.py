@@ -107,7 +107,8 @@ def survey_harvest(harvest: Path, *, reference: np.ndarray, compact_bodies: bool
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis anatomical-compiler shape-function-survey",
+                                     description=__doc__)
     parser.add_argument("--harvest", required=True, action="append", type=Path, dest="harvests")
     parser.add_argument("--reference", required=True, type=Path)
     parser.add_argument("--compact-bodies", action="store_true")
@@ -124,7 +125,3 @@ def main(argv: list[str] | None = None) -> int:
             fits = "  ".join(f"{k}={v['r2']:.2f}" for k, v in row["metricFits"].items())
             print(f"{harvest.parent.name} n={row['n']}  {fits}", flush=True)
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

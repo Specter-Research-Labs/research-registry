@@ -110,7 +110,7 @@ make check
 Useful individual targets:
 
 - `make check-swift`: package-level Swift tests.
-- `make check-python`: Ruff, Ty, and Pytest for `lenia_swarm_analysis/`.
+- `make check-python`: Ruff, Ty, and Pytest over `lenia_swarm_analysis/` and `Tests/`.
 - `make smoke-deterministic`: fixed-seed local determinism check.
 - `make smoke-cluster`: controller+worker smoke run.
 
@@ -137,10 +137,10 @@ Useful individual targets:
 - `LeniaCLI tt materialize-init --input INDEX.jsonl --output DIR`: rewrites seeded random-patch export bundles as explicit step-0 state patches, which the SFPU engine requires, and refuses any bundle whose rebuilt step-0 state is not bitwise identical.
 - `LeniaCLI discover map-elites-children --spec SPEC.json --output DIR`: emits MAP-Elites variation children of verified archive parents as replay bundles, with no simulation. Each spec cell names its source lineages, self or cross-lineage pairing, the mutated genome part (`params`, `patch` or `both`), and the isotropic and line sigmas. Children are seeded from the cell id and index, so a cell emitted alone or in chunks reproduces the full spec; `--verify-only` checks that every parent's export rebuilds from its archive genome.
 - `LeniaCLI benchmark`: standalone utility command.
-- `lenia-swarm-analysis`: canonical Python analysis CLI for TDA, fibers,
-  transport, packet builders, named-family preset extraction, and warehouse
-  bridge operations. Existing `lenia-swarm-*` Python commands remain
-  compatibility aliases.
+- `lenia-swarm-analysis`: the one Python CLI. Its groups are `morphospace`
+  (warehouse, compendium and morphospace analysis), `waddington`, `observer`,
+  `anatomical-compiler`, `chakazul-presets`, `compact` and
+  `coherent-body-pilot`; `--help` on any group lists its commands.
 
 ### Tenstorrent Runs
 

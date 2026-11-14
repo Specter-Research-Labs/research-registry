@@ -23,7 +23,6 @@ non-creature in none. Walled arenas let bodies lean on or park against a wall an
 
 from __future__ import annotations
 
-import base64
 import json
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -32,6 +31,8 @@ from typing import Any, Literal
 
 import numpy as np
 from scipy import ndimage
+
+from lenia_swarm_analysis.trace_codec import trace_field
 
 Border = Literal["wall", "torus"]
 
@@ -82,15 +83,6 @@ def kernel_reach(params: dict[str, Any]) -> float:
     if reach <= 0:
         raise ValueError("kernel has no ring with positive weight")
     return reach
-
-
-def trace_field(row: dict[str, Any]) -> np.ndarray:
-    n = row["fieldResolution"]
-    return (
-        np.frombuffer(base64.b64decode(row["fieldF16Base64"]), dtype=np.float16)
-        .astype(np.float64)
-        .reshape(n, n)
-    )
 
 
 def trace_arena_mask(row: dict[str, Any]) -> np.ndarray:
@@ -267,7 +259,7 @@ def assess(
     reach = kernel_reach(params) * scale
     frames = [
         frame_measures(
-            trace_field(r),
+            trace_field(r).astype(np.float64),
             reach=reach,
             border=border,
             arena=trace_arena_mask(r) if border == "wall" else None,

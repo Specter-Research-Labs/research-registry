@@ -12,7 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-DOSSIER_ROOT = Path(__file__).resolve().parents[2]
+from lenia_swarm_analysis import DOSSIER_ROOT
+
 RUN_ROOT = DOSSIER_ROOT / "artifacts" / "flow-universe-runs" / "track1-20260520"
 STUDY_ROOT = DOSSIER_ROOT / "artifacts" / "waddington"
 WAREHOUSE_DB = STUDY_ROOT / "waddington.duckdb"

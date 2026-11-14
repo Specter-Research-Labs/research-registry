@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import json
 import math
 from pathlib import Path
@@ -11,11 +10,6 @@ from ripser import ripser
 
 from lenia_swarm_analysis._io import read_json, read_jsonl
 from lenia_swarm_analysis.trace_codec import fingerprint_u8
-
-
-def _default_output_dir(manifest_path: Path) -> Path:
-    stem = manifest_path.name.removesuffix(".manifest.json")
-    return manifest_path.parent.parent / "topology-analysis" / stem
 
 
 def _resolve_rows_path(manifest_path: Path, manifest: dict[str, Any]) -> Path:
@@ -364,62 +358,3 @@ def run_analysis(
         encoding="utf-8",
     )
     return summary
-
-
-def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Compute persistent topology summaries from lenia-swarm topology artifacts."
-        )
-    )
-    parser.add_argument("--manifest", required=True, help="Path to topology manifest JSON")
-    parser.add_argument(
-        "--output",
-        help=(
-            "Output directory for topology analysis artifacts. Defaults to "
-            "outputs/topology-analysis/<stem>"
-        ),
-    )
-    parser.add_argument(
-        "--maxdim",
-        type=int,
-        default=1,
-        help="Maximum homology dimension for ripser",
-    )
-    parser.add_argument(
-        "--neighbor-k",
-        type=int,
-        default=8,
-        help="Neighborhood size for genotype-phenotype fiber locality summary",
-    )
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_arg_parser()
-    args = parser.parse_args(argv)
-    manifest_path = Path(args.manifest).expanduser().resolve()
-    if not manifest_path.is_file():
-        raise SystemExit(f"Missing manifest: {manifest_path}")
-    output_dir = (
-        Path(args.output).expanduser().resolve()
-        if args.output
-        else _default_output_dir(manifest_path).resolve()
-    )
-    summary = run_analysis(
-        manifest_path,
-        output_dir,
-        maxdim=args.maxdim,
-        neighbor_k=args.neighbor_k,
-    )
-    print(
-        "Topology analysis:"
-        f" specimens={summary['specimenCount']}"
-        f" phenotype_dim={summary['spaces']['phenotype']['dimension']}"
-        f" output={output_dir}"
-    )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

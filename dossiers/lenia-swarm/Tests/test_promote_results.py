@@ -3,11 +3,19 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
 from lenia_swarm_analysis.morphospace.warehouse import connect_database
 from lenia_swarm_analysis.morphospace_cli import refresh_compendium_warehouse
+
+
+def _one(connection: Any, query: str, params: list[object] | None = None) -> Any:
+    row = connection.execute(query, params or []).fetchone()
+    if row is None:
+        raise AssertionError(f"query returned no rows: {query}")
+    return row[0]
 
 
 def _write_json(path: Path, value: object) -> None:
@@ -291,13 +299,8 @@ def test_promote_results_jsonl_projects_results_into_canonical_compendium(
             run_id="test-run",
             ingest_raw_rows=False,
         )
-        assert warehouse.execute(
-            "SELECT COUNT(*) FROM specimens WHERE run_id = 'test-run'"
-        ).fetchone()[0] == 2
-        assert warehouse.execute(
-            "SELECT run_id FROM studies WHERE study_id = ?",
-            [study_id],
-        ).fetchone()[0] == "test-run"
+        assert _one(warehouse, "SELECT COUNT(*) FROM specimens WHERE run_id = 'test-run'") == 2
+        assert _one(warehouse, "SELECT run_id FROM studies WHERE study_id = ?", [study_id]) == "test-run"
     finally:
         warehouse.close()
 
@@ -311,19 +314,21 @@ def test_promote_results_jsonl_projects_results_into_canonical_compendium(
     assert refresh_payload["commonObservationsUpdated"] == 2
     fast_warehouse = connect_database(tmp_path / "warehouse-fast.duckdb")
     try:
-        assert fast_warehouse.execute(
+        assert _one(
+            fast_warehouse,
             """
             SELECT COUNT(DISTINCT observation_id)
             FROM comparison_feature_values_vw
             WHERE run_id = 'test-run' AND feature_space_id = 'lenia_terminal_v1'
             """
-        ).fetchone()[0] == 2
-        assert fast_warehouse.execute(
+        ) == 2
+        assert _one(
+            fast_warehouse,
             """
             SELECT COUNT(DISTINCT observation_id)
             FROM comparison_feature_values_vw
             WHERE run_id = 'test-run' AND feature_space_id = 'common_morphology_v1'
             """
-        ).fetchone()[0] == 2
+        ) == 2
     finally:
         fast_warehouse.close()

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 from copy import deepcopy
 from pathlib import Path
@@ -21,9 +22,8 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageDraw
 
-from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
+from lenia_swarm_analysis import DOSSIER_ROOT, LENIA_CLI
 from lenia_swarm_analysis.anatomical_compiler._codec import GenotypeCodec
-from lenia_swarm_analysis.anatomical_compiler.forward_sim import DEFAULT_BINARY, _merged_env
 
 _DRIFT_FIELDS = ("occupancy_mean", "gyration", "largest_component_fraction")
 
@@ -77,7 +77,7 @@ def _run_eval(binary: Path, base_config: dict, search_config: dict, corpus: list
     ]
     env = {"SPECTER_ARTIFACT_ROOT": str(out_dir / "artifacts")}
     completed = subprocess.run(cmd, capture_output=True, text=True, timeout=1800,
-                               env=_merged_env(env), cwd=str(root))
+                               env={**os.environ, **env}, cwd=str(root))
     if completed.returncode != 0:
         raise RuntimeError(f"evaluate ({name}) failed:\n{completed.stderr[-2000:]}")
     results = sorted(run_out.rglob("results.jsonl"))
@@ -116,7 +116,8 @@ def _scatter(complexity: np.ndarray, drift: np.ndarray, is_coherent: np.ndarray,
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis anatomical-compiler functional-map",
+                                     description=__doc__)
     parser.add_argument(
         "--base", type=Path, default=DOSSIER_ROOT / "configs/base/paper_random_3c_15k_128.json"
     )
@@ -162,10 +163,10 @@ def main(argv: list[str] | None = None) -> int:
           f"({int(is_coherent.sum())} coherent + {int((~is_coherent).sum())} random)")
     print("running baseline ...")
     base_metrics = _run_eval(
-        DEFAULT_BINARY, baseline_config, search, corpus, out_dir, root=DOSSIER_ROOT, name="baseline")
+        LENIA_CLI, baseline_config, search, corpus, out_dir, root=DOSSIER_ROOT, name="baseline")
     print("running ablation ...")
     abl_metrics = _run_eval(
-        DEFAULT_BINARY, ablation_config, search, corpus, out_dir, root=DOSSIER_ROOT, name="ablation")
+        LENIA_CLI, ablation_config, search, corpus, out_dir, root=DOSSIER_ROOT, name="ablation")
 
     n = min(len(base_metrics), len(abl_metrics), len(corpus))
     complexity = np.array([float(base_metrics[i].get("complexity_mean") or 0.0) for i in range(n)])
@@ -195,7 +196,3 @@ def main(argv: list[str] | None = None) -> int:
           f"{report['highComplexityLowDriftCount']}/{n}")
     print(f"wrote {out_dir}/complexity_recovery.png")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

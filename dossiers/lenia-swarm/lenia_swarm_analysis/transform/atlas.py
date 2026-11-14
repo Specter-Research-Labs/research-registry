@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import argparse
-import json
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -89,12 +87,13 @@ def _axis_statistics(
     for axis_id in axis_ids:
         transformed = [float(row["transformedAxes"][axis_id]) for row in rows]
         raw = [float(row["rawAxes"][axis_id]) for row in rows]
-        center, scale = robust_center_scale(transformed)
+        robust = robust_center_scale(transformed)
         stats[axis_id] = {
             "rawQuantiles": quantiles(raw),
             "transformedQuantiles": quantiles(transformed),
-            "center": center,
-            "scale": scale,
+            "center": robust.center,
+            "scale": robust.scale,
+            "scaleEstimator": robust.estimator,
         }
     return stats
 
@@ -544,71 +543,3 @@ def build_transformation_atlas_packet(
             for row in annotated_rows
         ]
     return packet
-
-
-def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Build developmental transformation atlas packets from terminal "
-            "or replay-time artifacts."
-        )
-    )
-    parser.add_argument("--rows", help="Path to topology JSONL rows for v1 atlas")
-    parser.add_argument(
-        "--replay-packet",
-        help="Path to transformation_replay_packet_v1 JSON for replay-time v2 atlas",
-    )
-    parser.add_argument(
-        "--baseline-atlas",
-        help="Optional baseline developmental_transformation_atlas_v1 JSON for v2 comparisons",
-    )
-    parser.add_argument(
-        "--top-exemplars-per-axis",
-        type=int,
-        default=5,
-        help="How many focal exemplars to keep for each axis",
-    )
-    parser.add_argument("--output", help="Output path")
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_arg_parser()
-    args = parser.parse_args(argv)
-    rows_path = Path(args.rows).expanduser().resolve() if args.rows else None
-    replay_packet_path = (
-        Path(args.replay_packet).expanduser().resolve() if args.replay_packet else None
-    )
-    baseline_atlas_path = (
-        Path(args.baseline_atlas).expanduser().resolve() if args.baseline_atlas else None
-    )
-    packet = build_transformation_atlas_packet(
-        rows_path=rows_path,
-        replay_packet_path=replay_packet_path,
-        baseline_atlas_path=baseline_atlas_path,
-        top_exemplars_per_axis=args.top_exemplars_per_axis,
-    )
-    if replay_packet_path is not None:
-        default_root = replay_packet_path.parent
-    else:
-        if rows_path is None:
-            raise SystemExit("atlas output requires either --rows or --replay-packet")
-        default_root = rows_path.parent
-    output_path = (
-        Path(args.output).expanduser().resolve()
-        if args.output
-        else default_root / "transformation-atlas-packet.json"
-    )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(
-        "Transformation atlas:"
-        f" specimens={packet['summary']['specimenCount']}"
-        f" axes={packet['summary']['axisCount']}"
-        f" output={output_path}"
-    )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
