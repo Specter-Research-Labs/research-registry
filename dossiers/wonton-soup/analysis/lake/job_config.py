@@ -328,7 +328,8 @@ def resolve_same_method_as_selection(
     run_id = same.get("run_id")
     if isinstance(run_key, str) and run_key.strip():
         row = conn.execute(
-            "SELECT run_key, run_id, provider, backend, rel_run_dir, run_dir, config_whitelist_hash "
+            "SELECT run_key, run_id, provider, backend, rel_run_dir, run_dir, "
+            "config_whitelist_hash "
             "FROM runs WHERE run_key = ?",
             [run_key.strip()],
         ).fetchone()
@@ -348,7 +349,8 @@ def resolve_same_method_as_selection(
             prefix = run_dir_prefix.strip()
             params.extend([prefix, prefix + "/%"])
         rows = conn.execute(
-            "SELECT run_key, run_id, provider, backend, rel_run_dir, run_dir, config_whitelist_hash "
+            "SELECT run_key, run_id, provider, backend, rel_run_dir, run_dir, "
+            "config_whitelist_hash "
             f"FROM runs WHERE {clause} ORDER BY run_key",
             params,
         ).fetchall()
@@ -358,12 +360,15 @@ def resolve_same_method_as_selection(
             lines = [f"Ambiguous run_id {run_id!r}; candidates:"]
             for rk, rid, prov, be, rel, rd, mh in rows[:12]:
                 lines.append(
-                    f"  run_key={rk} provider={prov} backend={be} rel={rel} run_dir={rd} method={mh}"
+                    f"  run_key={rk} provider={prov} backend={be} rel={rel} "
+                    f"run_dir={rd} method={mh}"
                 )
             if len(rows) > 12:
                 lines.append(f"  ... ({len(rows) - 12} more)")
             raise ValueError("\n".join(lines))
-        anchor_run_key, anchor_run_id, provider, backend, rel_run_dir, run_dir, method_hash = rows[0]
+        (anchor_run_key, anchor_run_id, provider, backend, rel_run_dir, run_dir, method_hash) = (
+            rows[0]
+        )
     else:
         raise ValueError("selection.same_method_as must set run_key or run_id")
 

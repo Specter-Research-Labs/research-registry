@@ -60,5 +60,12 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
 
+[tool.ruff.lint.per-file-ignores]
+# Inline SVG element templates and caption prose; wrapping them obscures the markup.
+"paper/build_figures.py" = ["E501"]
+"docs/figures/poster/scripts/render_poster.py" = ["E501"]
+# Marimo cells hold markdown prose, and `== True` is pandas elementwise comparison, not a truth test.
+"analysis/notebooks/*.py" = ["E501", "E712"]
+
 [tool.pytest.ini_options]
 testpaths = ["analysis/tests", "atp/tests", "corpus/tests", "prover/tests"]

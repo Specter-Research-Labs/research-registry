@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from leantree.core.lean import LeanGoal
-from leantree.repl_adapter.interaction import LeanInteractionException
 
 from prover.goal_signature import GoalSignatureConfig
 from prover.goal_signature import goal_signature as _goal_signature

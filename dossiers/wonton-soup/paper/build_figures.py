@@ -387,7 +387,7 @@ def build_structural_drift(rows: list[dict], out_path: Path) -> None:
         lines.append(f'<text x="{left-12}" y="{y+4}" class="tick" text-anchor="end">{tick}</text>')
     lines += [
         f'<text x="{left + 10*(bar_w+gap)/2}" y="385" class="small" text-anchor="middle">normalized GED on solved strict-denominator rows</text>',
-        f'<text x="24" y="230" class="small" transform="rotate(-90 24 230)">count</text>',
+        '<text x="24" y="230" class="small" transform="rotate(-90 24 230)">count</text>',
         f'<rect x="620" y="100" width="14" height="14" fill="{BLUE}"/><text x="642" y="112" class="small">hash-match solve</text>',
         f'<rect x="760" y="100" width="14" height="14" fill="{PURPLE}"/><text x="782" y="112" class="small">reroute</text>',
     ]
@@ -452,7 +452,7 @@ def build_basin_resilience(rows: list[dict], out_path: Path) -> None:
         lines.append(f'<text x="{left-12}" y="{py+4}" class="tick" text-anchor="end">{y:g}</text>')
         lines.append(f'<line x1="{left}" y1="{py}" x2="{left+chart_w}" y2="{py}" stroke="{GRID}" stroke-dasharray="2 4"/>')
     lines.append(f'<text x="{left+chart_w/2}" y="410" class="small" text-anchor="middle">average unique structures per matched theorem-provider row</text>')
-    lines.append(f'<text x="28" y="245" class="small" transform="rotate(-90 28 245)">lesion recovery rate</text>')
+    lines.append('<text x="28" y="245" class="small" transform="rotate(-90 28 245)">lesion recovery rate</text>')
 
     for row in rows:
         color, shape, offset = provider_style[row["provider"]]

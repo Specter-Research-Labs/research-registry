@@ -3,10 +3,8 @@ import threading
 import time
 from pathlib import Path
 
-import pytest
-
-torch = pytest.importorskip("torch")
-transformers = pytest.importorskip("transformers")
+import torch
+import transformers
 
 from prover.providers import reprover_sample_server
 from prover.providers.reprover_sample_server import BatchedSampler, Request, request_samples
