@@ -139,8 +139,8 @@ Useful individual targets:
 - `LeniaCLI benchmark`: standalone utility command.
 - `lenia-swarm-analysis`: the one Python CLI. Its groups are `morphospace`
   (warehouse, compendium and morphospace analysis), `waddington`, `observer`,
-  `anatomical-compiler`, `chakazul-presets` and `compact`; `--help` on any
-  group lists its commands.
+  `anatomical-compiler`, `chakazul-presets`, `compact` and
+  `coherent-body-pilot`; `--help` on any group lists its commands.
 
 ### Tenstorrent Runs
 

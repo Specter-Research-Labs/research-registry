@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Run a fixed cell-swap pilot on visually selected, long-lived Flow Lenia bodies.
 
 The original causal-emergence cohorts are never modified.
@@ -16,6 +15,7 @@ from scipy import ndimage
 
 from lenia_swarm_analysis._io import sha256_file
 from lenia_swarm_analysis.trace_codec import state_patch_values, trace_field
+from lenia_swarm_analysis.transformation_metrics import label_bodies
 
 AGES = (900, 2700)
 SWAP_SEEDS = (17, 31, 47)
@@ -49,7 +49,7 @@ def analyze(root):
 
     def component(t):
         v = field(t)
-        labels, n = ndimage.label(v > 0.001, np.ones((3, 3)))
+        labels, n = label_bodies(v > 0.001)
         m = ndimage.sum(v, labels, np.arange(1, n + 1))
         return float(max(m, default=0) / v.sum())
 
@@ -111,13 +111,15 @@ def analyze(root):
     (root / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="lenia-swarm-analysis coherent-body-pilot", description=__doc__
+    )
     parser.add_argument("--runner", type=Path, required=True)
     parser.add_argument("--replay-root", type=Path, required=True)
     parser.add_argument("--candidate", action="append", required=True)
     parser.add_argument("--output", type=Path, required=True)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     runner = args.runner.resolve()
@@ -322,7 +324,4 @@ def main():
             "trials": len(roster) * len(AGES) * (len(SWAP_SEEDS) + 1),
         },
     )
-
-
-if __name__ == "__main__":
-    main()
+    return 0

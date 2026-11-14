@@ -45,4 +45,7 @@ ROOT_COMMANDS = (
     Subcommand(ANATOMICAL_COMPILER.name, ANATOMICAL_COMPILER.module, ANATOMICAL_COMPILER.help),
     Subcommand("chakazul-presets", "chakazul_presets", "Extract Chakazul Lenia presets"),
     Subcommand("compact", "compact", "Rewrite JSON artifacts into the current storage format"),
+    Subcommand(
+        "coherent-body-pilot", "coherent_body_pilot", "Cell-swap pilot on long-lived Flow bodies"
+    ),
 )
