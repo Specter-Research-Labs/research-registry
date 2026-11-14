@@ -1299,6 +1299,66 @@ def _build_lean_suite_variants(values: dict[str, Any]) -> dict[str, dict[str, An
     }
 
 
+def _sweep_label(value: float) -> str:
+    return f"{value:.3f}".rstrip("0").rstrip(".")
+
+
+def _build_lean_distributed_sweep_variants(values: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    block_fractions = _coerce_typer_option(values["block_fraction"], None) or []
+    delay_probs = _coerce_typer_option(values["delay_prob"], None) or []
+    adaptation = _coerce_typer_option(values["adaptation"], False)
+    if not block_fractions and not delay_probs:
+        _die("Provide --block-fraction and/or --delay-prob for a sweep")
+    common = _collect_lean_command_kwargs(
+        values, mcts_mode="distributed", resume=False, basin_seeds=None, basin_blind=False
+    )
+    if block_fractions and (
+        common["mcts_block_duration"] is None or common["mcts_block_seed"] is None
+    ):
+        _die("--block-fraction requires --mcts-block-duration and --mcts-block-seed")
+    if delay_probs and (common["mcts_delay_duration"] is None or common["mcts_delay_seed"] is None):
+        _die("--delay-prob requires --mcts-delay-duration and --mcts-delay-seed")
+    has_adaptation_options = bool(common["mcts_reroute_blocked"]) or any(
+        common[name] is not None for name in ("mcts_unfreeze_after", "mcts_unfreeze_prob")
+    )
+    if adaptation:
+        if not block_fractions:
+            _die("--adaptation requires --block-fraction")
+        if not has_adaptation_options:
+            _die("--adaptation requires --mcts-reroute-blocked or --mcts-unfreeze-*")
+    elif has_adaptation_options:
+        _die("--mcts-reroute-* and --mcts-unfreeze-* apply only to --adaptation runs")
+
+    no_block = {
+        "mcts_block_fraction": None,
+        "mcts_block_duration": None,
+        "mcts_block_seed": None,
+        "mcts_block_immovable_fraction": None,
+    }
+    no_adaptation = {
+        "mcts_reroute_blocked": False,
+        "mcts_reroute_max": None,
+        "mcts_unfreeze_after": None,
+        "mcts_unfreeze_prob": None,
+    }
+    no_delay = {"mcts_delay_prob": None, "mcts_delay_duration": None, "mcts_delay_seed": None}
+    scenarios: dict[str, dict[str, Any]] = {"baseline": no_block | no_adaptation | no_delay}
+    for fraction in block_fractions:
+        label = _sweep_label(fraction)
+        damage = no_adaptation | no_delay | {"mcts_block_fraction": fraction}
+        scenarios[f"damage-block-f{label}"] = damage
+        if adaptation:
+            scenarios[f"adapt-block-f{label}"] = no_delay | {"mcts_block_fraction": fraction}
+    for probability in delay_probs:
+        scenarios[f"damage-delay-p{_sweep_label(probability)}"] = (
+            no_block | no_adaptation | {"mcts_delay_prob": probability}
+        )
+    return {
+        name: common | overrides | {"run_id": f"{values['run_id']}-{name}"}
+        for name, overrides in scenarios.items()
+    }
+
+
 def _run_lean_variants(
     variants: dict[str, dict[str, Any]],
     *,
@@ -1626,6 +1686,92 @@ def lean_suite(
     sync: bool = typer.Option(False, "--sync/--no-sync", help="Sync outputs to remote"),
 ) -> None:
     _run_lean_variants(_build_lean_suite_variants(locals()), summarize=not agent)
+
+
+@lean_app.command("distributed-sweep")
+def lean_distributed_sweep(
+    run_id: str = typer.Option(
+        ..., "--run-id", help="Run id prefix; each scenario runs as <run-id>-<scenario>"
+    ),
+    block_fraction: list[float] | None = typer.Option(
+        None,
+        "--block-fraction",
+        help="Scheduler block fraction to sweep (repeatable); one damage-block run per value",
+    ),
+    delay_prob: list[float] | None = typer.Option(
+        None,
+        "--delay-prob",
+        help="Controller delay probability to sweep (repeatable); one damage-delay run per value",
+    ),
+    adaptation: bool = typer.Option(
+        False,
+        "--adaptation",
+        help="Add an adapt-block run per block fraction using the reroute/unfreeze options",
+    ),
+    agent: bool = typer.Option(False, "--agent", help="Agent-optimized output"),
+    mode: str | None = _lean_typer_option("mode"),
+    corpus: str | None = _lean_typer_option("corpus"),
+    provider: str | None = _lean_typer_option("provider"),
+    providers: str | None = _lean_typer_option("providers"),
+    all_providers: bool = _lean_typer_option("all_providers"),
+    budget: str | None = _lean_typer_option("budget"),
+    limit: int | None = _lean_typer_option("limit"),
+    theorem: list[str] | None = _lean_typer_option("theorem"),
+    lean_project: str | None = _lean_typer_option("lean_project"),
+    wild_only: bool = typer.Option(False, "--wild-only", help="Skip interventions"),
+    with_interventions: bool = typer.Option(
+        False, "--with-interventions", help="Run intervention comparisons"
+    ),
+    trace_mcts: bool = typer.Option(False, "--trace-mcts", help="Enable MCTS tracing"),
+    no_trace_mcts: bool = typer.Option(False, "--no-trace-mcts", help="Disable MCTS tracing"),
+    mcts_expansion_policy: str | None = _lean_typer_option("mcts_expansion_policy"),
+    mcts_agents: int | None = _lean_typer_option("mcts_agents"),
+    mcts_inflight: int | None = _lean_typer_option("mcts_inflight"),
+    mcts_block_duration: int | None = _lean_typer_option("mcts_block_duration"),
+    mcts_block_seed: int | None = _lean_typer_option("mcts_block_seed"),
+    mcts_block_immovable_fraction: float | None = _lean_typer_option(
+        "mcts_block_immovable_fraction"
+    ),
+    mcts_unfreeze_after: int | None = _lean_typer_option("mcts_unfreeze_after"),
+    mcts_unfreeze_prob: float | None = _lean_typer_option("mcts_unfreeze_prob"),
+    mcts_reroute_blocked: bool = _lean_typer_option("mcts_reroute_blocked"),
+    mcts_reroute_max: int | None = _lean_typer_option("mcts_reroute_max"),
+    mcts_delay_duration: int | None = _lean_typer_option("mcts_delay_duration"),
+    mcts_delay_seed: int | None = _lean_typer_option("mcts_delay_seed"),
+    mcts_virtual_loss: int | None = _lean_typer_option("mcts_virtual_loss"),
+    mcts_depth_bias: float | None = _lean_typer_option("mcts_depth_bias"),
+    mcts_path_bias: float | None = _lean_typer_option("mcts_path_bias"),
+    mcts_history_cache: bool = _lean_typer_option("mcts_history_cache"),
+    mcts_deterministic_inference: bool = _lean_typer_option("mcts_deterministic_inference"),
+    allow_easy: bool = _lean_typer_option("allow_easy"),
+    debug: bool = _lean_typer_option("debug"),
+    plain: bool = _lean_typer_option("plain"),
+    sampling: bool = _lean_typer_option("sampling"),
+    deepseek_num_samples: int | None = _lean_typer_option("deepseek_num_samples"),
+    deepseek_model_path: str | None = _lean_typer_option("deepseek_model_path"),
+    deepseek_backend: str = _lean_typer_option("deepseek_backend"),
+    bfs_num_samples: int | None = _lean_typer_option("bfs_num_samples"),
+    internlm_num_samples: int | None = _lean_typer_option("internlm_num_samples"),
+    device: str | None = _lean_typer_option("device"),
+    workers: int | None = _lean_typer_option("workers"),
+    offset: int | None = _lean_typer_option("offset"),
+    sample: int | None = _lean_typer_option("sample"),
+    seed: int | None = _lean_typer_option("seed"),
+    search_seed: int | None = _lean_typer_option("search_seed"),
+    goal_sig: str | None = _lean_typer_option("goal_sig"),
+    analysis: bool = _lean_typer_option("analysis"),
+    no_solution_artifacts: bool = _lean_typer_option("no_solution_artifacts"),
+    baseline_solved_only: bool = _lean_typer_option("baseline_solved_only"),
+    premise_lesions: bool = _lean_typer_option("premise_lesions"),
+    intervention_name: list[str] | None = _lean_typer_option("intervention_name"),
+    extra_intervention: list[str] | None = _lean_typer_option("extra_intervention"),
+    tactic_ranker: str | None = _lean_typer_option("tactic_ranker"),
+    tactic_ranker_model: str | None = _lean_typer_option("tactic_ranker_model"),
+    tactic_ranker_alpha: float | None = _lean_typer_option("tactic_ranker_alpha"),
+    sync: bool = typer.Option(False, "--sync/--no-sync", help="Sync outputs to remote"),
+) -> None:
+    """Distributed MCTS robustness sweep: a baseline, then one run per perturbation."""
+    _run_lean_variants(_build_lean_distributed_sweep_variants(locals()), summarize=not agent)
 
 
 @corpus_app.command("build-lean-mathlib")

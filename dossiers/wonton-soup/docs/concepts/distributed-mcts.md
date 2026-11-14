@@ -218,6 +218,11 @@ Reroute:
 - when blocked or delayed, selection can retry alternate nodes up to `max_attempts`
 - reroute trail is recorded in trace payloads
 
+`wonton.py lean distributed-sweep --run-id <id>` runs an undamaged baseline and then one distributed
+run per `--block-fraction` and `--delay-prob` value, each under `<id>-<scenario>`. `--adaptation`
+adds an `adapt-block-f<x>` run per block fraction that keeps the reroute and unfreeze options the
+`damage-block-f<x>` run strips. Every other `lean run` option passes through unchanged.
+
 ## CLI Contract
 
 | Flag(s) | Requirement | Validation |

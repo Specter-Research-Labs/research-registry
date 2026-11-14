@@ -99,6 +99,74 @@ def test_lean_suite_runs_main_and_basin_with_expected_overrides(monkeypatch) -> 
     assert calls[1]["analysis"] is False
 
 
+def test_lean_distributed_sweep_runs_baseline_then_each_perturbation(monkeypatch) -> None:
+    import wonton
+
+    calls = _capture_keyword_calls(monkeypatch, wonton, "_run_lean_command")
+
+    wonton.lean_distributed_sweep(
+        run_id="dmcts",
+        block_fraction=[0.1, 0.25],
+        delay_prob=[0.5],
+        adaptation=True,
+        mcts_agents=4,
+        mcts_inflight=2,
+        mcts_block_duration=3,
+        mcts_block_seed=7,
+        mcts_reroute_blocked=True,
+        mcts_reroute_max=2,
+        mcts_delay_duration=2,
+        mcts_delay_seed=5,
+        sync=False,
+    )
+
+    by_run = {call["run_id"]: call for call in calls}
+    assert list(by_run) == [
+        "dmcts-baseline",
+        "dmcts-damage-block-f0.1",
+        "dmcts-adapt-block-f0.1",
+        "dmcts-damage-block-f0.25",
+        "dmcts-adapt-block-f0.25",
+        "dmcts-damage-delay-p0.5",
+    ]
+    assert all(call["mcts_mode"] == "distributed" and call["mcts_agents"] == 4 for call in calls)
+    baseline = by_run["dmcts-baseline"]
+    assert baseline["mcts_block_fraction"] is None and baseline["mcts_block_seed"] is None
+    assert baseline["mcts_delay_prob"] is None and baseline["mcts_delay_seed"] is None
+    assert baseline["mcts_reroute_blocked"] is False
+    damage = by_run["dmcts-damage-block-f0.25"]
+    assert (damage["mcts_block_fraction"], damage["mcts_block_duration"]) == (0.25, 3)
+    assert damage["mcts_reroute_blocked"] is False and damage["mcts_reroute_max"] is None
+    adapt = by_run["dmcts-adapt-block-f0.1"]
+    assert (adapt["mcts_reroute_blocked"], adapt["mcts_reroute_max"]) == (True, 2)
+    delay = by_run["dmcts-damage-delay-p0.5"]
+    assert (delay["mcts_delay_prob"], delay["mcts_delay_seed"]) == (0.5, 5)
+    assert delay["mcts_block_fraction"] is None and delay["mcts_block_duration"] is None
+
+
+def test_lean_distributed_sweep_rejects_adaptation_options_without_adaptation(
+    monkeypatch,
+) -> None:
+    import pytest
+    import typer
+
+    import wonton
+
+    _capture_keyword_calls(monkeypatch, wonton, "_run_lean_command")
+
+    with pytest.raises(typer.Exit):
+        wonton.lean_distributed_sweep(
+            run_id="dmcts",
+            block_fraction=[0.1],
+            mcts_agents=4,
+            mcts_inflight=2,
+            mcts_block_duration=3,
+            mcts_block_seed=7,
+            mcts_unfreeze_after=2,
+            sync=False,
+        )
+
+
 def test_lean_run_wrapper_leaves_validation_to_runtime(monkeypatch) -> None:
     import wonton
 
