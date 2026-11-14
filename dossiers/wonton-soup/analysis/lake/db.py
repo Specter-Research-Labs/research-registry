@@ -12,7 +12,7 @@ from analysis.logs import relpath_under, resolve_artifacts_dir
 from analysis.logs import utc_timestamp as _utc_timestamp
 
 # Bump when any persisted table schema changes (columns or meanings).
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 
 
 RUN_KEY_TABLE_PRIMARY_KEYS: dict[str, tuple[str, ...]] = {
@@ -70,6 +70,7 @@ RUN_KEY_TABLE_PRIMARY_KEYS: dict[str, tuple[str, ...]] = {
     "basin_runs": ("run_key", "theorem"),
     "basin_seed": ("run_key", "theorem", "seed"),
     "basin_structure_counts": ("run_key", "theorem", "structure_hash"),
+    "replay_verdict": ("run_key", "theorem", "variant"),
 }
 
 RUN_KEY_TABLES_WITHOUT_PRIMARY_KEYS: tuple[str, ...] = (
@@ -383,6 +384,79 @@ def _migrate_run_identity_v11(conn: duckdb.DuckDBPyConnection) -> None:
         raise
 
 
+_KERNEL_CHECK_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("tree_solved", "BOOLEAN"),
+    ("check_status", "VARCHAR"),
+    ("self_citation", "BOOLEAN"),
+    ("term_hash", "VARCHAR"),
+    ("premises", "JSON"),
+)
+
+
+def _migrate_v13(conn: duckdb.DuckDBPyConnection) -> None:
+    # Every v12 tactic_fingerprint is NULL because extraction dropped the dict
+    # the orchestrator writes, so retyping loses nothing.
+    conn.execute("ALTER TABLE theorem_variant_metrics ALTER COLUMN tactic_fingerprint TYPE JSON")
+
+
+def _create_verdict_views(conn: duckdb.DuckDBPyConnection) -> None:
+    """Kernel verdicts per variant, and wild/intervention comparisons over them.
+
+    A run that records `tree_solved` checked its own proofs, so its
+    `check_status` is the verdict and an unsolved row needs none. Archived runs
+    predate the check: their `solved` means tree-solved, so a solved archived
+    row counts only once a replay verdict exists, and rows without one are left
+    out of the views rather than counted either way.
+    """
+    conn.execute(
+        """
+        CREATE OR REPLACE VIEW theorem_variant_verdict AS
+        WITH variants AS (
+          SELECT run_key, theorem, 'wild_type' AS variant, solved, tree_solved,
+                 check_status, premises
+          FROM theorem_wild
+          UNION ALL
+          SELECT run_key, theorem, intervention AS variant, solved, tree_solved,
+                 check_status, premises
+          FROM theorem_intervention
+        )
+        SELECT
+          v.run_key, v.theorem, v.variant,
+          CASE WHEN v.tree_solved IS NOT NULL THEN v.tree_solved ELSE v.solved END
+            AS tree_solved,
+          CASE WHEN v.tree_solved IS NOT NULL THEN 'run' ELSE 'replay' END AS verdict_source,
+          CASE WHEN v.tree_solved IS NOT NULL THEN v.check_status ELSE r.replay_status END
+            AS check_status,
+          CASE WHEN v.tree_solved IS NOT NULL THEN v.premises ELSE r.premises END AS premises
+        FROM variants v
+        LEFT JOIN replay_verdict r
+          ON r.run_key = v.run_key AND r.theorem = v.theorem AND r.variant = v.variant
+        WHERE v.tree_solved IS NOT NULL
+           OR v.solved IS FALSE
+           OR r.replay_status IS NOT NULL
+        """
+    )
+    conn.execute(
+        """
+        CREATE OR REPLACE VIEW theorem_intervention_checked AS
+        SELECT
+          i.run_key, i.theorem, i.intervention, i.is_control, i.blocked, i.blocked_premises,
+          coalesce(w.check_status = 'checked', false) AS wild_solved,
+          coalesce(v.check_status = 'checked', false) AS solved,
+          w.check_status AS wild_check_status,
+          v.check_status,
+          v.verdict_source,
+          i.ged_search_value, i.ged_search_norm,
+          i.ged_search_soft_value, i.ged_search_soft_norm
+        FROM theorem_intervention i
+        JOIN theorem_variant_verdict v
+          ON v.run_key = i.run_key AND v.theorem = i.theorem AND v.variant = i.intervention
+        JOIN theorem_variant_verdict w
+          ON w.run_key = i.run_key AND w.theorem = i.theorem AND w.variant = 'wild_type'
+        """
+    )
+
+
 def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
     # Core registry.
     conn.execute(
@@ -420,6 +494,11 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
           problem_space JSON,
           config_whitelist_hash VARCHAR,
           config_full_hash VARCHAR,
+          source_commit VARCHAR,
+          source_dirty BOOLEAN,
+          lean_toolchain VARCHAR,
+          mathlib_rev VARCHAR,
+          provenance JSON,
           run_config JSON,
           run_status JSON,
           indexed_at TIMESTAMP NOT NULL DEFAULT now()
@@ -430,6 +509,11 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
     conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS run_dir VARCHAR")
     conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS config_whitelist_hash VARCHAR")
     conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS config_full_hash VARCHAR")
+    conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS source_commit VARCHAR")
+    conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS source_dirty BOOLEAN")
+    conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS lean_toolchain VARCHAR")
+    conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS mathlib_rev VARCHAR")
+    conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS provenance JSON")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_runs_run_dir ON runs(run_dir)")
     conn.execute(
         """
@@ -593,6 +677,11 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
           run_key VARCHAR NOT NULL,
           theorem VARCHAR NOT NULL,
           solved BOOLEAN,
+          tree_solved BOOLEAN,
+          check_status VARCHAR,
+          self_citation BOOLEAN,
+          term_hash VARCHAR,
+          premises JSON,
           iterations BIGINT,
           proof_term_hash VARCHAR,
           k_valid BOOLEAN,
@@ -614,10 +703,16 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
           theorem VARCHAR NOT NULL,
           intervention VARCHAR NOT NULL,
           solved BOOLEAN,
+          tree_solved BOOLEAN,
+          check_status VARCHAR,
+          self_citation BOOLEAN,
+          term_hash VARCHAR,
+          premises JSON,
           status VARCHAR,
           is_control BOOLEAN,
           baseline_solved BOOLEAN,
           blocked JSON,
+          blocked_premises JSON,
           ged_search_value DOUBLE,
           ged_search_norm DOUBLE,
           ged_search_soft_value DOUBLE,
@@ -633,6 +728,15 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
           PRIMARY KEY (run_key, theorem, intervention)
         )
         """
+    )
+
+    for table in ("theorem_wild", "theorem_intervention"):
+        for column, sql_type in _KERNEL_CHECK_COLUMNS:
+            conn.execute(
+                f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {sql_type}"
+            )
+    conn.execute(
+        "ALTER TABLE theorem_intervention ADD COLUMN IF NOT EXISTS blocked_premises JSON"
     )
 
     # Per-variant metrics written by the orchestrator (<variant>_metrics.json).
@@ -665,7 +769,7 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
           proof_term_width BIGINT,
 
           solution_path_len BIGINT,
-          tactic_fingerprint VARCHAR,
+          tactic_fingerprint JSON,
           root_goal_sigs JSON,
 
           metrics_json JSON,
@@ -1081,6 +1185,26 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
         """
     )
 
+    # Kernel verdicts replayed outside a run, for archived runs that predate the
+    # in-run check. `source_sha256` names the verdict file they were ingested from.
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS replay_verdict (
+          run_key VARCHAR NOT NULL,
+          theorem VARCHAR NOT NULL,
+          variant VARCHAR NOT NULL,
+          status VARCHAR NOT NULL,
+          replay_status VARCHAR,
+          replay_error VARCHAR,
+          premises JSON,
+          source_sha256 VARCHAR NOT NULL,
+          ingested_at TIMESTAMP NOT NULL DEFAULT now(),
+          PRIMARY KEY (run_key, theorem, variant)
+        )
+        """
+    )
+    _create_verdict_views(conn)
+
     row = conn.execute("SELECT max(schema_version) FROM schema_meta").fetchone()
     max_ver = row[0] if row else None
     if max_ver is None:
@@ -1092,4 +1216,5 @@ def ensure_schema(conn: duckdb.DuckDBPyConnection) -> None:
         )
     elif max_ver < SCHEMA_VERSION:
         _migrate_run_identity_v11(conn)
+        _migrate_v13(conn)
         conn.execute("INSERT INTO schema_meta(schema_version) VALUES (?)", [SCHEMA_VERSION])

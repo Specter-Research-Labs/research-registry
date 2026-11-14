@@ -38,6 +38,7 @@ ALL_RUN_KEY_TABLES = [
     "basin_runs",
     "basin_seed",
     "basin_structure_counts",
+    "replay_verdict",
 ]
 
 

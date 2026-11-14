@@ -159,6 +159,8 @@ def test_lake_index_extract_export_smoke(tmp_path: Path) -> None:
             "theorem_variant_metrics",
             "theorem_intervention",
             "theorem_wild",
+            "replay_verdict",
+            "theorem_intervention_checked",
             "basin_runs",
             "basin_seed",
             "basin_structure_counts",

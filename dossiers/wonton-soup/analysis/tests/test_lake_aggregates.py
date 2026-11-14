@@ -138,7 +138,7 @@ def test_extract_run_aggregates_and_goal_matrix_and_postprocess_multi_provider_r
             },
             "proof_term": {"node_count": 45, "depth": 12, "width": 3},
             "solution_path": ["intro h", "exact hp"],
-            "tactic_fingerprint": "intro|exact",
+            "tactic_fingerprint": {"solution_path_tactics": ["exact", "intro"]},
             "root_goal_sigs": ["sig0"],
             "proof_term_pretty": "SHOULD_NOT_STORE",
         },
@@ -200,7 +200,9 @@ def test_extract_run_aggregates_and_goal_matrix_and_postprocess_multi_provider_r
             "SELECT trajectory_total_iterations, detour_total_attempts, proof_term_node_count, "
             "solution_path_len, tactic_fingerprint FROM theorem_variant_metrics",
         ).fetchone()
-        assert mrow == (5, 8, 45, 2, "intro|exact")
+        assert mrow is not None
+        assert mrow[:4] == (5, 8, 45, 2)
+        assert json.loads(mrow[4]) == {"solution_path_tactics": ["exact", "intro"]}
 
         crow = conn.execute(
             "SELECT wild_type_hash, intervention_hash, hash_mismatch, axiom_delta_count, "

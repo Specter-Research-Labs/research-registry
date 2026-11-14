@@ -2144,6 +2144,30 @@ def lake_export_parquet(
         print(f"  {t['name']}: {t['file']}")
 
 
+@lake_app.command("ingest-verdicts")
+def lake_ingest_verdicts(
+    parquet: str = typer.Option(
+        ...,
+        "--parquet",
+        help="Replay verdict parquet keyed by run_key, theorem and variant",
+    ),
+    db: str | None = typer.Option(
+        None,
+        "--db",
+        help="DuckDB path (default: canonical local Wonton lake)",
+    ),
+) -> None:
+    """Ingest kernel replay verdicts for runs that predate the in-run check."""
+
+    from analysis.lake.verdicts import ingest_replay_verdicts
+
+    path = Path(os.path.expanduser(parquet)).resolve()
+    with _open_lake_db(db) as (conn, db_path):
+        count = ingest_replay_verdicts(conn, path)
+    print(f"Lake DB: {db_path}")
+    print(f"Ingested {count} replay verdicts from {path}")
+
+
 @lake_app.command("score-k")
 def lake_score_k(
     ref_id: str = typer.Option(..., "--ref-id"),

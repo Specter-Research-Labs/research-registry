@@ -48,6 +48,29 @@ uv run python wonton.py lake reconcile
 Use the same sequence for fresh runs and for backfilling old runs after
 postprocess logic changes.
 
+## Kernel Verdicts
+
+Runs that check proofs in the kernel store `tree_solved`, `check_status`,
+`term_hash`, `premises` and `self_citation` on `theorem_wild` and
+`theorem_intervention`, and their provenance on `runs`. Older runs only know
+that the search tree closed. A replay study re-elaborates their proofs offline,
+and its per-variant verdicts are ingested from Parquet:
+
+```bash
+uv run python wonton.py lake ingest-verdicts --parquet <dependency_rows.parquet>
+```
+
+The file needs `run_key`, `theorem`, `variant`, `status`, `replay_status`,
+`replay_error` and `premises`. Ingest rejects duplicate keys and unknown
+statuses, replaces earlier verdicts for the same keys, and stores the file's
+sha256 on each row of `replay_verdict`.
+
+`theorem_variant_verdict` takes the run's own check when it has one and the
+replay verdict otherwise. Solved rows with neither are left out.
+`theorem_intervention_checked` is the comparison view: `wild_solved` and
+`solved` are true only for kernel-checked proofs, so intervention effects
+should be read from it rather than from `theorem_intervention.solved`.
+
 ## Paper Figures
 
 The paper uses the shared runtime lake as the dataset.
