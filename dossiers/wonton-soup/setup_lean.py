@@ -6,17 +6,12 @@ from pathlib import Path
 from runtime_env import assert_wonton_python_runtime
 
 DOSSIER_ROOT = Path(__file__).parent.resolve()
+LEAN_TOOLCHAIN = "leanprover/lean4:v4.25.0"
 MATHLIB_REQUIRE_BLOCK = """[[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4"
 rev = "{lean_version}"
 """
-
-
-def _normalize_lean_version(raw: str) -> str:
-    if raw.startswith("leanprover/lean4:"):
-        return raw.split(":", 1)[1]
-    return raw
 
 
 def _quote(args: list[str]) -> str:
@@ -54,30 +49,30 @@ def _ensure_mathlib_requirement(lakefile_path: Path, lean_version: str) -> None:
 
 def _scaffold_project(project_path: Path, lean_version: str) -> None:
     project_path.mkdir(parents=True, exist_ok=True)
-    (project_path / "lean-toolchain").write_text(
-        f"leanprover/lean4:{lean_version}\n",
-        encoding="utf-8",
-    )
+    (project_path / "lean-toolchain").write_text(f"{LEAN_TOOLCHAIN}\n", encoding="utf-8")
     _run(["lake", "init", ".", "lib.toml"], cwd=project_path)
     _ensure_mathlib_requirement(project_path / "lakefile.toml", lean_version)
 
 
 def main() -> None:
     assert_wonton_python_runtime(dossier_root=DOSSIER_ROOT, command_name="setup_lean.py")
-    lean_version = _normalize_lean_version(
-        os.environ.get("ELAN_DEFAULT_TOOLCHAIN", "leanprover/lean4:v4.25.0")
-    )
+    lean_version = LEAN_TOOLCHAIN.split(":", 1)[1]
     project_path = _configured_project_path()
 
     print(f"Using Lean version: {lean_version}", flush=True)
     print(f"Using Lean project path: {project_path}", flush=True)
-    _run(["elan", "toolchain", "install", f"leanprover/lean4:{lean_version}"], cwd=DOSSIER_ROOT)
+    _run(["elan", "toolchain", "install", LEAN_TOOLCHAIN], cwd=DOSSIER_ROOT)
     print("Building Lean REPL...", flush=True)
     _run(["lake", "build"], cwd=_leantree_repl_dir())
 
     lakefile_path = project_path / "lakefile.toml"
     if lakefile_path.exists():
         print(f"Using existing Lean project at: {project_path}", flush=True)
+        toolchain = (project_path / "lean-toolchain").read_text(encoding="utf-8").strip()
+        if toolchain != LEAN_TOOLCHAIN:
+            raise SystemExit(
+                f"{project_path}/lean-toolchain is {toolchain!r}, expected {LEAN_TOOLCHAIN!r}"
+            )
     else:
         print(f"Creating Lean project at: {project_path}", flush=True)
         print(

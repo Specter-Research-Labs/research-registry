@@ -108,6 +108,13 @@ def _method_view(run_config: dict[str, Any]) -> dict[str, Any]:
         if pm:
             out["providers_meta"] = pm
 
+    # The tactic limit and Lean build decide which tactics succeed, so runs that
+    # differ in them must not share a cohort. Runs that predate provenance have neither.
+    provenance = run_config.get("provenance")
+    if provenance is not None:
+        out["lean"] = provenance["lean"]
+        out["tactic_limit"] = provenance["tactic_limit"]
+
     return out
 
 
@@ -287,6 +294,7 @@ def index_logs(
             problem_space = None
             config_whitelist_hash = None
             config_full_hash = None
+            provenance = None
             if isinstance(run_config, dict):
                 run_id = _get_str(run_config, "run_id")
                 backend = _get_str(run_config, "backend")
@@ -301,6 +309,7 @@ def index_logs(
                 sanitized = _sanitize_run_config(run_config)
                 config_whitelist_hash = _stable_hash(_method_view(sanitized))
                 config_full_hash = _stable_hash(_full_view(sanitized))
+                provenance = run_config.get("provenance")
 
             goal_sig_scheme = None
             if isinstance(run_config, dict):
@@ -324,9 +333,10 @@ def index_logs(
                   run_id, provider, backend, mode, corpus, created_at,
                   goal_sig_scheme, trace_mcts, problem_space,
                   config_whitelist_hash, config_full_hash,
+                  source_commit, source_dirty, lean_toolchain, mathlib_rev, provenance,
                   run_config, run_status
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
                     run_key,
@@ -344,6 +354,11 @@ def index_logs(
                     json.dumps(problem_space) if problem_space is not None else None,
                     config_whitelist_hash,
                     config_full_hash,
+                    provenance["source"]["base_commit"] if provenance is not None else None,
+                    provenance["source"]["dirty"] if provenance is not None else None,
+                    provenance["lean"]["toolchain"] if provenance is not None else None,
+                    provenance["lean"]["mathlib"]["rev"] if provenance is not None else None,
+                    json.dumps(provenance) if provenance is not None else None,
                     json.dumps(run_config) if run_config is not None else None,
                     json.dumps(run_status) if run_status is not None else None,
                 ],

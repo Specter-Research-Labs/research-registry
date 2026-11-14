@@ -17,12 +17,16 @@ from prover.mcts import (
     MCTSTraceWriter,
     MCTSTree,
     ProgressCallback,
-    _blocked_goal_sigs_for_expansion,
-    _family_index,
     _get_path_to_root,
+    child_obligations,
     coerce_expansion_policy,
 )
-from prover.providers.base import goal_signature, normalize_tactic, tactic_family
+from prover.providers.base import (
+    TACTIC_FAMILIES,
+    goal_signature,
+    normalize_tactic,
+    tactic_family,
+)
 
 if TYPE_CHECKING:
     from prover.adapters.lean import LeanAdapter
@@ -1120,7 +1124,7 @@ async def distributed_mcts_search(
                             if goal_cache is not None:
                                 fam = tactic_family(tactic_norm)
                                 goal_cache.record_outcome(
-                                    node.mvar_id, _family_index(fam), success=False
+                                    node.mvar_id, TACTIC_FAMILIES.index(fam), success=False
                                 )
                             if history is not None:
                                 attempts.append(
@@ -1166,47 +1170,10 @@ async def distributed_mcts_search(
                                 break
                             continue
 
-                        novel_mvars: list[str] = []
-                        novel_goal_types: list[str] = []
-                        novel_goal_sigs: list[str] = []
-                        novel_goal_sigs_strict: list[str] = []
-                        blocked_goal_sigs = _blocked_goal_sigs_for_expansion(node)
-
-                        for state_id, child_goal in zip(
-                            preview.child_mvar_ids, preview.child_goals
-                        ):
-                            if child_goal.mvar_id is None:
-                                raise ValueError(
-                                    f"Child goal has no mvar_id: {child_goal.type}"
-                                )
-                            hyp_types = [h.type for h in child_goal.hypotheses]
-                            hyp_exprs = [h.type_expr for h in child_goal.hypotheses]
-                            if goal_cache is None:
-                                sig = goal_signature(child_goal, goal_sig_config)
-                            else:
-                                sig = goal_cache.add_goal(
-                                    mvar_id=state_id,
-                                    type_str=child_goal.type,
-                                    type_expr=child_goal.type_expr,
-                                    hyp_types=hyp_types,
-                                    hyp_exprs=hyp_exprs,
-                                )
-                            sig_strict = compute_goal_signature_strict(
-                                type_str=child_goal.type,
-                                type_expr=child_goal.type_expr,
-                                hyp_types=hyp_types,
-                                hyp_exprs=hyp_exprs,
-                                config=goal_sig_config,
-                            )
-                            if sig in blocked_goal_sigs:
-                                continue
-                            novel_mvars.append(state_id)
-                            novel_goal_types.append(child_goal.type)
-                            novel_goal_sigs.append(sig)
-                            novel_goal_sigs_strict.append(sig_strict)
-                            blocked_goal_sigs.add(sig)
-
-                        if not novel_mvars:
+                        obligations = child_obligations(
+                            node, preview, goal_cache, goal_sig_config
+                        )
+                        if obligations is None:
                             if history is not None:
                                 attempts.append(
                                     TacticAttempt(
@@ -1224,6 +1191,12 @@ async def distributed_mcts_search(
                                     )
                                 )
                             continue
+                        (
+                            novel_mvars,
+                            novel_goal_types,
+                            novel_goal_sigs,
+                            novel_goal_sigs_strict,
+                        ) = obligations
 
                         if history is not None:
                             attempts.append(
@@ -1277,7 +1250,7 @@ async def distributed_mcts_search(
                         if goal_cache is not None:
                             fam = tactic_family(tactic_norm)
                             goal_cache.record_outcome(
-                                node.mvar_id, _family_index(fam), success=True
+                                node.mvar_id, TACTIC_FAMILIES.index(fam), success=True
                             )
 
                         async with tree_lock:

@@ -10,7 +10,6 @@ from atp.compare_hash import hash_goal_sig
 from corpus.lean.theorems import Theorem
 from orchestrator.lean_progress import CorpusProgress
 from orchestrator.lean_runner import (
-    _reset_provider_for_seed,
     make_unique_name,
     run_single,
 )
@@ -227,7 +226,7 @@ async def run_basin_analysis(
         seed: int,
         policy: SearchPolicy,
     ) -> tuple[bool, str | None, int | None, int]:
-        _reset_provider_for_seed(base_provider, seed)
+        base_provider.set_seed(seed)
         rng = random.Random(seed)
         counter[0] += 1
         statement = make_unique_name(theorem, f"basin_{seed}_{policy.value}_{counter[0]}")
@@ -236,6 +235,8 @@ async def run_basin_analysis(
             statement,
             base_provider,
             budget_tiers,
+            library_name=theorem.library_name,
+            blocked_premises=frozenset(),
             goal_cache=goal_cache_for_run,
             goal_sig_config=goal_sig_config,
             mcts_mode=mcts_mode,

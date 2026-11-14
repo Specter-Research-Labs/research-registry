@@ -176,7 +176,20 @@ Typical fields:
 - `detour`
 - `proof_term`
 - `solution_path`
-- optional pretty-print and fingerprint fields
+- `tree_solved`: the search tree closed every goal
+- `kernel_check`: `null` when the tree did not close, otherwise the result of
+  re-elaborating the extracted tactic path as a declaration
+- `tactic_fingerprint`: attempted, successful and solution-path tactic counts;
+  `null` when unsolved
+- optional pretty-print fields
+
+`solved` means `kernel_check.status == "checked"`. The other statuses are
+`replay_failed` (the tactic path does not elaborate as a declaration),
+`check_failed` (the kernel rejects the term) and `blocked_premise` (the term
+uses a constant the variant blocks). A checked result carries `term_hash`
+(sha256 of the elaborated term), `premises` (the constants the term uses) and
+`self_citation`, which is true when the theorem's library name is among the
+premises and `null` when the corpus gives no library name.
 
 ### `*_comparison.json`
 
@@ -184,7 +197,8 @@ Intervention-vs-wild comparison payload.
 
 Typical fields:
 
-- intervention status
+- intervention status, `tree_solved` and `check_status`
+- `blocked_premises`: constants a premise lesion forbids in the final term
 - hash and axiom deltas
 - GED family payloads
 - trajectory and novelty comparisons
@@ -196,6 +210,8 @@ Example skeleton:
 {
   "name": "block_simp",
   "solved": true,
+  "tree_solved": true,
+  "check_status": "checked",
   "ged_search_graph": {
     "value": 4.0,
     "normalized": 0.1,

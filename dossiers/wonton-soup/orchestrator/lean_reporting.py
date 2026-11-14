@@ -162,6 +162,10 @@ def _run_result_metrics(
     include_root_goal_sigs: bool = False,
 ) -> dict[str, Any]:
     metrics: dict[str, Any] = {
+        "tree_solved": run_result.tree_solved,
+        "kernel_check": run_result.kernel_check.serialize()
+        if run_result.kernel_check is not None
+        else None,
         "trajectory": run_result.history.trajectory_metrics(),
         "detour": run_result.history.detour_metrics(),
         "proof_term": run_result.proof_term.metrics() if run_result.proof_term else None,
@@ -326,6 +330,10 @@ def _trajectory_diff(
     }
 
 
+def _check_status(run_result: RunResult) -> str | None:
+    return run_result.kernel_check.status if run_result.kernel_check is not None else None
+
+
 def _build_intervention_outputs(
     *,
     baseline_result: TheoremResult,
@@ -365,6 +373,8 @@ def _build_intervention_outputs(
         "blocked": blocked,
         "blocked_premises": sorted(intervention_result.intervention.blocked_premises),
         "solved": intervention_result.intervention_run.solved,
+        "tree_solved": intervention_result.intervention_run.tree_solved,
+        "check_status": _check_status(intervention_result.intervention_run),
         "status": status,
         "ged_search_graph": ged_search_graph,
         "ged_search_graph_soft": ged_search_graph_soft,
@@ -385,6 +395,8 @@ def _build_intervention_outputs(
         "is_control": intervention_result.intervention.is_control,
         "baseline_solved": baseline_result.wild_type.solved,
         "solved": intervention_result.intervention_run.solved,
+        "tree_solved": intervention_result.intervention_run.tree_solved,
+        "check_status": _check_status(intervention_result.intervention_run),
         "status": status,
         "ged_search_graph": ged_search_graph,
         "ged_search_graph_soft": ged_search_graph_soft,
@@ -434,6 +446,8 @@ def _build_theorem_summary(
         "search_seed": result.search_seed,
         "wild_type": {
             "solved": result.wild_type.solved,
+            "tree_solved": result.wild_type.tree_solved,
+            "check_status": _check_status(result.wild_type),
             "iterations": result.wild_type.history.trajectory_metrics()["total_iterations"],
             "proof_term_hash": result.wild_type.proof_term.structural_hash()
             if result.wild_type.proof_term
@@ -611,6 +625,7 @@ def _compute_run_stats(
     crashed_count = len(crashed) if crashed else 0
     total = len(results)
     wild_solved = sum(1 for r in results if r.wild_type.solved)
+    wild_tree_solved = sum(1 for r in results if r.wild_type.tree_solved)
     wild_aborted = sum(
         1 for r in results if r.wild_type.mcts_tree and r.wild_type.mcts_tree.aborted
     )
@@ -626,6 +641,7 @@ def _compute_run_stats(
         "theorem_total": total,
         "crashed": crashed_count,
         "wild_solved": wild_solved,
+        "wild_tree_solved": wild_tree_solved,
         "wild_aborted": wild_aborted,
         "intervention_total": total_interventions,
         "intervention_solved": solved_interventions,

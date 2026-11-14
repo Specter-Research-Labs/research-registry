@@ -100,7 +100,7 @@ def test_export_parquet_profiles(tmp_path: Path) -> None:
     cases: list[_ParquetProfileCase] = [
         {
             "profile": "full",
-            "table_count": 20,
+            "table_count": 22,
             "files": ["runs.parquet", "theorem_wild.parquet", "theorem_intervention.parquet"],
             "tables": {"runs", "theorem_wild"},
             "absent_tables": set(),

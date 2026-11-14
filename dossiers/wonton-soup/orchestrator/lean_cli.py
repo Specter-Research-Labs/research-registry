@@ -23,6 +23,7 @@ from orchestrator.lean_options import (
     parse_provider_list,
     validate_providers,
 )
+from orchestrator.provenance import record_run_provenance
 from prover.mcts import coerce_expansion_policy
 from prover.providers.base import normalize_tactic
 
@@ -287,6 +288,8 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         _error("--basin-blind currently requires --mcts-mode centralized", parser_error)
     if basin_seeds is not None and search_seed is not None:
         _error("--search-seed is not supported with --basin-seeds", parser_error)
+    if basin_seeds is None and search_seed is None:
+        _error("--search-seed is required unless --basin-seeds sets the seeds", parser_error)
     intervention_names = cast(list[str] | None, args.intervention_name)
     extra_intervention_specs = cast(list[str] | None, args.extra_intervention)
     if basin_seeds is not None and (
@@ -298,6 +301,11 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         )
     if wild_only and (intervention_names is not None or extra_intervention_specs is not None):
         _error("--intervention-name and --extra-intervention require interventions", parser_error)
+    premise_lesions = bool(args.premise_lesions)
+    if premise_lesions and (wild_only or basin_seeds is not None):
+        _error("--premise-lesions requires interventions and no --basin-seeds", parser_error)
+    if premise_lesions and mcts_mode != "centralized":
+        _error("--premise-lesions requires --mcts-mode centralized", parser_error)
 
     budget_tiers = parse_budget(budget)
 
@@ -410,6 +418,7 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         "theorem_name": cast(str | None, args.theorem),
         "intervention_names": intervention_names,
         "extra_interventions": extra_interventions,
+        "premise_lesions": premise_lesions,
         "plain": plain,
         "basin_seeds": basin_seeds,
         "basin_blind": basin_blind,
@@ -527,6 +536,8 @@ def run_from_args(args: Any, *, parser_error: Callable[[str], NoReturn] | None =
         blocked_tactics=blocked_tactics,
         requested_interventions=list(intervention_names or []),
         extra_intervention_payloads=extra_intervention_payloads,
+        premise_lesions=premise_lesions,
+        provenance=record_run_provenance(top_log_dir, Path(project_path), resume=resume),
     )
     lean_metadata.write_run_config(top_log_dir, run_config)
     runtime._write_latest_run(top_log_dir, providers, None, True)

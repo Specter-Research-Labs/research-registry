@@ -1,6 +1,7 @@
 import asyncio
-import logging
 from dataclasses import dataclass
+
+import pytest
 
 from prover.goal_signature import GoalSignatureConfig
 from prover.mcts import mcts_search
@@ -58,25 +59,18 @@ class ThrowingProvider:
         return "throwing"
 
 
-def test_mcts_provider_exception_is_contained(caplog):
+def test_mcts_provider_exception_is_a_run_error():
     goal_sig_config = GoalSignatureConfig(scheme="text")
-    adapter = MinimalAdapter()
-    provider = ThrowingProvider()
-
-    with caplog.at_level(logging.ERROR, logger="prover.mcts"):
-        tree = asyncio.run(
+    with pytest.raises(RuntimeError, match="boom"):
+        asyncio.run(
             mcts_search(
                 "theorem",
-                adapter,
-                provider,
+                MinimalAdapter(),
+                ThrowingProvider(),
                 max_iterations=3,
                 goal_sig_config=goal_sig_config,
             )
         )
-
-    assert tree.root.is_dead
-    assert tree.root.dead_reason == "provider_exception"
-    assert any("tactic provider failed" in r.message for r in caplog.records)
 
 
 class NoSuggestionAdapter:

@@ -1,5 +1,4 @@
 import asyncio
-import os
 from dataclasses import dataclass
 
 import pytest
@@ -16,11 +15,7 @@ from prover.goal_signature import GoalSignatureConfig
 from prover.history import ExplorationHistory, TacticOutcome
 from prover.intervention import FilteredTacticProvider, PegKind
 from prover.mcts import mcts_search
-
-LEAN_PROJECT = os.environ.get("WONTON_LEAN_PROJECT")
-needs_lean = pytest.mark.skipif(
-    LEAN_PROJECT is None, reason="set WONTON_LEAN_PROJECT to a built Lean project"
-)
+from prover.tests import LEAN_PROJECT, needs_lean
 
 
 def test_premise_name_strips_generated_suffixes():
@@ -145,6 +140,7 @@ IMPLICIT_SIMP = "theorem {name} (l : List ℕ) : (l ++ []).length = l.length := 
 async def _with_adapter(body):
     from prover.adapters.lean import LeanAdapter
 
+    assert LEAN_PROJECT is not None
     adapter = await LeanAdapter.create(LEAN_PROJECT)
     async with adapter:
         return await body(adapter)

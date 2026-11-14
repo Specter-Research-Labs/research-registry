@@ -12,7 +12,9 @@ from orchestrator import lean as lean_mod
 from orchestrator import lean_basin, lean_checkpoints, lean_reporting, lean_runner
 from prover import ExplorationHistory, GoalCache, MCTSTree, ProofGraph
 from prover.adapters.lean import LeanAdapter
+from prover.dependencies import KernelCheck
 from prover.goal_signature import GoalSignatureConfig
+from prover.providers.base import GoalAwareTacticProvider
 
 
 def test_ensure_mathlib_requirement_is_idempotent(tmp_path: Path) -> None:
@@ -137,6 +139,8 @@ def test_save_results_writes_intervention_comparison_payloads(tmp_path: Path) ->
     theorem_result = _minimal_theorem_result(theorem)
     intervention_run = lean_mod.RunResult(
         solved=False,
+        tree_solved=False,
+        kernel_check=None,
         stats={},
         graph=ProofGraph.for_search_trace(backend="lean"),
         history=ExplorationHistory.create(theorem.name),
@@ -179,6 +183,7 @@ def test_save_results_writes_intervention_comparison_payloads(tmp_path: Path) ->
         "theorem_total": 1,
         "crashed": 0,
         "wild_solved": 0,
+        "wild_tree_solved": 0,
         "wild_aborted": 0,
         "intervention_total": 1,
         "intervention_solved": 0,
@@ -197,6 +202,16 @@ def test_save_results_marks_missing_ged_invalid(tmp_path: Path) -> None:
     theorem_result = _minimal_theorem_result(theorem)
     intervention_run = lean_mod.RunResult(
         solved=True,
+        tree_solved=True,
+        kernel_check=KernelCheck(
+            status="checked",
+            error=None,
+            tactics=("trivial",),
+            term_hash="0" * 64,
+            premises=(),
+            self_citation=None,
+            blocked_hits=(),
+        ),
         stats={},
         graph=ProofGraph.for_search_trace(backend="lean"),
         history=ExplorationHistory.create(theorem.name),
@@ -381,11 +396,6 @@ def test_lean_adapter_timeout_message_points_to_flake_and_warmup(
     assert "uv run python setup_lean.py" in message
 
 
-class _StartupFailProvider:
-    def describe(self) -> str:
-        return "startup-fail-provider"
-
-
 class _NoopAdapter:
     async def __aenter__(self) -> "_NoopAdapter":
         return self
@@ -408,7 +418,7 @@ class _CountingAdapter(_NoopAdapter):
         return None
 
 
-def _minimal_theorem_result(theorem: Theorem, *, search_seed: int | None = None):
+def _minimal_theorem_result(theorem: Theorem, *, search_seed: int = 7):
     graph = ProofGraph.for_search_trace(backend="lean")
     history = ExplorationHistory.create(theorem.name)
     tree = MCTSTree.create(f"{theorem.name}:root", "True")
@@ -416,6 +426,8 @@ def _minimal_theorem_result(theorem: Theorem, *, search_seed: int | None = None)
         theorem=theorem,
         wild_type=lean_mod.RunResult(
             solved=False,
+            tree_solved=False,
+            kernel_check=None,
             stats={},
             graph=graph,
             history=history,
@@ -447,13 +459,18 @@ def _patch_corpus_runtime(
     monkeypatch.setattr(lean_mod, "resolve_logs_dir", lambda: logs_dir)
     monkeypatch.setattr(
         lean_mod,
+        "record_run_provenance",
+        lambda *_args, **_kwargs: {"source": {"base_commit": "abc"}},
+    )
+    monkeypatch.setattr(
+        lean_mod,
         "load_corpus",
         lambda _corpus: (theorems, {"name": "test", "total_theorems": len(theorems)}, None),
     )
     monkeypatch.setattr(
         lean_mod,
         "create_provider",
-        lambda *_args, **_kwargs: _StartupFailProvider(),
+        lambda *_args, **_kwargs: GoalAwareTacticProvider(),
     )
 
 
@@ -508,6 +525,8 @@ def _run_corpus_for_test(project_path: Path, run_id: str, **overrides):
         "write_latest_run": False,
         "no_sync": True,
     }
+    if overrides.get("basin_seeds") is None:
+        kwargs["search_seed"] = 7
     kwargs.update(overrides)
     return asyncio.run(lean_mod.run_corpus(**kwargs))
 

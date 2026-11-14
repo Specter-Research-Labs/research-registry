@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from analysis.lake.score_k import compute_k_reference_from_variant
-from prover.mcts import TACTIC_FAMILIES
+from prover.providers.base import TACTIC_FAMILIES
 
 
 def _write_json(path, payload) -> None:

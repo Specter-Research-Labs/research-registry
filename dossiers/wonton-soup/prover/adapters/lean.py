@@ -1,7 +1,6 @@
 import asyncio
-import logging
 import re
-import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -17,7 +16,7 @@ from leantree.repl_adapter.interaction import (
 )
 
 from prover.assembly import ProofAssemblyTrace
-from prover.dependencies import PremiseBlocked, forbidden_hits
+from prover.dependencies import KernelCheck, PremiseBlocked, check_proof, forbidden_hits
 from prover.expr import ExprDAG, PartialProofTerm
 from prover.tactic_ir import (
     CONTINUATION_KIND_BRANCH,
@@ -41,10 +40,87 @@ from prover.tactic_ir import (
     stable_unique_strings,
 )
 
-logger = logging.getLogger(__name__)
-
 LEAN_STARTUP_IMPORTS = "import Mathlib\nopen BigOperators Real Nat Topology"
 LEAN_STARTUP_TIMEOUT_S = 120.0
+
+# Tactic budgets are counted in Lean heartbeats (units of 1000, like maxHeartbeats)
+# so that a search outcome does not depend on host load. The REPL's own timeout is
+# wall-clock; it stays only as a guard against a tactic that never checks
+# heartbeats, and hitting it is an infrastructure error, not a tactic failure.
+TACTIC_HEARTBEATS = 50_000
+TACTIC_WALL_GUARD_MS = 120_000
+DECLARATION_MAX_HEARTBEATS = 200_000
+MAX_REC_DEPTH = 2000
+
+# `set_option maxHeartbeats N in tac` does not bound a tactic run through the REPL,
+# because the option elaborator does not update Core.Context.maxHeartbeats, so the
+# limit is installed directly on the context.
+HEARTBEAT_LIMIT_TACTIC = """syntax (name := wontonHeartbeatLimit)
+  "heartbeat_limit " num " => " tacticSeq : tactic
+open Lean Elab Tactic in
+@[tactic wontonHeartbeatLimit] def evalWontonHeartbeatLimit : Tactic := fun stx => do
+  let some limit := stx[1].isNatLit? | throwUnsupportedSyntax
+  let start ← IO.getNumHeartbeats
+  withTheReader Core.Context
+    (fun ctx => { ctx with maxHeartbeats := limit * 1000, initHeartbeats := start })
+    (evalTactic stx[3])"""
+
+# leantree reports the REPL's wall-clock timeout as this LeanInteractionException message.
+REPL_TIMEOUT_MESSAGE = "Tactic application timed out."
+
+REPLAY_DECLARATION = "wonton_replay"
+CHECK_DECLARATION = "wonton_check"
+
+
+class TacticWallTimeout(LeanProcessException):
+    """A tactic outran the wall-clock guard without exhausting its heartbeats."""
+
+
+def heartbeat_limited(tactic: str) -> str:
+    body = tactic.strip("\n")
+    if "\n" not in body:
+        return f"heartbeat_limit {TACTIC_HEARTBEATS} => ({body})"
+    indented = "\n".join(f"  {line}" for line in body.split("\n"))
+    return f"heartbeat_limit {TACTIC_HEARTBEATS} => (\n{indented}\n)"
+
+
+def rename_declaration(statement: str, name: str) -> str:
+    renamed, count = re.subn(r"(theorem\s+)(\S+)", rf"\g<1>{name}", statement, count=1)
+    if count != 1:
+        raise ValueError(f"statement has no theorem declaration: {statement[:120]!r}")
+    return renamed
+
+
+async def _limited[T](
+    branch: LeanProofBranch, tactic: str, apply: Callable[..., Awaitable[T]]
+) -> T | None:
+    """Apply `tactic` under the heartbeat budget; None means Lean rejected it.
+
+    Masked sibling goals are removed before the tactic runs, so a failure there is
+    an infrastructure error and propagates. Search-tactic and `have` checks run on
+    the raw tactic because the wrapper would hide its prefix from them.
+    """
+    try:
+        LeanProofBranch._check_tactic(tactic, ban_search_tactics=True)
+    except LeanInteractionException:
+        return None
+    await branch._delete_masked_goals_async()
+    try:
+        return await apply(heartbeat_limited(tactic), timeout=TACTIC_WALL_GUARD_MS)
+    except LeanInteractionException as exc:
+        if str(exc) == REPL_TIMEOUT_MESSAGE:
+            raise TacticWallTimeout(
+                f"{tactic!r} exceeded the {TACTIC_WALL_GUARD_MS} ms wall guard"
+            ) from exc
+        return None
+
+
+async def apply_limited(branch: LeanProofBranch, tactic: str) -> list[LeanProofBranch] | None:
+    return await _limited(branch, tactic, branch.apply_tactic_async)
+
+
+async def apply_limited_linear(branch: LeanProofBranch, tactic: str) -> LeanProofBranch | None:
+    return await _limited(branch, tactic, branch.apply_tactic_no_branching_async)
 
 
 @dataclass
@@ -236,11 +312,17 @@ class LeanAdapter:
                 timeout=LEAN_STARTUP_TIMEOUT_S,
             )
             await asyncio.wait_for(
-                self.env.send_command_async("set_option maxRecDepth 2000"),
+                self.env.send_command_async(f"set_option maxRecDepth {MAX_REC_DEPTH}"),
                 timeout=30.0,
             )
             await asyncio.wait_for(
-                self.env.send_command_async("set_option maxHeartbeats 200000"),
+                self.env.send_command_async(
+                    f"set_option maxHeartbeats {DECLARATION_MAX_HEARTBEATS}"
+                ),
+                timeout=30.0,
+            )
+            await asyncio.wait_for(
+                self.env.send_command_async(HEARTBEAT_LIMIT_TACTIC),
                 timeout=30.0,
             )
         except TimeoutError as exc:
@@ -301,11 +383,9 @@ class LeanAdapter:
         goals_before = list(self.states.keys())
         partial_term_before = self._last_partial_term
 
-        result = await state.branch.try_apply_tactic_async(tactic)
-        if not result.is_success():
+        new_branches = await apply_limited(state.branch, tactic)
+        if new_branches is None:
             return None
-
-        new_branches = result.value
         if self.forbidden_constants:
             await self._reject_forbidden_constants(tactic, new_branches)
         checkpoint = self.env.checkpoint()
@@ -439,84 +519,62 @@ class LeanAdapter:
     def get_proof_term(self) -> ExprDAG | None:
         return self.completed_proof_term
 
-    async def _replay_solution_path_isolated(
-        self,
-        theorem_with_sorry: str,
-        solution_path: list[dict[str, Any]],
-    ) -> ReplayResult:
-        if self.project is None or not hasattr(self.project, "path"):
-            return await self.replay_solution_path(
-                theorem_with_sorry=theorem_with_sorry,
-                solution_path=solution_path,
-            )
-        replay_adapter = await LeanAdapter.create(self.project.path)
-        async with replay_adapter:
-            return await replay_adapter.replay_solution_path(
-                theorem_with_sorry=theorem_with_sorry,
-                solution_path=solution_path,
-            )
-
     async def replay_solution_path(
         self,
         theorem_with_sorry: str,
         solution_path: list[dict[str, Any]],
-        *,
-        extract_proof_term: bool = True,
     ) -> ReplayResult:
-        unique_suffix = f"_replay_{int(time.time() * 1000)}"
-        theorem_with_new_name = re.sub(
-            r"(theorem\s+)(\S+)",
-            rf"\1\2{unique_suffix}",
-            theorem_with_sorry,
-            count=1,
+        """Replay a goal-ordered solution path as one linear tactic script.
+
+        The declaration is renamed to REPLAY_DECLARATION, so the caller must roll
+        the environment back before replaying again. Every step names the goal it
+        was found on; a step whose goal is no longer open fails the replay instead
+        of being skipped.
+        """
+        branch = await self.env.proof_from_sorry_async(
+            rename_declaration(theorem_with_sorry, REPLAY_DECLARATION)
         )
-        branch = await self.env.proof_from_sorry_async(theorem_with_new_name)
 
         applied_tactics: list[str] = []
         for i, step in enumerate(solution_path):
-            tactic_raw = step.get("tactic")
-            if not isinstance(tactic_raw, str) or not tactic_raw.strip():
-                return ReplayResult(
-                    success=False,
-                    applied_tactics=applied_tactics,
-                    error=f"solution_path step {i} missing tactic",
-                )
-            tactic = tactic_raw.strip()
+            tactic = step["tactic"].strip()
+            target_goal = step["goal"]
+            if not tactic or not target_goal:
+                raise ValueError(f"solution_path step {i} needs a tactic and a goal: {step!r}")
             if branch.is_solved:
-                break
-
-            goal_raw = step.get("goal")
-            target_goal = goal_raw if isinstance(goal_raw, str) and goal_raw else None
-            if target_goal is not None:
-                goals = [goal.type for goal in branch.state.goals]
-                if target_goal in goals:
-                    goal_idx = goals.index(target_goal)
-                    if goal_idx > 0:
-                        rotate_tactic = f"rotate_left {goal_idx}"
-                        rotate_result = await branch.try_apply_tactic_no_branching_async(
-                            rotate_tactic
-                        )
-                        if not rotate_result.is_success():
-                            return ReplayResult(
-                                success=False,
-                                applied_tactics=applied_tactics,
-                                error=(
-                                    "failed to rotate to target goal at "
-                                    f"step {i} ({tactic}): {rotate_result.error}"
-                                ),
-                            )
-                        applied_tactics.append(rotate_tactic)
-                        branch = rotate_result.value
-
-            result = await branch.try_apply_tactic_no_branching_async(tactic)
-            if not result.is_success():
                 return ReplayResult(
                     success=False,
                     applied_tactics=applied_tactics,
-                    error=f"tactic failed at step {i} ({tactic}): {result.error}",
+                    error=f"proof closed before step {i} ({tactic})",
+                )
+
+            goals = [goal.type for goal in branch.state.goals]
+            if target_goal not in goals:
+                return ReplayResult(
+                    success=False,
+                    applied_tactics=applied_tactics,
+                    error=f"goal of step {i} ({tactic}) is not open: {target_goal!r}",
+                )
+            goal_idx = goals.index(target_goal)
+            if goal_idx > 0:
+                rotate_tactic = f"rotate_left {goal_idx}"
+                rotated = await apply_limited_linear(branch, rotate_tactic)
+                if rotated is None:
+                    raise LeanInteractionException(
+                        f"{rotate_tactic} failed with {len(goals)} open goals at step {i}"
+                    )
+                applied_tactics.append(rotate_tactic)
+                branch = rotated
+
+            result = await apply_limited_linear(branch, tactic)
+            if result is None:
+                return ReplayResult(
+                    success=False,
+                    applied_tactics=applied_tactics,
+                    error=f"tactic failed at step {i} ({tactic})",
                 )
             applied_tactics.append(tactic)
-            branch = result.value
+            branch = result
 
         if not branch.is_solved:
             return ReplayResult(
@@ -524,72 +582,89 @@ class LeanAdapter:
                 applied_tactics=applied_tactics,
                 error="proof not solved after replaying all tactics",
             )
-        if not extract_proof_term:
-            return ReplayResult(success=True, applied_tactics=applied_tactics)
 
         proof_term_json = branch.get_proof_term_json()
         if proof_term_json is None:
-            try:
-                response = await branch.inspect_async(include_proof_term=True)
-            except (LeanInteractionException, LeanProcessException, AssertionError) as exc:
-                logger.debug(
-                    "replay_solution_path: proof-term extraction failed after replay: %s",
-                    exc,
-                )
-            else:
-                proof_term_json = response.get("proofTerm")
-        proof_term = ExprDAG.from_json(proof_term_json) if proof_term_json else None
-        return ReplayResult(success=True, applied_tactics=applied_tactics, proof_term=proof_term)
-
-    async def reconstruct_proof_term(
-        self,
-        solution_path: list[dict[str, Any]] | None = None,
-    ) -> ExprDAG | None:
-        """
-        Reconstruct the proof term by replaying tactics sequentially.
-
-        This is needed when the proof involved multiple independent goals that were
-        explored in parallel branches (with sorry masking). The parallel exploration
-        contaminates each branch's proof term with sorry, so we replay the tactics
-        sequentially using apply_tactic_no_branching_async to get a clean proof term.
-        """
-        if not self.assembly_trace or not self.assembly_trace.steps:
-            logger.debug("reconstruct_proof_term: no assembly trace or steps")
-            return None
-        if self.completed_proof_term:
-            return self.completed_proof_term
-
-        if solution_path:
-            replay = await self._replay_solution_path_isolated(
-                theorem_with_sorry=self.assembly_trace.theorem,
-                solution_path=solution_path,
-            )
-            if not replay.success:
-                logger.debug("reconstruct_proof_term: %s", replay.error)
-                return None
-            if replay.proof_term is not None:
-                self.completed_proof_term = replay.proof_term
-                if self.assembly_trace:
-                    self.assembly_trace.final_term = self.completed_proof_term
-                return self.completed_proof_term
-            logger.debug("reconstruct_proof_term: no proof term JSON from solved branch")
-            return None
-
-        replay_steps = [{"tactic": step.tactic} for step in self.assembly_trace.steps]
-        replay = await self._replay_solution_path_isolated(
-            theorem_with_sorry=self.assembly_trace.theorem,
-            solution_path=replay_steps,
+            response = await branch.inspect_async(include_proof_term=True)
+            proof_term_json = response.get("proofTerm")
+        if proof_term_json is None:
+            raise LeanInteractionException("REPL returned no proof term for a solved replay")
+        return ReplayResult(
+            success=True,
+            applied_tactics=applied_tactics,
+            proof_term=ExprDAG.from_json(proof_term_json),
         )
-        if not replay.success:
-            logger.debug("reconstruct_proof_term: %s", replay.error)
-            return None
-        if replay.proof_term:
-            self.completed_proof_term = replay.proof_term
-            if self.assembly_trace:
-                self.assembly_trace.final_term = self.completed_proof_term
-            return self.completed_proof_term
-        logger.debug("reconstruct_proof_term: no proof term JSON from solved branch")
-        return None
+
+    async def kernel_check(
+        self,
+        theorem_with_sorry: str,
+        solution_path: list[dict[str, Any]],
+        *,
+        library_name: str | None,
+        blocked_premises: frozenset[str],
+    ) -> tuple[KernelCheck, ExprDAG | None]:
+        """Replay a tree solution, then elaborate it as a standalone declaration.
+
+        The replay yields the linear script and the proof term; the declaration is
+        then elaborated with the raw tactics under Lean's default per-declaration
+        heartbeat budget, so a checked proof compiles as ordinary Lean. Both
+        declarations use fixed names so auxiliary lemma names, and with them the
+        term hash, do not depend on the variant or the run. The environment is
+        rolled back afterwards so the names can be reused.
+        """
+        checkpoint = self.env.checkpoint()
+        try:
+            replay = await self.replay_solution_path(theorem_with_sorry, solution_path)
+            if not replay.success:
+                return (
+                    KernelCheck(
+                        status="replay_failed",
+                        error=replay.error,
+                        tactics=tuple(replay.applied_tactics),
+                        term_hash=None,
+                        premises=(),
+                        self_citation=None,
+                        blocked_hits=(),
+                    ),
+                    None,
+                )
+            assert replay.proof_term is not None
+            tactics = tuple(replay.applied_tactics)
+            term_hash = replay.proof_term.structural_hash()
+            check = await check_proof(
+                self.env, rename_declaration(theorem_with_sorry, CHECK_DECLARATION), list(tactics)
+            )
+            if not check.ok:
+                return (
+                    KernelCheck(
+                        status="check_failed",
+                        error=check.error,
+                        tactics=tactics,
+                        term_hash=term_hash,
+                        premises=(),
+                        self_citation=None,
+                        blocked_hits=(),
+                    ),
+                    replay.proof_term,
+                )
+            names = {d.premise for d in check.dependencies}
+            hits = tuple(
+                sorted(forbidden_hits((d.name for d in check.dependencies), blocked_premises))
+            )
+            return (
+                KernelCheck(
+                    status="blocked_premise" if hits else "checked",
+                    error=f"proof uses blocked premise {', '.join(hits)}" if hits else None,
+                    tactics=tactics,
+                    term_hash=term_hash,
+                    premises=tuple(sorted(check.premises())),
+                    self_citation=library_name in names if library_name is not None else None,
+                    blocked_hits=hits,
+                ),
+                replay.proof_term,
+            )
+        finally:
+            self.env.rollback_to(checkpoint)
 
     def get_assembly_trace(self) -> ProofAssemblyTrace | None:
         return self.assembly_trace
@@ -616,7 +691,16 @@ class LeanAdapter:
         state = self.states[mvar_id]
         self.env.rollback_to(state.checkpoint)
 
-        response = await state.branch._send_tactic_async(search_tactic, timeout=5000)
+        try:
+            response = await state.branch._send_tactic_async(
+                heartbeat_limited(search_tactic), timeout=TACTIC_WALL_GUARD_MS
+            )
+        except LeanInteractionException as exc:
+            if str(exc) == REPL_TIMEOUT_MESSAGE:
+                raise TacticWallTimeout(
+                    f"{search_tactic!r} exceeded the {TACTIC_WALL_GUARD_MS} ms wall guard"
+                ) from exc
+            raise
         if "messages" not in response:
             raise ValueError(f"Lean response missing messages for {search_tactic}")
 

@@ -19,6 +19,7 @@ from prover import (
     ProofAssemblyTrace,
     ProofGraph,
 )
+from prover.dependencies import KernelCheck
 from prover.goal_signature import GoalSignatureConfig
 
 if TYPE_CHECKING:
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
 
 
 THEOREM_RESULT_CHECKPOINT_NAME = "theorem_result.checkpoint.json.gz"
+THEOREM_RESULT_FORMAT_VERSION = 2
 
 
 def _lean_helpers():
@@ -75,6 +77,10 @@ def _trajectory_comparison_from_payload(data: Mapping[str, Any]) -> TrajectoryCo
 def _run_result_payload(result: RunResult) -> dict[str, Any]:
     return {
         "solved": result.solved,
+        "tree_solved": result.tree_solved,
+        "kernel_check": (
+            result.kernel_check.serialize() if result.kernel_check is not None else None
+        ),
         "stats": result.stats,
         "graph": result.graph.serialize(),
         "history": result.history.serialize(),
@@ -96,8 +102,11 @@ def _run_result_from_payload(data: Mapping[str, Any]) -> RunResult:
     proof_term_payload = data.get("proof_term")
     assembly_payload = data.get("assembly_trace")
     mcts_tree_payload = data.get("mcts_tree")
+    check_payload = data["kernel_check"]
     return _run_result_type()(
-        solved=bool(data.get("solved")),
+        solved=bool(data["solved"]),
+        tree_solved=bool(data["tree_solved"]),
+        kernel_check=KernelCheck.from_json(check_payload) if check_payload is not None else None,
         stats=dict(data.get("stats") or {}),
         graph=ProofGraph.deserialize(graph_payload),
         history=ExplorationHistory.from_json(history_payload),
@@ -179,10 +188,11 @@ def _intervention_result_from_payload(data: Mapping[str, Any]) -> InterventionRe
 
 def _theorem_result_payload(result: TheoremResult) -> dict[str, Any]:
     return {
-        "format_version": 1,
+        "format_version": THEOREM_RESULT_FORMAT_VERSION,
         "theorem": {
             "name": result.theorem.name,
             "statement": result.theorem.statement,
+            "library_name": result.theorem.library_name,
         },
         "wild_type": _run_result_payload(result.wild_type),
         "interventions": [_intervention_result_payload(item) for item in result.interventions],
@@ -197,21 +207,21 @@ def _theorem_result_from_payload(data: Mapping[str, Any]) -> TheoremResult:
         raise ValueError("TheoremResult payload missing theorem")
     if not isinstance(wild_type_payload, dict):
         raise ValueError("TheoremResult payload missing wild_type")
+    if data["format_version"] != THEOREM_RESULT_FORMAT_VERSION:
+        raise ValueError(
+            f"theorem checkpoint format {data['format_version']} predates kernel checks; "
+            f"expected {THEOREM_RESULT_FORMAT_VERSION}"
+        )
     theorem = Theorem(
         name=str(theorem_payload["name"]),
         statement=str(theorem_payload["statement"]),
+        library_name=theorem_payload["library_name"],
     )
     return _theorem_result_type()(
         theorem=theorem,
         wild_type=_run_result_from_payload(wild_type_payload),
-        interventions=[
-            _intervention_result_from_payload(item)
-            for item in data.get("interventions", [])
-            if isinstance(item, dict)
-        ],
-        search_seed=(
-            int(data["search_seed"]) if isinstance(data.get("search_seed"), int) else None
-        ),
+        interventions=[_intervention_result_from_payload(item) for item in data["interventions"]],
+        search_seed=int(data["search_seed"]),
     )
 
 

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import math
-from types import SimpleNamespace
 
 from experiments.distributed_mcts import DistributedMCTSConfig
-from orchestrator.lean import runner as lean_runner
-from orchestrator.lean.metadata import build_distributed_config
-from prover.mcts import BackpropStrategy
+from orchestrator import lean_runner
+from orchestrator.lean_metadata import build_distributed_config
+from prover.mcts import BackpropStrategy, ExpansionPolicy
 
 
 def test_build_distributed_config_preserves_deterministic_inference() -> None:
@@ -41,23 +41,14 @@ def test_build_distributed_config_preserves_deterministic_inference() -> None:
     assert config.deterministic_inference is True
 
 
-def test_run_search_budget_uses_local_builder_not_runtime_private_helper(monkeypatch) -> None:
+def test_run_search_budget_builds_distributed_config_from_settings(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
     async def fake_distributed_search(*_args, **kwargs):
         captured["config"] = kwargs["config"]
         return "ok"
 
-    lean_runner.distributed_mcts_search = fake_distributed_search  # type: ignore[assignment]
-    monkeypatch.setattr(
-        lean_runner,
-        "_lean_helpers",
-        lambda: SimpleNamespace(
-            _open_mcts_trace_writer=None,
-            TheoremResult=None,
-            InterventionResult=None,
-        ),
-    )
+    monkeypatch.setattr(lean_runner, "distributed_mcts_search", fake_distributed_search)
 
     result = lean_runner._run_search_budget(
         statement="theorem",
@@ -68,6 +59,7 @@ def test_run_search_budget_uses_local_builder_not_runtime_private_helper(monkeyp
         goal_cache=None,
         goal_sig_config=None,  # type: ignore[arg-type]
         mcts_mode="distributed",
+        expansion_policy=ExpansionPolicy.ALL_SUCCESSES,
         budget=17,
         tree=None,
         distributed_settings={
@@ -87,8 +79,6 @@ def test_run_search_budget_uses_local_builder_not_runtime_private_helper(monkeyp
             "delay_seed": None,
         },
     )
-
-    import asyncio
 
     assert asyncio.run(result) == "ok"
     assert captured["config"] == DistributedMCTSConfig(

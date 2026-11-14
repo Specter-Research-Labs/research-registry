@@ -39,6 +39,7 @@ if TYPE_CHECKING:
         TieBreakerAgent,
     )
     from orchestrator.lean_progress import CorpusProgress
+    from prover.dependencies import KernelCheck
 
 from orchestrator.lean_metadata import build_distributed_config
 
@@ -58,15 +59,6 @@ def _derive_search_seed(base_seed: int, *parts: str) -> int:
     return int.from_bytes(digest.digest()[:4], "big")
 
 
-def _reset_provider_for_seed(provider: TacticProvider, seed: int | None) -> None:
-    if seed is None:
-        return
-    clear_cache = getattr(provider, "clear_cache", None)
-    if callable(clear_cache):
-        clear_cache()
-    set_seed = getattr(provider, "set_seed", None)
-    if callable(set_seed):
-        set_seed(seed)
 
 
 def make_unique_name(theorem: Theorem, suffix: str) -> str:
@@ -184,7 +176,8 @@ async def _run_theorem_variant(
     progress: CorpusProgress | None,
     log_dir: Path | None,
     trace_mcts: bool,
-    theorem_search_seed: int | None,
+    theorem_search_seed: int,
+    blocked_premises: frozenset[str],
     blocked_tactics: set[str] | None = None,
     tactic_ranker: TacticRanker | None = None,
     tactic_ranker_agent: TacticRankerAgent | None = None,
@@ -192,13 +185,9 @@ async def _run_theorem_variant(
     tie_breaker_agent: TieBreakerAgent | None = None,
     collect_solution_artifacts: bool = True,
 ) -> RunResult:
-    variant_seed = (
-        _derive_search_seed(theorem_search_seed, variant_seed_key)
-        if theorem_search_seed is not None
-        else None
-    )
-    _reset_provider_for_seed(provider, variant_seed)
-    rng = random.Random(variant_seed) if variant_seed is not None else None
+    variant_seed = _derive_search_seed(theorem_search_seed, variant_seed_key)
+    provider.set_seed(variant_seed)
+    rng = random.Random(variant_seed)
     with _lean_helpers()._open_mcts_trace_writer(
         enabled=trace_mcts,
         log_dir=log_dir,
@@ -210,6 +199,8 @@ async def _run_theorem_variant(
             statement,
             provider,
             budget_tiers,
+            library_name=theorem.library_name,
+            blocked_premises=blocked_premises,
             blocked_tactics=blocked_tactics,
             goal_cache=goal_cache,
             goal_sig_config=goal_sig_config,
@@ -361,6 +352,9 @@ async def run_single(
     statement: str,
     provider,
     budget_tiers: list[int],
+    *,
+    library_name: str | None,
+    blocked_premises: frozenset[str],
     blocked_tactics: set[str] | None = None,
     goal_cache: GoalCache | None = None,
     goal_sig_config: GoalSignatureConfig | None = None,
@@ -421,24 +415,31 @@ async def run_single(
     if tree is None:
         raise RuntimeError("No budget tiers provided for theorem run")
 
+    tree_solved = tree.is_solved()
     proof_term = None
-    if tree.is_solved():
+    kernel_check = None
+    assembly_trace = None
+    if tree_solved:
         solution_path = tree.extract_winning_tactics()
         if solution_path is None:
             raise ValueError("Solved tree missing solution path")
         history.solution_path = solution_path
+        kernel_check, replay_term = await adapter.kernel_check(
+            statement,
+            solution_path,
+            library_name=library_name,
+            blocked_premises=blocked_premises,
+        )
         if collect_solution_artifacts:
-            proof_term = adapter.get_proof_term()
-            if proof_term is None:
-                proof_term = await adapter.reconstruct_proof_term(solution_path=solution_path)
-    assembly_trace = (
-        adapter.get_assembly_trace() if tree.is_solved() and collect_solution_artifacts else None
-    )
+            proof_term = replay_term
+            assembly_trace = adapter.get_assembly_trace()
     stats = tree.stats()
     stats["solved_at_tier"] = solved_at_tier
     stats["budget_tiers"] = budget_tiers
     return _lean_helpers().RunResult(
-        solved=tree.is_solved(),
+        solved=kernel_check is not None and kernel_check.status == "checked",
+        tree_solved=tree_solved,
+        kernel_check=kernel_check,
         stats=stats,
         graph=graph,
         history=history,
@@ -446,6 +447,24 @@ async def run_single(
         assembly_trace=assembly_trace,
         mcts_tree=tree,
     )
+
+
+def _premise_interventions(check: KernelCheck | None) -> list[Intervention]:
+    """One lesion per lemma premise of the checked wild-type proof.
+
+    A wild type that did not pass the kernel check has no premise set, so it
+    gets no premise lesions.
+    """
+    if check is None or check.status != "checked":
+        return []
+    return [
+        Intervention(
+            name=f"block_premise_{premise}",
+            blocked=set(),
+            blocked_premises=frozenset({premise}),
+        )
+        for premise in check.premises
+    ]
 
 
 async def run_theorem(
@@ -465,9 +484,11 @@ async def run_theorem(
     log_dir: Path | None = None,
     theorem_idx: int = 0,
     trace_mcts: bool = False,
-    search_seed: int | None = None,
+    *,
+    search_seed: int,
     intervention_names: list[str] | None = None,
     extra_interventions: list[Intervention] | None = None,
+    premise_lesions: bool = False,
     tactic_ranker: TacticRanker | None = None,
     tactic_ranker_agent: TacticRankerAgent | None = None,
     tie_breaker: TieBreaker | None = None,
@@ -486,9 +507,7 @@ async def run_theorem(
     if trace_mcts and log_dir is None:
         raise ValueError("log_dir is required when trace_mcts is enabled")
 
-    theorem_search_seed = (
-        _derive_search_seed(search_seed, theorem.name) if search_seed is not None else None
-    )
+    theorem_search_seed = _derive_search_seed(search_seed, theorem.name)
     variant_kwargs: dict[str, Any] = {
         "adapter": adapter,
         "theorem": theorem,
@@ -515,6 +534,7 @@ async def run_theorem(
         statement=wild_statement,
         variant_seed_key="wild",
         trace_filename="wild_type_mcts_trace.jsonl",
+        blocked_premises=frozenset(),
         **variant_kwargs,
     )
     was_aborted = wild_result.mcts_tree is not None and wild_result.mcts_tree.aborted
@@ -545,6 +565,8 @@ async def run_theorem(
         logger.warning("  Wild type failed; running interventions anyway")
 
     interventions = theorem.generate_interventions(wild_result.history)
+    if premise_lesions:
+        interventions.extend(_premise_interventions(wild_result.kernel_check))
     interventions = _merge_interventions(interventions, list(extra_interventions or []))
     interventions = _select_interventions(interventions, intervention_names)
     if not interventions:
@@ -576,6 +598,7 @@ async def run_theorem(
                 statement=int_statement,
                 variant_seed_key=intervention.name,
                 trace_filename=f"{intervention.name}_mcts_trace.jsonl",
+                blocked_premises=intervention.blocked_premises,
                 blocked_tactics=intervention.blocked,
                 **variant_kwargs,
             )

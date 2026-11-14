@@ -30,6 +30,7 @@ from orchestrator.lean_metadata import write_run_config as _write_run_config
 from orchestrator.lean_options import BUDGET_PRESETS
 from orchestrator.lean_progress import CorpusProgress
 from orchestrator.lean_progress import ProgressCallback as _ProgressCallback
+from orchestrator.provenance import record_run_provenance
 from prover.mcts import ExpansionPolicy, coerce_expansion_policy
 from run_capabilities import default_run_capabilities, normalize_run_capabilities
 from runtime_paths import (
@@ -164,6 +165,7 @@ from prover import (
     ProofAssemblyTrace,
     ProofGraph,
 )
+from prover.dependencies import KernelCheck
 from prover.goal_signature import GoalSignatureConfig
 from prover.providers import TacticProvider
 
@@ -182,7 +184,15 @@ TieBreakerAgentFactory = Callable[[Theorem, int], TieBreakerAgent | None]
 
 @dataclass
 class RunResult:
+    """`solved` means the search tree closed and the kernel accepted the proof.
+
+    `tree_solved` alone is what the search believed; `kernel_check` is None
+    exactly when the tree did not close.
+    """
+
     solved: bool
+    tree_solved: bool
+    kernel_check: KernelCheck | None
     stats: dict
     graph: ProofGraph
     history: ExplorationHistory
@@ -205,8 +215,8 @@ class InterventionResult:
 class TheoremResult:
     theorem: Theorem
     wild_type: RunResult
+    search_seed: int
     interventions: list[InterventionResult] = field(default_factory=list)
-    search_seed: int | None = None
 
 
 _build_run_capabilities = lean_metadata.build_run_capabilities
@@ -863,6 +873,7 @@ async def run_corpus(
     theorem_name: str | None = None,
     intervention_names: list[str] | None = None,
     extra_interventions: list[Intervention] | None = None,
+    premise_lesions: bool = False,
     plain: bool = False,
     basin_seeds: int | None = None,
     basin_blind: bool = False,
@@ -907,10 +918,16 @@ async def run_corpus(
         raise ValueError("basin_blind currently requires centralized MCTS")
     if basin_seeds is not None and search_seed is not None:
         raise ValueError("search_seed is not supported with basin_seeds")
+    if basin_seeds is None and search_seed is None:
+        raise ValueError("search_seed is required unless basin_seeds sets the seeds")
     if skip_interventions and intervention_names:
         raise ValueError("intervention_names require interventions to be enabled")
     if skip_interventions and extra_interventions:
         raise ValueError("extra_interventions require interventions to be enabled")
+    if premise_lesions and (skip_interventions or basin_seeds is not None):
+        raise ValueError("premise_lesions require interventions and no basin_seeds")
+    if premise_lesions and mcts_mode != "centralized":
+        raise ValueError("premise_lesions require mcts_mode='centralized'")
     expansion_policy = coerce_expansion_policy(expansion_policy)
     expansion_policy_value = expansion_policy.value
     logs_dir = resolve_logs_dir()
@@ -1059,6 +1076,8 @@ async def run_corpus(
         blocked_tactics=blocked_tactics,
         requested_interventions=requested_interventions,
         extra_intervention_payloads=extra_intervention_payloads,
+        premise_lesions=premise_lesions,
+        provenance=record_run_provenance(log_dir, Path(project_path), resume=resume),
     )
     _write_run_config(log_dir, run_config)
     if write_latest_run:
@@ -1232,6 +1251,8 @@ async def run_corpus(
         )
         return results
 
+    assert search_seed is not None
+    theorem_seed = search_seed
     counter = [0]
     results_lock = asyncio.Lock()
 
@@ -1264,9 +1285,10 @@ async def run_corpus(
                 log_dir,
                 idx,
                 trace_mcts,
-                search_seed=search_seed,
+                search_seed=theorem_seed,
                 intervention_names=intervention_names,
                 extra_interventions=extra_interventions,
+                premise_lesions=premise_lesions,
                 tactic_ranker=resolve_for_theorem(tactic_ranker_factory, tactic_ranker),
                 tactic_ranker_agent=resolve_for_theorem(
                     tactic_ranker_agent_factory,

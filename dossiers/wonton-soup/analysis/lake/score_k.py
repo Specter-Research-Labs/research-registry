@@ -10,12 +10,11 @@ import duckdb
 
 from analysis.logs import (
     extract_solution_steps,
-    family_index,
     read_json,
     read_json_gz,
 )
 from prover.k import k_log10_ratio
-from prover.providers.base import normalize_tactic, tactic_family
+from prover.providers.base import TACTIC_FAMILIES, normalize_tactic, tactic_family
 
 
 def _load_reference(path: Path) -> dict[str, Any]:
@@ -116,7 +115,7 @@ def compute_k_reference_from_variant(
 
             probs = []
             for fam in fams:
-                p = _p_success(reference, sig, family_index(fam))
+                p = _p_success(reference, sig, TACTIC_FAMILIES.index(fam))
                 if p is None:
                     continue
                 probs.append(p)
@@ -126,7 +125,7 @@ def compute_k_reference_from_variant(
                 if used_count <= 0:
                     local_notes.append(f"used_family_missing_from_candidates: iteration={it}")
                     return None, local_notes
-                p_used = _p_success(reference, sig, family_index(used_fam))
+                p_used = _p_success(reference, sig, TACTIC_FAMILIES.index(used_fam))
                 if p_used is None:
                     local_notes.append(f"missing_used_family_prob: iteration={it}")
                     return None, local_notes

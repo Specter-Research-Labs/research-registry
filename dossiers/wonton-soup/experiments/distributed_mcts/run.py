@@ -35,6 +35,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--offset", type=int, default=0)
     parser.add_argument("--sample", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--search-seed", type=int, required=True)
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--run-id", type=str, required=True)
     trace_group = parser.add_mutually_exclusive_group()
@@ -219,6 +220,7 @@ async def _run_scenarios(args: argparse.Namespace, scenarios: Iterable[Scenario]
             offset=args.offset,
             sample=args.sample,
             seed=args.seed,
+            search_seed=args.search_seed,
             num_workers=args.workers,
             run_id=run_id,
             trace_mcts=args.trace_mcts,

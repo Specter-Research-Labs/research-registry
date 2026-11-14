@@ -4,12 +4,13 @@ import asyncio
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from leantree.core.lean import LeanGoal
 
 from prover.providers.base import TacticProvider
-from prover.providers.reprover_client import PremiseRetriever, ReProverModel
+from prover.providers.reprover_client import RETRIEVER_MODEL_ID, PremiseRetriever, ReProverModel
+from prover.providers.weights import hub_weights
 
 if TYPE_CHECKING:
     from prover.adapters.lean import LeanAdapter
@@ -65,14 +66,19 @@ class ReProverTacticProvider(TacticProvider):
                 self.retriever.load()
             self._loaded = True
 
-    def set_seed(self, seed: int) -> None:
+    def weights(self) -> dict[str, Any]:
         self._ensure_loaded()
-        self.model.set_seed(seed)
+        return {
+            "generator": hub_weights(ReProverModel.MODEL_ID),
+            "retriever": hub_weights(RETRIEVER_MODEL_ID) if self.retriever is not None else None,
+        }
 
-    def clear_cache(self) -> None:
+    def set_seed(self, seed: int) -> None:
         self._cache.clear()
         self.cache_hits = 0
         self.cache_misses = 0
+        self._ensure_loaded()
+        self.model.set_seed(seed)
 
     def _cache_get(self, state: str) -> list[tuple[str, float]] | None:
         cached = self._cache.get(state)

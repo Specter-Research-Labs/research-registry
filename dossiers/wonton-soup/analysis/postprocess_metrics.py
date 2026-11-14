@@ -10,7 +10,6 @@ import networkx as nx
 from analysis.logs import (
     ProviderRun,
     extract_solution_steps,
-    family_index,
     iter_provider_runs,
     read_json,
     read_json_gz,
@@ -23,9 +22,8 @@ from analysis.root_goal_similarity import compute_root_goal_similarity
 from prover.goal_cache import GoalCache
 from prover.goal_distance import GoalSigTedDistance, normalized_sequence_edit_distance
 from prover.k import k_log10_ratio
-from prover.mcts import TACTIC_FAMILIES as MCTS_TACTIC_FAMILIES
 from prover.proof import ProofGraph
-from prover.providers.base import normalize_tactic, tactic_family
+from prover.providers.base import TACTIC_FAMILIES, normalize_tactic, tactic_family
 
 # These are intentionally conservative defaults. They keep postprocess deterministic and
 # bounded even when proof graphs are large.
@@ -152,8 +150,8 @@ def _compute_family_priors(cache: GoalCache) -> dict[str, float]:
     """Laplace-smoothed p(success|family) aggregated across the whole run."""
 
     priors: dict[str, float] = {}
-    for fam in MCTS_TACTIC_FAMILIES:
-        idx = family_index(fam)
+    for fam in TACTIC_FAMILIES:
+        idx = TACTIC_FAMILIES.index(fam)
         attempts = 0
         successes = 0
         for entry in cache.entries.values():
@@ -174,14 +172,11 @@ def _p_success_sig_family(
 ) -> float:
     """Return p(success | goal_sig=sig, tactic_family=fam) with empirical fallback."""
 
-    # Unknown tactic families are bucketed to "other" in prover/mcts.py and recorded that way in
-    # goal_cache outcomes. Mirror that here so the prior is consistent with the observation index.
-    fam_key = fam if fam in MCTS_TACTIC_FAMILIES else "other"
-    prior = family_priors.get(fam_key, 0.5)
+    prior = family_priors.get(fam, 0.5)
     entry = cache.entries.get(sig)
     if entry is None:
         return float(prior)
-    idx = family_index(fam)
+    idx = TACTIC_FAMILIES.index(fam)
     attempts = 0
     successes = 0
     for occ in entry.occurrences.values():
@@ -198,8 +193,8 @@ def _observed_families_for_sig(cache: GoalCache, sig: str) -> list[str]:
     if entry is None:
         return []
     families: list[str] = []
-    for fam in MCTS_TACTIC_FAMILIES:
-        idx = family_index(fam)
+    for fam in TACTIC_FAMILIES:
+        idx = TACTIC_FAMILIES.index(fam)
         attempts = 0
         for occ in entry.occurrences.values():
             attempts += len(occ.outcomes.get(idx, []))

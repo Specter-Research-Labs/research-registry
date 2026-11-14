@@ -69,6 +69,28 @@ def _ged_detail(entry: Any) -> tuple[
     return value, norm, valid, trace_source, trace_comp
 
 
+def _kernel_check_fields(
+    entry: dict[str, Any],
+) -> tuple[bool | None, str | None, bool | None, str | None, str | None]:
+    """(tree_solved, check_status, self_citation, term_hash, premises) of a variant.
+
+    Summaries that predate the in-run kernel check carry no `tree_solved`; their
+    fields stay NULL so that `solved` there is read as tree-solved, never as checked.
+    """
+    if "tree_solved" not in entry:
+        return None, None, None, None, None
+    check = entry["metrics"]["kernel_check"]
+    if check is None:
+        return entry["tree_solved"], None, None, None, None
+    return (
+        entry["tree_solved"],
+        check["status"],
+        check["self_citation"],
+        check["term_hash"],
+        json.dumps(check["premises"]),
+    )
+
+
 def _k_primary(
     entry: Any,
 ) -> tuple[bool | None, str | None, int | None, float | None, float | None]:
@@ -457,8 +479,8 @@ def extract_facts(
                             _as_int(pt.get("depth")),
                             _as_int(pt.get("width")),
                             int(sp_len) if isinstance(sp_len, int) else None,
-                            metrics.get("tactic_fingerprint")
-                            if isinstance(metrics.get("tactic_fingerprint"), str)
+                            json.dumps(metrics["tactic_fingerprint"])
+                            if metrics.get("tactic_fingerprint") is not None
                             else None,
                             json.dumps(metrics.get("root_goal_sigs"))
                             if isinstance(metrics.get("root_goal_sigs"), list)
@@ -479,16 +501,19 @@ def extract_facts(
                 conn.execute(
                     """
                     INSERT INTO theorem_wild(
-                      run_key, theorem, solved, iterations, proof_term_hash,
+                      run_key, theorem, solved,
+                      tree_solved, check_status, self_citation, term_hash, premises,
+                      iterations, proof_term_hash,
                       k_valid, k_null_model, k_tau_agent, k_tau_blind, k_K,
                       metrics, k_json, wild_json
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     [
                         run_key,
                         theorem,
                         solved,
+                        *_kernel_check_fields(wild),
                         iterations,
                         proof_term_hash,
                         k_valid,
@@ -638,6 +663,7 @@ def extract_facts(
                 is_control = _as_bool(inv.get("is_control"))
                 baseline_solved = _as_bool(inv.get("baseline_solved"))
                 blocked = inv.get("blocked") if isinstance(inv.get("blocked"), list) else None
+                blocked_premises = inv.get("blocked_premises")
 
                 ged_search_value, ged_search_norm = _ged_value(inv.get("ged_search_graph"))
                 soft_value, soft_norm = _ged_value(inv.get("ged_search_graph_soft"))
@@ -650,23 +676,29 @@ def extract_facts(
                     """
                     INSERT INTO theorem_intervention(
                       run_key, theorem, intervention,
-                      solved, status, is_control, baseline_solved, blocked,
+                      solved, tree_solved, check_status, self_citation, term_hash, premises,
+                      status, is_control, baseline_solved, blocked, blocked_premises,
                       ged_search_value, ged_search_norm,
                       ged_search_soft_value, ged_search_soft_norm,
                       k_valid, k_null_model, k_tau_agent, k_tau_blind, k_K,
                       metrics, k_json, intervention_json
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (
+                      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    )
                     """,
                     [
                         run_key,
                         theorem,
                         name,
                         solved,
+                        *_kernel_check_fields(inv),
                         status,
                         is_control,
                         baseline_solved,
                         json.dumps(blocked) if blocked is not None else None,
+                        json.dumps(blocked_premises) if blocked_premises is not None else None,
                         ged_search_value,
                         ged_search_norm,
                         soft_value,

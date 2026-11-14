@@ -102,6 +102,10 @@ def test_run_from_args_multi_provider_uses_runtime_selection_for_top_run_config(
     )
     monkeypatch.setattr(runtime, "_sync_run_dir_to_remote", lambda **_kwargs: None)
     monkeypatch.setattr(runtime, "_cleanup_torch_memory", lambda: None)
+    provenance = {"source": {"base_commit": "abc"}}
+    monkeypatch.setattr(
+        lean_cli, "record_run_provenance", lambda _log_dir, _project, *, resume: provenance
+    )
 
     args = lean_cli._build_parser().parse_args(
         [
@@ -112,6 +116,8 @@ def test_run_from_args_multi_provider_uses_runtime_selection_for_top_run_config(
             "--deepseek-backend",
             "transformers",
             "--baseline-solved-only",
+            "--search-seed",
+            "7",
             "--run-id",
             "corpus-multi",
             "--resume",
@@ -148,6 +154,8 @@ def test_run_from_args_multi_provider_uses_runtime_selection_for_top_run_config(
         "error": None,
     }
     assert run_config["providers"] == ["reprover", "deepseek"]
+    assert run_config["provenance"] == provenance
+    assert run_config["resolved"]["search_seed"] == 7
     assert run_config["mcts_expansion_policy"] == "all-successes"
     assert run_config["mcts"]["expansion_policy"] == "all-successes"
     assert run_config["skip_interventions_after_wild_failure"] is True

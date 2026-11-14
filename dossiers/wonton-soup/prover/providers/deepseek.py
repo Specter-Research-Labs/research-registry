@@ -9,12 +9,12 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
-from urllib.request import Request, urlopen
 
 from leantree.core.lean import LeanGoal
 
 from prover.providers.base import TacticProvider
 from prover.providers.shared_prefix_decode import sample_shared_prefix
+from prover.providers.weights import local_weights
 
 if TYPE_CHECKING:
     from prover.adapters.lean import LeanAdapter
@@ -40,6 +40,8 @@ DEEPSEEK_TOKENIZER_KWARGS = {
     "unk_token": "<unk>",
 }
 DeepSeekBackend = Literal["mlx", "transformers", "tt"]
+DEEPSEEK_TEMPERATURE = 0.6
+DEEPSEEK_TOP_P = 0.9
 
 
 def _decode_bytelevel_artifacts(text: str) -> str:
@@ -100,59 +102,6 @@ def _resolve_model_path(explicit: str | None = None) -> str:
     )
 
 
-_VLLM_DEFAULT_PORTS = [8000, 8001, 8002, 8003]
-
-
-def _resolve_backend(
-    explicit_model_path: str | None = None,
-) -> tuple[list[str], str]:
-    vllm_env = os.environ.get("VLLM_ENDPOINTS") or os.environ.get("VLLM_ENDPOINT")
-    if vllm_env:
-        return [e.strip() for e in vllm_env.split(",") if e.strip()], ""
-
-    try:
-        return [], _resolve_model_path(explicit_model_path)
-    except FileNotFoundError:
-        pass
-
-    # MLX model not found -- probe localhost for a vLLM server on default ports
-    for port in _VLLM_DEFAULT_PORTS:
-        try:
-            req = Request(
-                f"http://localhost:{port}/v1/models",
-                method="GET",
-                headers={"Accept": "application/json"},
-            )
-            with urlopen(req, timeout=2) as resp:
-                if resp.status == 200:
-                    endpoints = [
-                        f"http://localhost:{p}" for p in _VLLM_DEFAULT_PORTS if _probe_port(p)
-                    ]
-                    return endpoints, ""
-        except Exception:
-            continue
-
-    raise FileNotFoundError(
-        "DeepSeek backend unavailable: no local MLX model found and no vLLM "
-        "server detected on localhost. Either set VLLM_ENDPOINTS, place the "
-        f"MLX model at $DEEPSEEK_ARTIFACT_ROOT/wonton-soup/models/{MLX_MODEL_DIRNAME}, "
-        "or start a vLLM server on port 8000."
-    )
-
-
-def _probe_port(port: int) -> bool:
-    try:
-        req = Request(
-            f"http://localhost:{port}/v1/models",
-            method="GET",
-            headers={"Accept": "application/json"},
-        )
-        with urlopen(req, timeout=1) as resp:
-            return resp.status == 200
-    except Exception:
-        return False
-
-
 class DeepSeekTacticProvider(TacticProvider):
     MODEL_ID = "l3lab/ntp-mathlib-context-deepseek-coder-1.3b"
     MAX_INPUT_LENGTH = 2048
@@ -177,18 +126,13 @@ class DeepSeekTacticProvider(TacticProvider):
         self._backend = backend
         self._tt_socket = tt_socket
         self._tt_seeds: random.Random | None = None
+        self._model_path = _resolve_model_path(model_path)
         if backend == "mlx":
-            self._vllm_endpoints, self._model_path = _resolve_backend(model_path)
             self._device = device
         elif backend == "tt":
-            self._vllm_endpoints = []
-            self._model_path = _resolve_model_path(model_path)
             self._device = None
         else:
-            self._vllm_endpoints = []
-            self._model_path = _resolve_model_path(model_path)
             self._device = device or _default_transformers_device_name()
-        self._vllm_next = 0
         self._model: Any = None
         self._tokenizer: Any = None
         self._prompt_tokenizer: Any = None
@@ -206,10 +150,11 @@ class DeepSeekTacticProvider(TacticProvider):
         self._batch_task: asyncio.Task[None] | None = None
         self._batch_max_size = 8
 
-    def clear_cache(self) -> None:
-        self._cache.clear()
+    def weights(self) -> dict[str, Any]:
+        return {"source_repo": self.MODEL_ID, **local_weights(Path(self._model_path))}
 
     def set_seed(self, seed: int) -> None:
+        self._cache.clear()
         # Model loading may consume randomness, so seed after initialization.
         self._ensure_loaded()
         if self._backend == "mlx":
@@ -280,14 +225,12 @@ class DeepSeekTacticProvider(TacticProvider):
             )
 
     @staticmethod
-    def _load_prompt_tokenizer(model_path: str) -> Any | None:
+    def _load_prompt_tokenizer(model_path: str) -> Any:
+        from tokenizers import Tokenizer
+
         tokenizer_path = Path(model_path) / "tokenizer.json"
         if not tokenizer_path.exists():
-            return None
-        try:
-            from tokenizers import Tokenizer
-        except Exception:
-            return None
+            raise FileNotFoundError(f"DeepSeek tokenizer.json not found: {tokenizer_path}")
         return Tokenizer.from_file(str(tokenizer_path))
 
     def _cache_get(self, prompt: str) -> list[tuple[str, float]] | None:
@@ -463,7 +406,7 @@ class DeepSeekTacticProvider(TacticProvider):
         from mlx_lm.sample_utils import make_sampler
 
         num_to_generate = max(1, min(n, self._num_samples))
-        sampler = make_sampler(temp=0.6, top_p=0.9)
+        sampler = make_sampler(temp=DEEPSEEK_TEMPERATURE, top_p=DEEPSEEK_TOP_P)
         encoded_prompt = self._prompt_ids(prompt)
         prompts = [list(encoded_prompt) for _ in range(num_to_generate)]
         batch = batch_generate(
@@ -490,8 +433,8 @@ class DeepSeekTacticProvider(TacticProvider):
             input_ids,
             num_samples=num_to_generate,
             max_new_tokens=self.MAX_NEW_TOKENS,
-            temperature=0.6,
-            top_p=0.9,
+            temperature=DEEPSEEK_TEMPERATURE,
+            top_p=DEEPSEEK_TOP_P,
             eos_token_id=self._tokenizer.eos_token_id,
         )
         decoded = self._tokenizer.batch_decode(generated.detach().cpu(), skip_special_tokens=False)
@@ -511,8 +454,8 @@ class DeepSeekTacticProvider(TacticProvider):
             n=num_to_generate,
             seed=self._tt_seeds.getrandbits(63),
             max_new_tokens=self.MAX_NEW_TOKENS,
-            temperature=0.6,
-            top_p=0.9,
+            temperature=DEEPSEEK_TEMPERATURE,
+            top_p=DEEPSEEK_TOP_P,
         )
         decoded = self._tokenizer.batch_decode(generated, skip_special_tokens=False)
         return self._rank_tactics(decoded, num_to_generate)

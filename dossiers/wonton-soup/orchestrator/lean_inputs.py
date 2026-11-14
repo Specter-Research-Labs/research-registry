@@ -69,6 +69,24 @@ def _manifest_items_entry(manifest: dict[str, Any], root_dir: Path) -> tuple[Pat
     return items_path, items_sha256, total_items
 
 
+LIBRARY_SOURCE_KINDS = frozenset({"lean_env", "1000_plus_lean"})
+
+
+def _library_name(payload: dict[str, Any]) -> str | None:
+    """The Mathlib constant an item was extracted from, used to flag self-citing proofs.
+
+    Items built from other sources (curated, derived replays) carry no library
+    name, so their self-citation is recorded as unknown.
+    """
+    source = payload.get("source")
+    if not isinstance(source, dict) or source.get("kind") not in LIBRARY_SOURCE_KINDS:
+        return None
+    qualname = source["qualname"]
+    if not isinstance(qualname, str) or not qualname:
+        raise ValueError(f"library corpus item has no source.qualname: {source!r}")
+    return qualname
+
+
 def _load_artifact_corpus(
     *,
     corpus_artifact: str,
@@ -121,7 +139,9 @@ def _load_artifact_corpus(
         statement = payload.get("statement")
         if not isinstance(statement, str) or not statement.strip():
             raise ValueError(f"Missing payload.statement for item {item_id!r} in {items_path}")
-        theorems.append(Theorem(name=item_id, statement=statement))
+        theorems.append(
+            Theorem(name=item_id, statement=statement, library_name=_library_name(payload))
+        )
 
     corpus_label = f"artifact:{corpus_artifact}@{ref.build_id}"
     if corpus_derived:

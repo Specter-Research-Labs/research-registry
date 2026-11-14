@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any, Iterable, Literal
 
 from leantree.repl_adapter.interaction import LeanInteractionException
 
@@ -110,6 +110,50 @@ class ProofCheck:
 
     def premises(self) -> set[str]:
         return {d.premise for d in self.dependencies if d.role == "lemma"}
+
+
+CheckStatus = Literal["checked", "replay_failed", "check_failed", "blocked_premise"]
+
+
+@dataclass(frozen=True)
+class KernelCheck:
+    """Outcome of re-elaborating a tree-solved proof as a standalone declaration.
+
+    Only `checked` counts as solved. `premises` are the lemma premises of the
+    checked declaration; `self_citation` is None when the theorem has no library
+    name to cite.
+    """
+
+    status: CheckStatus
+    error: str | None
+    tactics: tuple[str, ...]
+    term_hash: str | None
+    premises: tuple[str, ...]
+    self_citation: bool | None
+    blocked_hits: tuple[str, ...]
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "error": self.error,
+            "tactics": list(self.tactics),
+            "term_hash": self.term_hash,
+            "premises": list(self.premises),
+            "self_citation": self.self_citation,
+            "blocked_hits": list(self.blocked_hits),
+        }
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> KernelCheck:
+        return cls(
+            status=data["status"],
+            error=data["error"],
+            tactics=tuple(data["tactics"]),
+            term_hash=data["term_hash"],
+            premises=tuple(data["premises"]),
+            self_citation=data["self_citation"],
+            blocked_hits=tuple(data["blocked_hits"]),
+        )
 
 
 def premise_name(name: str) -> str:
