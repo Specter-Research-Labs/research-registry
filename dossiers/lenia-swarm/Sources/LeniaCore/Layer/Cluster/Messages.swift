@@ -235,6 +235,8 @@ public struct SimulationResult: Codable, Sendable {
     public let results: [SimulationResultData]
     public let errorMessage: String?
     public let durationSeconds: Double
+    /// The engine that produced `results`; nil only when the job failed before a backend was resolved.
+    public let engineID: String?
 
     public init(
         jobId: String,
@@ -244,7 +246,8 @@ public struct SimulationResult: Codable, Sendable {
         count: Int,
         results: [SimulationResultData],
         errorMessage: String?,
-        durationSeconds: Double
+        durationSeconds: Double,
+        engineID: String?
     ) {
         self.jobId = jobId
         self.workerId = workerId
@@ -254,6 +257,7 @@ public struct SimulationResult: Codable, Sendable {
         self.results = results
         self.errorMessage = errorMessage
         self.durationSeconds = durationSeconds
+        self.engineID = engineID
     }
 }
 
@@ -265,6 +269,8 @@ public struct WorkerStatus: Codable, Sendable {
     public let jobsCompleted: Int
     public let totalSeedsProcessed: Int
     public let isAvailable: Bool
+    /// Engine id per backend raw value, so a controller can refuse a worker built from different engine code.
+    public let engineIDs: [String: String]
 
     public init(
         capabilities: WorkerBackendCapabilities,
@@ -273,7 +279,8 @@ public struct WorkerStatus: Codable, Sendable {
         currentJob: String?,
         jobsCompleted: Int,
         totalSeedsProcessed: Int,
-        isAvailable: Bool
+        isAvailable: Bool,
+        engineIDs: [String: String]
     ) {
         self.capabilities = capabilities
         self.workerId = workerId
@@ -282,6 +289,17 @@ public struct WorkerStatus: Codable, Sendable {
         self.jobsCompleted = jobsCompleted
         self.totalSeedsProcessed = totalSeedsProcessed
         self.isAvailable = isAvailable
+        self.engineIDs = engineIDs
+    }
+
+    /// Describes every advertised backend whose engine id is missing or differs from `expected`; empty means the worker may join.
+    public func engineMismatches(expected: [String: String]) -> [String] {
+        let advertised = Set((capabilities.canonicalSearchBackends + capabilities.canonicalFlowLeniaBackends).map(\.rawValue))
+        return advertised.sorted().compactMap { backend in
+            let worker = engineIDs[backend]
+            guard worker == nil || worker != expected[backend] else { return nil }
+            return "\(backend): worker \(worker ?? "missing"), controller \(expected[backend] ?? "missing")"
+        }
     }
 }
 
@@ -366,22 +384,29 @@ public func backendRequestValue(for job: SimulationJob) -> String {
     job.requestedBackend ?? job.baseConfig.backend
 }
 
-public func resolvedSearchBackend(for capabilities: WorkerBackendCapabilities, job: SimulationJob)
+/// Auto resolves to metal-full on every worker, so one request names one backend across the cluster.
+public func clusterBackend(forRequest value: String) throws -> FlowLeniaComputeBackend {
+    switch try SimulationJobBackendRequest(configValue: value) {
+    case .explicit(let backend):
+        return backend
+    case .auto:
+        return .metalFull
+    }
+}
+
+public func resolvedSearchBackend(for capabilities: WorkerBackendCapabilities, job: SimulationJob) throws
     -> FlowLeniaComputeBackend?
 {
-    guard let request = try? SimulationJobBackendRequest(configValue: backendRequestValue(for: job)) else {
+    let requestValue = backendRequestValue(for: job)
+    let backend = try clusterBackend(forRequest: requestValue)
+    guard capabilities.canonicalSearchBackends.contains(backend) else {
         return nil
     }
-    switch request {
-    case .explicit(let backend):
-        return capabilities.canonicalSearchBackends.contains(backend) ? backend : nil
-    case .auto:
-        if capabilities.canonicalSearchBackends.contains(.metalFull),
-           isSearchBackendCompatible(backend: .metalFull, config: job.baseConfig) {
-            return .metalFull
-        }
+    if try SimulationJobBackendRequest(configValue: requestValue) == .auto,
+       !isSearchBackendCompatible(backend: backend, config: job.baseConfig) {
         return nil
     }
+    return backend
 }
 
 private func copyBaseConfig(_ baseConfig: LeniaBaseConfig, backend: String) -> LeniaBaseConfig {
@@ -408,14 +433,14 @@ private func copyBaseConfig(_ baseConfig: LeniaBaseConfig, backend: String) -> L
     )
 }
 
-public func materializeSimulationJob(_ job: SimulationJob, for status: WorkerStatus) -> SimulationJob? {
-    materializeSimulationJob(job, for: status.capabilities)
+public func materializeSimulationJob(_ job: SimulationJob, for status: WorkerStatus) throws -> SimulationJob? {
+    try materializeSimulationJob(job, for: status.capabilities)
 }
 
-public func materializeSimulationJob(_ job: SimulationJob, for capabilities: WorkerBackendCapabilities)
+public func materializeSimulationJob(_ job: SimulationJob, for capabilities: WorkerBackendCapabilities) throws
     -> SimulationJob?
 {
-    guard let backend = resolvedSearchBackend(for: capabilities, job: job) else {
+    guard let backend = try resolvedSearchBackend(for: capabilities, job: job) else {
         return nil
     }
     let requestValue = backendRequestValue(for: job)
@@ -451,20 +476,16 @@ public func restoreRequestedBackend(for job: SimulationJob) -> SimulationJob {
     )
 }
 
-public func workerSupportsSimulationJob(_ status: WorkerStatus, job: SimulationJob) -> Bool {
-    resolvedSearchBackend(for: status.capabilities, job: job) != nil
+public func workerSupportsSimulationJob(_ status: WorkerStatus, job: SimulationJob) throws -> Bool {
+    try resolvedSearchBackend(for: status.capabilities, job: job) != nil
 }
 
-func reserveCompatibleSimulationJob(from jobs: inout [SimulationJob], for status: WorkerStatus?) -> SimulationJob? {
-    guard !jobs.isEmpty else { return nil }
-    guard let status else {
-        return jobs.removeFirst()
-    }
-    guard let index = jobs.firstIndex(where: { workerSupportsSimulationJob(status, job: $0) }) else {
+func reserveCompatibleSimulationJob(from jobs: inout [SimulationJob], for status: WorkerStatus) throws -> SimulationJob? {
+    guard let index = try jobs.firstIndex(where: { try workerSupportsSimulationJob(status, job: $0) }) else {
         return nil
     }
     let job = jobs.remove(at: index)
-    return materializeSimulationJob(job, for: status)
+    return try materializeSimulationJob(job, for: status)
 }
 
 // MARK: - Sweep Job Configuration
@@ -564,6 +585,7 @@ public struct ClusterSummary: Codable, Sendable {
 public enum ControllerEvent: Sendable {
     case progress(completed: Int, total: Int, seeds: Int, totalSeeds: Int, rate: Double)
     case finished(elapsed: Double)
+    case failed(String)
     case workerListUpdated([WorkerStatus])
     case creatureDiscovered(SavedCreature)
     case campaignsUpdated([CampaignStatus])

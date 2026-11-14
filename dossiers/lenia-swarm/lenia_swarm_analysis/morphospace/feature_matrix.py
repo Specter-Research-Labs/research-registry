@@ -9,6 +9,7 @@ from duckdb import DuckDBPyConnection
 from ripser import ripser
 from scipy.spatial import KDTree
 
+from lenia_swarm_analysis.morphospace.provenance import lenia_engine_pool
 from lenia_swarm_analysis.topology.analysis import (
     _diagram_summary,
     _pairwise_distance_matrix,
@@ -381,7 +382,8 @@ def _observation_payloads(
             comparison_observations_vw.source_algorithm,
             comparison_observations_vw.config_hash,
             comparison_observations_vw.canonical_family,
-            comparison_observations_vw.runtime_family
+            comparison_observations_vw.runtime_family,
+            comparison_observations_vw.engine_id
         FROM feature_values
         JOIN comparison_observations_vw USING (observation_id)
         WHERE feature_values.feature_space_id = ?
@@ -417,6 +419,7 @@ def _observation_payloads(
             "configHash": row[17],
             "canonicalFamily": row[18],
             "runtimeFamily": row[19],
+            "engineId": row[20],
         }
         for row in rows
     ]
@@ -436,6 +439,7 @@ def export_feature_matrix(
     source_algorithm: str | None = None,
     canonical_family: str | None = None,
     observation_kind: str | None = None,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     resolved_value_column = _validate_value_column(value_column)
     feature_space = _feature_space_payload(connection, feature_space_id=feature_space_id)
@@ -455,6 +459,7 @@ def export_feature_matrix(
         canonical_family=canonical_family,
         observation_kind=observation_kind,
     )
+    engines = lenia_engine_pool(observations, pool_engines=pool_engines, what="feature matrix")
     observation_index = {
         str(observation["observationId"]): index for index, observation in enumerate(observations)
     }
@@ -508,6 +513,7 @@ def export_feature_matrix(
             "sourceCounts": dict(sorted(source_counts.items())),
             "studyCounts": dict(sorted(study_counts.items())),
             "runCounts": dict(sorted(run_counts.items())),
+            "engines": engines,
         },
         "featureSpace": feature_space,
         "axes": axes,
@@ -531,6 +537,7 @@ def run_feature_tda(
     canonical_family: str | None = None,
     observation_kind: str | None = None,
     max_homology_dim: int = 1,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     matrix_packet = export_feature_matrix(
         connection,
@@ -545,6 +552,7 @@ def run_feature_tda(
         source_algorithm=source_algorithm,
         canonical_family=canonical_family,
         observation_kind=observation_kind,
+        pool_engines=pool_engines,
     )
     matrix = np.asarray(matrix_packet["matrix"], dtype=np.float64)
     if matrix.shape[0] < 2:
@@ -598,6 +606,7 @@ def compare_feature_cohorts(
     right_source_algorithm: str | None = None,
     right_canonical_family: str | None = None,
     right_observation_kind: str | None = None,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     left_filters: MatrixFilters = {
         "sourceId": left_source_id,
@@ -634,6 +643,7 @@ def compare_feature_cohorts(
         source_algorithm=left_source_algorithm,
         canonical_family=left_canonical_family,
         observation_kind=left_observation_kind,
+        pool_engines=pool_engines,
     )
     right_packet = export_feature_matrix(
         connection,
@@ -648,6 +658,12 @@ def compare_feature_cohorts(
         source_algorithm=right_source_algorithm,
         canonical_family=right_canonical_family,
         observation_kind=right_observation_kind,
+        pool_engines=pool_engines,
+    )
+    lenia_engine_pool(
+        [*left_packet["observations"], *right_packet["observations"]],
+        pool_engines=pool_engines,
+        what=f"cohorts {left_label} and {right_label}",
     )
     left_matrix = np.asarray(left_packet["matrix"], dtype=np.float64)
     right_matrix = np.asarray(right_packet["matrix"], dtype=np.float64)

@@ -61,7 +61,7 @@ struct WorkerCommand: AsyncParsableCommand {
 
         logger.info("Cluster system created")
 
-        let worker = LeniaWorker(actorSystem: system, workerId: workerId)
+        let worker = LeniaWorker(actorSystem: system, workerId: workerId, buildInfo: try runningBuildInfo())
         logger.info("Worker actor created")
 
         await system.receptionist.checkIn(worker, with: .leniaWorkers)

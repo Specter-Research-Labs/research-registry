@@ -286,6 +286,11 @@ def upsert_specimen(
 ) -> None:
     specimen_id = str(row["specimen_id"])
     existing = _fetch_existing_specimen(connection, specimen_id)
+    if existing is not None and existing["engine_id"] != row["engine_id"]:
+        raise ValueError(
+            f"specimen {specimen_id} is already recorded from engine {existing['engine_id']}; "
+            f"refusing to merge a record from engine {row['engine_id']}"
+        )
     merged = dict(existing or {})
     for key, value in row.items():
         if key in {"provenance_json", "specimen_manifest_json"} and isinstance(value, dict):
@@ -309,11 +314,12 @@ def upsert_specimen(
             regime_family, geometry_family, canonical_family, family_kind, score,
             filters_passed, search_is_stable_candidate, recorded_at, results_path,
             export_dir, activity_path, fingerprint_path, provenance_json,
-            runtime_family, runtime_capabilities_json, specimen_manifest_json
+            runtime_family, runtime_capabilities_json, specimen_manifest_json,
+            engine_id, source_commit, receipt_sha256, descriptor_version
         )
         VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            CAST(? AS JSON), ?, CAST(? AS JSON), CAST(? AS JSON)
+            CAST(? AS JSON), ?, CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, ?
         )
         """,
         [
@@ -343,6 +349,10 @@ def upsert_specimen(
             merged.get("runtime_family"),
             json_text(merged.get("runtime_capabilities_json") or []),
             json_text(merged.get("specimen_manifest_json") or {}),
+            merged["engine_id"],
+            merged.get("source_commit"),
+            merged.get("receipt_sha256"),
+            merged.get("descriptor_version"),
         ],
     )
 

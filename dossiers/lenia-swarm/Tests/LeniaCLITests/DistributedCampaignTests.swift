@@ -44,43 +44,7 @@ final class DistributedCampaignTests: XCTestCase {
         let root = try makeTempDirectory(prefix: "lenia-campaign-distributed")
         defer { try? FileManager.default.removeItem(at: root) }
 
-        let searchConfigURL = root.appendingPathComponent("search.json")
-        try writeJSON(
-            [
-                "count": 2,
-                "seed_start": 41,
-                "seed_stride": 1,
-                "init_seed_offset": 0,
-                "steps": 6,
-                "record_interval": 3,
-                "warmup_steps": 0,
-                "occupancy_threshold": 0.05,
-                "mass_channel": -1,
-                "score_weights": [:] as [String: Double],
-                "filters": [:] as [String: Double],
-                "overrides": [:] as [String: Double],
-                "top_k": 2,
-                "batch_size": 1,
-                "seeds_per_job": 1,
-            ],
-            to: searchConfigURL
-        )
-        let baseConfigPath = dossierConfigsRoot().appendingPathComponent("base/paper_base_1c_128.json").path
-        let manifestURL = root.appendingPathComponent("sweep.json")
-        try writeJSON(
-            [
-                "variants": [
-                    ["id": "a", "config": baseConfigPath, "search": searchConfigURL.path, "count": 2],
-                    ["id": "b", "config": baseConfigPath, "search": searchConfigURL.path, "count": 2],
-                ],
-                "target_creatures": 2,
-                "max_cycles": 1,
-                "keep_best": 2,
-                "rank_by": "score",
-            ],
-            to: manifestURL
-        )
-        let phase: [String: Any] = ["name": "sweep", "type": "sweep", "manifest": manifestURL.path]
+        let phase = try makeTinySweepPhase(root: root)
 
         let localURL = root.appendingPathComponent("local", isDirectory: true)
         _ = try await runTinyCampaignPhase(phase, root: root, outputURL: localURL, runID: "campaign-distributed-test")
@@ -95,9 +59,10 @@ final class DistributedCampaignTests: XCTestCase {
         let pool = CampaignWorkerPool(
             system: system,
             logger: Logger(label: "DistributedCampaignTests.Pool"),
-            runContext: RunContext(runId: "campaign-distributed-test", controllerId: "test-controller")
+            runContext: RunContext(runId: "campaign-distributed-test", controllerId: "test-controller"),
+            buildInfo: testBuildInfo()
         )
-        let worker = LeniaWorker(actorSystem: system, workerId: "campaign-test-worker")
+        let worker = LeniaWorker(actorSystem: system, workerId: "campaign-test-worker", buildInfo: testBuildInfo())
         let distributedURL = root.appendingPathComponent("distributed", isDirectory: true)
         do {
             async let started: Void = pool.start(minWorkers: 1)
@@ -145,6 +110,90 @@ final class DistributedCampaignTests: XCTestCase {
             try String(contentsOf: localURL.appendingPathComponent(exportIndex), encoding: .utf8).split(separator: "\n").count
         )
     }
+
+    func testCampaignPoolRefusesWorkerFromDifferentEngine() async throws {
+        let root = try makeTempDirectory(prefix: "lenia-campaign-engine-mismatch")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let phase = try makeTinySweepPhase(root: root)
+
+        let port = try unusedLocalPort()
+        let system = await ClusterSystem("LeniaCLITestsEngineMismatch") { settings in
+            settings.bindPort = port
+            settings.swim.probeInterval = .seconds(1)
+            settings.swim.pingTimeout = .milliseconds(500)
+            settings.remoteCall.defaultTimeout = .seconds(60)
+        }
+        let pool = CampaignWorkerPool(
+            system: system,
+            logger: Logger(label: "DistributedCampaignTests.EngineMismatch"),
+            runContext: RunContext(runId: "campaign-engine-mismatch", controllerId: "test-controller"),
+            buildInfo: testBuildInfo()
+        )
+        let worker = LeniaWorker(
+            actorSystem: system,
+            workerId: "other-engine-worker",
+            buildInfo: testBuildInfo(cEngineSha256: String(repeating: "d", count: 64))
+        )
+        var refusal: Error?
+        do {
+            async let started: Void = pool.start(minWorkers: 1)
+            await system.receptionist.checkIn(worker, with: .leniaWorkers)
+            try await started
+            _ = try await runTinyCampaignPhase(
+                phase,
+                root: root,
+                outputURL: root.appendingPathComponent("distributed", isDirectory: true),
+                runID: "campaign-engine-mismatch",
+                executionMode: .distributed(pool)
+            )
+        } catch {
+            refusal = error
+        }
+        await pool.stop()
+        try system.shutdown()
+        let message = try XCTUnwrap(refusal.map { String(describing: $0) })
+        XCTAssertTrue(message.contains("other-engine-worker runs a different engine"), message)
+    }
+}
+
+private func makeTinySweepPhase(root: URL) throws -> [String: Any] {
+    let searchConfigURL = root.appendingPathComponent("search.json")
+    try writeJSON(
+        [
+            "count": 2,
+            "seed_start": 41,
+            "seed_stride": 1,
+            "init_seed_offset": 0,
+            "steps": 6,
+            "record_interval": 3,
+            "warmup_steps": 0,
+            "occupancy_threshold": 0.05,
+            "mass_channel": -1,
+            "score_weights": [:] as [String: Double],
+            "filters": [:] as [String: Double],
+            "overrides": [:] as [String: Double],
+            "top_k": 2,
+            "batch_size": 1,
+            "seeds_per_job": 1,
+        ],
+        to: searchConfigURL
+    )
+    let baseConfigPath = dossierConfigsRoot().appendingPathComponent("base/paper_base_1c_128.json").path
+    let manifestURL = root.appendingPathComponent("sweep.json")
+    try writeJSON(
+        [
+            "variants": [
+                ["id": "a", "config": baseConfigPath, "search": searchConfigURL.path, "count": 2],
+                ["id": "b", "config": baseConfigPath, "search": searchConfigURL.path, "count": 2],
+            ],
+            "target_creatures": 2,
+            "max_cycles": 1,
+            "keep_best": 2,
+            "rank_by": "score",
+        ],
+        to: manifestURL
+    )
+    return ["name": "sweep", "type": "sweep", "manifest": manifestURL.path]
 }
 
 private func unusedLocalPort() throws -> Int {

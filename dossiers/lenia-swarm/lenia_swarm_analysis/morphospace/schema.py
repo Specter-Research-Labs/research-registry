@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from duckdb import DuckDBPyConnection
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 
 def create_schema(connection: DuckDBPyConnection) -> None:
@@ -126,7 +126,11 @@ def create_schema(connection: DuckDBPyConnection) -> None:
             provenance_json JSON,
             runtime_family TEXT,
             runtime_capabilities_json JSON,
-            specimen_manifest_json JSON
+            specimen_manifest_json JSON,
+            engine_id TEXT,
+            source_commit TEXT,
+            receipt_sha256 TEXT,
+            descriptor_version INTEGER
         )
         """
     )
@@ -871,6 +875,7 @@ def create_views(connection: DuckDBPyConnection) -> None:
             specimens.geometry_family,
             specimens.canonical_family,
             specimens.runtime_family,
+            specimens.engine_id,
             observations.payload_json
         FROM observations
         LEFT JOIN studies USING (study_id)
@@ -900,6 +905,7 @@ def create_views(connection: DuckDBPyConnection) -> None:
             comparison_observations_vw.source_mode,
             comparison_observations_vw.source_algorithm,
             comparison_observations_vw.config_hash,
+            comparison_observations_vw.engine_id,
             feature_values.feature_space_id,
             feature_spaces.feature_space_kind,
             feature_spaces.label AS feature_space_label,

@@ -43,7 +43,18 @@ struct Curiosity25Command: AsyncParsableCommand {
         guard let resolvedOutput else {
             throw ValidationError("--output is required unless --validate-only is set.")
         }
+        let outputDirectoryURL = URL(fileURLWithPath: resolvedOutput, isDirectory: true)
+        let configFiles = try configDirectoryFiles(in: URL(fileURLWithPath: resolvedConfigDir, isDirectory: true))
+        let receipt = try beginPaperRunReceipt(
+            outputDirectory: outputDirectoryURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            configFiles: configFiles,
+            extraInputs: [],
+            backend: try uniformConfigBackend(configFiles.filter { $0.name.hasSuffix("-base.json") }.map(\.url)),
+            seeds: []
+        )
         let runner = AIScientist2025Runner(configs: bundle, logger: logger)
-        _ = try runner.run(outputDirectory: URL(fileURLWithPath: resolvedOutput, isDirectory: true))
+        _ = try runner.run(outputDirectory: outputDirectoryURL)
+        try receipt.finish()
     }
 }

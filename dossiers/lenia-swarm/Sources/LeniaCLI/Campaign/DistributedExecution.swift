@@ -41,13 +41,15 @@ actor CampaignWorkerPool {
     private let system: ClusterSystem
     private let logger: Logger
     private let runContext: RunContext
+    private let expectedEngineIDs: [String: String]
     private var workers: [LeniaWorker] = []
     private var listener: Task<Void, Never>?
 
-    init(system: ClusterSystem, logger: Logger, runContext: RunContext) {
+    init(system: ClusterSystem, logger: Logger, runContext: RunContext, buildInfo: LeniaBuildInfo) {
         self.system = system
         self.logger = logger
         self.runContext = runContext
+        self.expectedEngineIDs = LeniaEngineIdentity.engineIDs(for: [.mlx, .metalFull, .cpu], buildInfo: buildInfo)
     }
 
     func start(minWorkers: Int) async throws {
@@ -94,7 +96,15 @@ actor CampaignWorkerPool {
         guard !connected.isEmpty else {
             throw ValidationError("No campaign workers are connected.")
         }
-        for job in jobs where !connected.contains(where: { workerSupportsCampaignJob($0.status, job: job) }) {
+        for remote in connected {
+            let mismatches = remote.status.engineMismatches(expected: expectedEngineIDs)
+            guard mismatches.isEmpty else {
+                throw ValidationError(
+                    "Campaign worker \(remote.status.workerId) runs a different engine (\(mismatches.joined(separator: "; "))); run every node from the same build."
+                )
+            }
+        }
+        for job in jobs where try !connected.contains(where: { try workerSupportsCampaignJob($0.status, job: job) }) {
             let available = connected.map { worker in
                 let capabilities = worker.status.capabilities
                 return "\(worker.status.workerId) (search \(capabilities.canonicalSearchBackends.map(\.rawValue)), flow-lenia \(capabilities.canonicalFlowLeniaBackends.map(\.rawValue)))"
@@ -111,7 +121,7 @@ actor CampaignWorkerPool {
             for remote in connected {
                 group.addTask {
                     var finished: [(Int, LeniaCampaignJobExecution)] = []
-                    while let index = await queue.reserve(for: remote.status) {
+                    while let index = try await queue.reserve(for: remote.status) {
                         let job = jobs[index]
                         logger.info("Dispatching campaign job \(index + 1)/\(jobs.count) \(job.runID) to \(remote.status.workerId)")
                         do {
@@ -157,8 +167,8 @@ private actor CampaignJobQueue {
         self.pending = Array(jobs.indices)
     }
 
-    func reserve(for status: WorkerStatus) -> Int? {
-        guard let position = pending.firstIndex(where: { workerSupportsCampaignJob(status, job: jobs[$0]) }) else {
+    func reserve(for status: WorkerStatus) throws -> Int? {
+        guard let position = try pending.firstIndex(where: { try workerSupportsCampaignJob(status, job: jobs[$0]) }) else {
             return nil
         }
         return pending.remove(at: position)

@@ -208,13 +208,18 @@ struct EvolveCommand: AsyncParsableCommand {
             return
         }
 
-        // Create output directory
         let outputDir = URL(fileURLWithPath: esConfig.outputDir)
-        try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
-
-        // Save configs
-        try baseConfigData.write(to: outputDir.appendingPathComponent("config.json"))
         let resolvedESConfigData = try JSONEncoder().encode(esConfig)
+        let receipt = try beginRunReceipt(
+            directory: outputDir,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            backend: resolvedBackend,
+            config: ResolvedRunConfig(parts: [("base", baseConfigData), ("es", resolvedESConfigData)]),
+            seeds: [Int(esConfig.seed)],
+            inputs: [baseConfigURL, URL(fileURLWithPath: es)]
+        )
+
+        try baseConfigData.write(to: outputDir.appendingPathComponent("config.json"))
         try resolvedESConfigData.write(to: outputDir.appendingPathComponent("es_config.json"))
 
         logger.info("============================================================")
@@ -388,6 +393,9 @@ struct EvolveCommand: AsyncParsableCommand {
                 )
             }
         }
+
+        try historyHandle.close()
+        try receipt.finish()
 
         let resolvedPromotion = try promoteIfConfigured(
             options: promotion,

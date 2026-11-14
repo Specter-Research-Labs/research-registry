@@ -114,7 +114,7 @@ func libraryReplayBaseConfig(
         run: RunConfig(steps: resolvedSteps),
         interventions: base.interventions
     )
-    let resolvedBackend = try resolveReplaySearchBackend(requestValue: "auto", baseConfig: replayConfig)
+    let resolvedBackend = try resolveReplaySearchBackend(requestValue: replaySourceBackendRequest, baseConfig: replayConfig)
     return baseConfigBySettingBackend(replayConfig, backend: resolvedBackend)
 }
 

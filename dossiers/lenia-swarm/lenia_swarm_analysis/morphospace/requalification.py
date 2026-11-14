@@ -17,6 +17,9 @@ from typing import Any
 from lenia_swarm_analysis._io import read_jsonl, sha256_bytes
 from lenia_swarm_analysis.trace_codec import state_patch_values, trace_field
 
+from .creature_definition import definition_of, load_assessment, require_same_thresholds
+from .provenance import require_engine_pool
+
 SCREEN_LITERALS = (
     "individuality_pass",
     "locality_pass",
@@ -262,6 +265,21 @@ def _write_arena_cells(
     }
 
 
+def _lineage(row: dict[str, Any]) -> str:
+    """A discovery campaign is one search lineage; an export made outside a campaign has no
+    campaignId, and its run is then the lineage."""
+    return f"{row['runId']}/{row['campaignId']}" if "campaignId" in row else row["runId"]
+
+
+def _effective(rows: list[dict[str, Any]]) -> dict[str, int]:
+    """Bodies that share a rule or a search lineage are not independent observations."""
+    return {
+        "bodies": len(rows),
+        "rules": len({r["params_sha256"] for r in rows}),
+        "lineages": len({r["lineage"] for r in rows}),
+    }
+
+
 def compare_verdicts(
     *,
     members_path: Path,
@@ -269,24 +287,56 @@ def compare_verdicts(
     ensembles: list[Path],
     prior_ensembles: list[Path],
     output_path: Path,
+    pool_engines: frozenset[str] | None = None,
+    legacy_engine_id: str | None = None,
 ) -> dict[str, Any]:
-    """Tabulate each member's ensemble verdict, per-arena failed criteria and any prior verdict."""
+    """Tabulate each member's ensemble verdict, per-arena failed criteria and any prior verdict.
+
+    Verdicts join on body and engine, every input must be judged by one definition, and counts
+    are reported per engine next to the number of distinct rules and lineages behind them.
+    """
     members = json.loads(members_path.read_text())["members"]
-    verdicts: dict[str, dict[str, Any]] = {}
+    if not ensembles:
+        raise ValueError("need at least one ensemble")
+    reference: dict[str, Any] | None = None
+    engines: set[str] = set()
+
+    def engine_of(path: Path, data: dict[str, Any]) -> str:
+        nonlocal reference
+        definition = definition_of(data, source=str(path))
+        reference = reference or definition
+        require_same_thresholds(reference, definition, source=str(path))
+        engines.add(definition["engine"])
+        return definition["engine"]
+
+    verdicts: dict[tuple[str, str], dict[str, Any]] = {}
     for path in ensembles:
-        for body, v in json.loads(path.read_text())["bodies"].items():
-            if body in verdicts:
-                raise ValueError(f"{body} classified twice")
-            verdicts[body] = v
-    prior: dict[str, str] = {}
+        data = json.loads(path.read_text())
+        engine = engine_of(path, data)
+        for body, v in data["bodies"].items():
+            if (body, engine) in verdicts:
+                raise ValueError(f"{body} classified twice for engine {engine}")
+            verdicts[(body, engine)] = v
+    prior: dict[tuple[str, str], str] = {}
     for path in prior_ensembles:
-        for body, v in json.loads(path.read_text())["bodies"].items():
-            prior[body] = v["verdict"]
-    per_arena: dict[str, dict[str, dict[str, Any]]] = {}
+        data = json.loads(path.read_text())
+        engine = engine_of(path, data)
+        for body, v in data["bodies"].items():
+            if (body, engine) in prior:
+                raise ValueError(f"{body} has two prior verdicts for engine {engine}")
+            prior[(body, engine)] = v["verdict"]
+    per_arena: dict[tuple[str, str], dict[str, dict[str, Any]]] = {}
     for path in assessments:
-        for b in json.loads(path.read_text())["bodies"]:
+        data = load_assessment(path, legacy_engine_id=legacy_engine_id)
+        engine = engine_of(path, data)
+        for b in data["bodies"]:
+            arenas = per_arena.setdefault((b["body"], engine), {})
+            if str(b["arena"]) in arenas:
+                raise ValueError(
+                    f"{b['body']} assessed twice at arena {b['arena']} for engine {engine}"
+                )
             adult = b["adult"]
-            per_arena.setdefault(b["body"], {})[str(b["arena"])] = {
+            arenas[str(b["arena"])] = {
                 "failed": sorted(k for k, ok in b["criteria"].items() if not ok),
                 "onset_step": adult["onset_step"],
                 "min_lifetime_runs": (
@@ -295,41 +345,74 @@ def compare_verdicts(
                 "captured": adult["reference"]["captured"],
                 "body_radius": adult["reference"]["body_radius"],
             }
-    missing = sorted(m["body"] for m in members if m["body"] not in verdicts)
-    if missing:
-        raise ValueError(f"members without a verdict: {missing}")
-    rows = []
-    for m in members:
-        rows.append(
-            {
-                "cohort": m["cohort"],
-                "body": m["body"],
-                "native_arena": m["native_arena"],
-                "motion_class": m["original"].get("motion_class"),
-                "failed_gates": sorted(g for g, ok in m["original"]["gates"].items() if not ok),
-                "verdict": verdicts[m["body"]]["verdict"],
-                "prior_verdict": prior.get(m["body"]),
-                "arenas": per_arena[m["body"]],
-            }
-        )
-    summary = {
-        cohort: dict(Counter(r["verdict"] for r in rows if r["cohort"] == cohort))
-        for cohort in sorted({r["cohort"] for r in rows})
-    }
-    transitions = Counter(
-        f"{r['prior_verdict']}->{r['verdict']}" for r in rows if r["prior_verdict"] is not None
+    assert reference is not None
+    pooled = require_engine_pool(engines, pool_engines=pool_engines, what="requalification inputs")
+    missing = sorted(
+        f"{m['body']}@{engine}"
+        for engine in pooled
+        for m in members
+        if (m["body"], engine) not in verdicts or (m["body"], engine) not in per_arena
     )
-    tally: dict[str, Counter[str]] = {}
+    if missing:
+        raise ValueError(f"members without a verdict and assessments for every engine: {missing}")
+    rows = [
+        {
+            "engine": engine,
+            "cohort": m["cohort"],
+            "body": m["body"],
+            "params_sha256": m["params_sha256"],
+            "lineage": _lineage(m["input"]),
+            "native_arena": m["native_arena"],
+            "motion_class": m["original"].get("motion_class"),
+            "failed_gates": sorted(g for g, ok in m["original"]["gates"].items() if not ok),
+            "verdict": verdicts[(m["body"], engine)]["verdict"],
+            "prior_verdict": prior.get((m["body"], engine)),
+            "arenas": per_arena[(m["body"], engine)],
+        }
+        for engine in pooled
+        for m in members
+    ]
+
+    def grouped(key) -> dict[str, dict[str, dict[str, Any]]]:
+        out: dict[str, dict[str, dict[str, Any]]] = {}
+        for engine in pooled:
+            groups: dict[str, dict[str, list[dict[str, Any]]]] = {}
+            for r in rows:
+                if r["engine"] == engine:
+                    groups.setdefault(key(r), {}).setdefault(r["verdict"], []).append(r)
+            out[engine] = {
+                k: {v: _effective(rs) for v, rs in sorted(by_verdict.items())}
+                for k, by_verdict in sorted(groups.items())
+            }
+        return out
+
+    summary = grouped(lambda r: r["cohort"])
+    by_gates = grouped(lambda r: f"{r['cohort']}/{'+'.join(r['failed_gates']) or 'none'}")
+    transitions = {
+        engine: dict(
+            Counter(
+                f"{r['prior_verdict']}->{r['verdict']}"
+                for r in rows
+                if r["engine"] == engine and r["prior_verdict"] is not None
+            )
+        )
+        for engine in pooled
+    }
+    rules: dict[str, dict[str, dict[str, Any]]] = {engine: {} for engine in pooled}
     for r in rows:
-        key = f"{r['cohort']}/{'+'.join(r['failed_gates']) or 'none'}"
-        tally.setdefault(key, Counter())[r["verdict"]] += 1
-    by_gates = {k: dict(v) for k, v in sorted(tally.items())}
+        rule = rules[r["engine"]].setdefault(r["params_sha256"], {"bodies": [], "verdicts": Counter()})
+        rule["bodies"].append(r["body"])
+        rule["verdicts"][r["verdict"]] += 1
     output_path.write_text(
         json.dumps(
             {
+                "engines": pooled,
+                "thresholds": reference["thresholds"],
+                "core_level": reference["core_level"],
                 "verdicts": summary,
                 "verdicts_by_failed_gates": by_gates,
-                "prior_transitions": dict(transitions),
+                "prior_transitions": transitions,
+                "rules": rules,
                 "members": rows,
             },
             indent=1,
@@ -337,9 +420,10 @@ def compare_verdicts(
     )
     return {
         "output": str(output_path),
+        "engines": pooled,
         "verdicts": summary,
         "verdicts_by_failed_gates": by_gates,
-        "prior_transitions": dict(transitions),
+        "prior_transitions": transitions,
     }
 
 

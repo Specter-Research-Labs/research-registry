@@ -183,6 +183,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
         let baseConfig = try JSONDecoder().decode(LeniaBaseConfig.self, from: baseConfigData)
         let runtimeConfig = try loadRuntimeConfig(from: baseConfigData)
         var seedWarmStarts: [FlowMapElitesSeedWarmStart] = []
+        var seedLibraryInputs: [URL] = []
 
         if let seedLibrary = seedWarmStart.seedLibrary {
             let canSeedInitPatch = mapConfig.initPatch?.enabled == true
@@ -190,6 +191,7 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
                 throw ValidationError("--seed-library without --seed-kernel-params requires init_patch.enabled in the MAP-Elites config.")
             }
             let resolvedSeedLibrary = try resolveArtifactPath(seedLibrary, dossier: dossierName)
+            seedLibraryInputs = [URL(fileURLWithPath: resolvedSeedLibrary)]
             let selection = try flowMapElitesEffectiveSeedSelection(
                 requested: seedWarmStart.seedSelection.resolvedSelection(),
                 hasExplicitSeedCells: !seedWarmStart.seedCell.isEmpty
@@ -268,9 +270,16 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
         }
 
         let outputDir = URL(fileURLWithPath: mapConfig.outputDir, isDirectory: true)
-        try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
-        try baseConfigData.write(to: outputDir.appendingPathComponent("config.json"))
         let resolvedMapConfigData = try researchJSONEncoder(prettyPrinted: true).encode(mapConfig)
+        let receipt = try beginRunReceipt(
+            directory: outputDir,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            backend: resolvedBackend,
+            config: ResolvedRunConfig(parts: [("base", baseConfigData), ("map_elites", resolvedMapConfigData)]),
+            seeds: [Int(mapConfig.seed)],
+            inputs: [baseConfigURL, URL(fileURLWithPath: mapElites)] + seedLibraryInputs
+        )
+        try baseConfigData.write(to: outputDir.appendingPathComponent("config.json"))
         try resolvedMapConfigData.write(to: outputDir.appendingPathComponent("map_elites_config.json"))
         if !seedWarmStarts.isEmpty {
             let seedRecords = seedWarmStarts.enumerated().map { pair in
@@ -502,6 +511,8 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
                 reason: "flow-map-elites"
             )
         }
+        try historyHandle.close()
+        try receipt.finish()
 
         let resolvedPromotion = try promoteIfConfigured(
             options: promotion,

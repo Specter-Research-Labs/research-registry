@@ -67,8 +67,20 @@ struct SensorimotorFlowLeniaCommand: AsyncParsableCommand {
         logger.info("Rollout steps: \(config.rolloutSteps)")
         logger.info("============================================================")
 
+        let receipt = try beginPaperRunReceipt(
+            outputDirectory: outputDirectoryURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            configFiles: [ConfigDirectoryFile(
+                name: URL(fileURLWithPath: resolvedConfigFile).lastPathComponent,
+                url: URL(fileURLWithPath: resolvedConfigFile).standardizedFileURL
+            )],
+            extraInputs: [],
+            backend: .mlx,
+            seeds: [seed]
+        )
         let runner = FlowSensorimotorRunner(config: config, logger: logger)
         let summary = try runner.run(seed: UInt64(seed), outputDirectory: outputDirectoryURL, runId: resolvedRunId)
+        try receipt.finish()
 
         logger.info("Sensorimotor Flow-Lenia complete")
         logger.info("History count: \(summary.historyCount)")

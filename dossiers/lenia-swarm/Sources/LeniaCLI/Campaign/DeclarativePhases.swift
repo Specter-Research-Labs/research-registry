@@ -28,6 +28,7 @@ private struct CampaignPhaseExecutionContext {
     let runID: String
     let backendRequest: String
     let executionMode: CampaignExecutionMode
+    let executableURL: URL
     let logger: Logger
     let startTime: Date
 
@@ -66,7 +67,8 @@ private struct CampaignPhaseExecutionContext {
             backendRequest: backendRequest,
             exportBest: exportBest,
             promotion: phasePromotionConfig(outputURL: phaseOutputURL),
-            executionMode: executionMode
+            executionMode: executionMode,
+            executableURL: executableURL
         )
     }
 
@@ -96,6 +98,7 @@ func executeDeclarativePhase(
     runID: String,
     backendRequest: String,
     executionMode: CampaignExecutionMode,
+    executableURL: URL,
     logger: Logger
 ) async throws -> LeniaCampaignPhaseResult {
     if case .distributed = executionMode, !phase.type.runsOnCampaignWorkers {
@@ -108,6 +111,7 @@ func executeDeclarativePhase(
         runID: runID,
         backendRequest: backendRequest,
         executionMode: executionMode,
+        executableURL: executableURL,
         logger: logger,
         startTime: Date()
     )
@@ -163,13 +167,21 @@ private func executeQDPhase(
     let bundle = try loadLeniaBreeder2024ConfigBundle(configDirectory: configDirURL)
     let algorithm = phase.algorithm ?? "me"
     let seeds = phase.seeds ?? [0]
+    let configFiles = try configDirectoryFiles(in: configDirURL)
 
     var totalOccupied = 0
     var bestCoverage: Float = 0
 
     for seed in seeds {
         let seedOutputURL = context.phaseOutputURL.appendingPathComponent("seed-\(seed)", isDirectory: true)
-        try FileManager.default.createDirectory(at: seedOutputURL, withIntermediateDirectories: true)
+        let receipt = try beginPaperRunReceipt(
+            outputDirectory: seedOutputURL,
+            executableURL: context.executableURL,
+            configFiles: configFiles,
+            extraInputs: [],
+            backend: .mlx,
+            seeds: [seed]
+        )
         let runner = LeniaBreeder2024Runner(configs: bundle, logger: context.logger, seed: seed)
 
         let summary: LeniaBreeder2024RunSummary
@@ -181,6 +193,7 @@ private func executeQDPhase(
         }
         totalOccupied += summary.occupiedCells
         bestCoverage = max(bestCoverage, summary.coverage)
+        try receipt.finish()
         context.logger.info("QD seed \(seed): \(summary.occupiedCells) cells, coverage=\(String(format: "%.3f", summary.coverage)), qd_score=\(String(format: "%.2f", summary.qdScore))")
 
         try runCampaignCompendiumIndex(outputURL: seedOutputURL)
@@ -228,6 +241,19 @@ private func executeIMGEPPhase(
     let initSeedOffset = parsedSearchConfig.initSeedOffset ?? 0
     let simSearchConfig = parsedSearchConfig.toSearchConfig()
 
+    let receipt = try beginRunReceipt(
+        directory: context.phaseOutputURL,
+        executableURL: context.executableURL,
+        backend: try loadRuntimeConfig(from: baseConfigData).backend,
+        config: ResolvedRunConfig(parts: [
+            ("base", baseConfigData),
+            ("search", try Data(contentsOf: searchConfigURL)),
+            ("imgep", try Data(contentsOf: imgepConfigURL)),
+            ("phase_iterations", try JSONEncoder().encode(iterations)),
+        ]),
+        seeds: [],
+        inputs: [baseConfigURL, searchConfigURL, imgepConfigURL]
+    )
     try baseConfigData.write(to: context.phaseOutputURL.appendingPathComponent("config.json"))
 
     let resultsURL = context.phaseOutputURL.appendingPathComponent("results.jsonl")
@@ -341,6 +367,10 @@ private func executeIMGEPPhase(
         }
         iteration += batchCount
     }
+
+    try resultsHandle.close()
+    try historyHandle.close()
+    try receipt.finish()
 
     let elapsed = Date().timeIntervalSince(context.startTime)
     context.logger.info("IMGEP phase '\(phase.name)': \(iterations) iterations, \(topResults.count) top results, \(String(format: "%.1f", elapsed))s")
@@ -486,8 +516,18 @@ private func executeCuriosityPhase(
     }
     let configDirURL = context.resolve(configDir)
     let bundle = try loadAIScientist2025ConfigBundle(configDirectory: configDirURL)
+    let configFiles = try configDirectoryFiles(in: configDirURL)
+    let receipt = try beginPaperRunReceipt(
+        outputDirectory: context.phaseOutputURL,
+        executableURL: context.executableURL,
+        configFiles: configFiles,
+        extraInputs: [],
+        backend: try uniformConfigBackend(configFiles.filter { $0.name.hasSuffix("-base.json") }.map(\.url)),
+        seeds: []
+    )
     let runner = AIScientist2025Runner(configs: bundle, logger: context.logger)
     let summary = try runner.run(outputDirectory: context.phaseOutputURL)
+    try receipt.finish()
 
     let totalCreatures = summary.experiments.reduce(0) { $0 + $1.records }
     return context.result(

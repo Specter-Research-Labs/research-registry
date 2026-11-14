@@ -14,6 +14,7 @@ from lenia_swarm_analysis.transformation_metrics import (
     transform_axes,
 )
 
+from .provenance import RunProvenance
 from .warehouse import (
     ingest_sqlite_rows,
     register_artifact,
@@ -66,6 +67,22 @@ def _sqlite_columns(path: Path, table_name: str) -> set[str]:
         }
     finally:
         connection.close()
+
+
+def _compendium_run_provenance(path: Path) -> dict[str, RunProvenance]:
+    if not {"engine_id", "source_commit", "receipt_sha256"} <= _sqlite_columns(path, "runs"):
+        raise ValueError(
+            f"{path} has no runs.engine_id; rebuild it with `LeniaCLI index` so every run "
+            "names the engine that produced it"
+        )
+    return {
+        str(row["run_id"]): RunProvenance(
+            engine_id=str(row["engine_id"]),
+            source_commit=row["source_commit"],
+            receipt_sha256=row["receipt_sha256"],
+        )
+        for row in _load_sqlite_rows(path, "runs")
+    }
 
 
 def _active_creature_filter(path: Path, run_id: str | None) -> tuple[str | None, tuple[Any, ...]]:
@@ -329,6 +346,7 @@ def ingest_compendium(
             "rebuild the canonical compendium before warehouse ingest."
         )
 
+    run_provenance = _compendium_run_provenance(compendium_path)
     creature_where_sql, creature_params = _active_creature_filter(compendium_path, run_id)
     creature_rows = _load_sqlite_rows(
         compendium_path,
@@ -424,6 +442,13 @@ def ingest_compendium(
             )
             manifest_family_kind = _manifest_taxonomy_family(specimen_manifest)
             manifest_export_dir = _manifest_replay_export_dir(specimen_manifest)
+            specimen_run_id = str(row["run_id"])
+            if specimen_run_id not in run_provenance:
+                raise ValueError(
+                    f"{compendium_path}: specimen {specimen_id} names run {specimen_run_id}, "
+                    "which has no runs row"
+                )
+            provenance = run_provenance[specimen_run_id]
             upsert_specimen(
                 connection,
                 {
@@ -483,6 +508,10 @@ def ingest_compendium(
                         manifest_runtime_capabilities or runtime_capabilities
                     ),
                     "specimen_manifest_json": specimen_manifest,
+                    "engine_id": provenance.engine_id,
+                    "source_commit": provenance.source_commit,
+                    "receipt_sha256": provenance.receipt_sha256,
+                    "descriptor_version": row["descriptor_version"],
                     "provenance_json": {
                         "specimen": row,
                         "creature": raw_creature_row,

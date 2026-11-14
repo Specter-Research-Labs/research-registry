@@ -50,6 +50,7 @@ resources_dir="$contents_dir/Resources"
 mkdir -p "$macos_dir" "$resources_dir"
 cp "$executable_path" "$macos_dir/$PRODUCT"
 chmod +x "$macos_dir/$PRODUCT"
+"$SCRIPT_DIR/write-buildinfo.sh" "$macos_dir/$PRODUCT"
 
 shopt -s nullglob
 resource_bundles=("$build_dir"/${PACKAGE_RESOURCE_PREFIX}*.bundle)

@@ -16,6 +16,7 @@ from lenia_swarm_analysis.transformation_metrics import (
 )
 
 from .ingest_library import resolve_library_row_context
+from .provenance import read_run_provenance
 from .warehouse import (
     ingest_json_object_artifact,
     ingest_jsonl_rows,
@@ -55,26 +56,22 @@ def _load_terminal_and_trajectory(
     specimen_id: str,
     library_row: dict[str, Any],
     results_path: Path,
-) -> tuple[dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any], int]:
     creature = library_row.get("creature")
     descriptor_bundle = creature.get("descriptorBundle") if isinstance(creature, dict) else None
-    terminal = descriptor_bundle.get("terminal") if isinstance(descriptor_bundle, dict) else None
-    trajectory = (
-        descriptor_bundle.get("trajectory") if isinstance(descriptor_bundle, dict) else None
-    )
-    if isinstance(terminal, dict) and isinstance(trajectory, dict):
-        return terminal, trajectory
-    result_row = _load_single_jsonl_row(results_path)
-    descriptor_bundle = result_row.get("descriptor_bundle")
-    terminal = descriptor_bundle.get("terminal") if isinstance(descriptor_bundle, dict) else None
-    trajectory = (
-        descriptor_bundle.get("trajectory") if isinstance(descriptor_bundle, dict) else None
-    )
+    if not isinstance(descriptor_bundle, dict) or not isinstance(
+        descriptor_bundle.get("terminal"), dict
+    ) or not isinstance(descriptor_bundle.get("trajectory"), dict):
+        descriptor_bundle = _load_single_jsonl_row(results_path).get("descriptor_bundle")
+    if not isinstance(descriptor_bundle, dict):
+        raise SystemExit(f"{specimen_id}: missing descriptor bundle in replay bundle")
+    terminal = descriptor_bundle.get("terminal")
+    trajectory = descriptor_bundle.get("trajectory")
     if not isinstance(terminal, dict):
         raise SystemExit(f"{specimen_id}: missing terminal descriptor in replay bundle")
     if not isinstance(trajectory, dict):
         raise SystemExit(f"{specimen_id}: missing trajectory descriptor in replay bundle")
-    return terminal, trajectory
+    return terminal, trajectory, int(descriptor_bundle["descriptorVersion"])
 
 
 def _summary_row_from_manifest(manifest_path: Path) -> dict[str, Any]:
@@ -99,7 +96,7 @@ def _summary_row_from_manifest(manifest_path: Path) -> dict[str, Any]:
         search_payload = read_json(Path(search_path_raw).expanduser().resolve())
     results_path = Path(str(manifest["resultsPath"])).expanduser().resolve()
     specimen_id = str(creature["id"])
-    terminal, trajectory = _load_terminal_and_trajectory(
+    terminal, trajectory, descriptor_version = _load_terminal_and_trajectory(
         specimen_id=specimen_id,
         library_row=library_row,
         results_path=results_path,
@@ -156,6 +153,7 @@ def _summary_row_from_manifest(manifest_path: Path) -> dict[str, Any]:
         "resultsPath": str(results_path),
         "terminal": terminal,
         "trajectory": trajectory,
+        "descriptorVersion": descriptor_version,
     }
 
 
@@ -174,7 +172,14 @@ def ingest_replay_batch(
     study_id: str | None = None,
     label: str | None = None,
     replay_packet_path: Path | None = None,
+    legacy_engine_id: str | None = None,
 ) -> str:
+    replay_root = (
+        development_traces_path
+        if development_traces_path.is_dir()
+        else development_traces_path.parent
+    )
+    provenance = read_run_provenance(replay_root, legacy_engine_id=legacy_engine_id)
     summary_rows, manifest_paths = _load_replay_summary_rows(development_traces_path)
     run_id = (
         str(summary_rows[0].get("replayRunId"))
@@ -251,7 +256,7 @@ def ingest_replay_batch(
                 "study_id": resolved_study_id,
                 "run_id": summary_row.get("sourceRunId"),
                 "campaign_id": summary_row.get("sourceCampaignId"),
-                "source_kind": str(summary_row.get("sourceKind", "unknown")),
+                "source_kind": str(summary_row["sourceKind"]),
                 "source_mode": summary_row.get("sourceMode"),
                 "source_algorithm": summary_row.get("sourceAlgorithm"),
                 "config_hash": summary_row.get("configHash"),
@@ -272,6 +277,10 @@ def ingest_replay_batch(
                 "export_dir": summary_row.get("sourceExportDir"),
                 "activity_path": None,
                 "fingerprint_path": None,
+                "engine_id": provenance.engine_id,
+                "source_commit": provenance.source_commit,
+                "receipt_sha256": provenance.receipt_sha256,
+                "descriptor_version": summary_row["descriptorVersion"],
                 "provenance_json": summary_row,
             },
         )

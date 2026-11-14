@@ -23,20 +23,20 @@ Consumers:
 
 ## Schema version
 
-The current schema version is `15`, set by `compendiumSchemaVersion` in `Sources/LeniaArchive/CompendiumSchemaVersion.swift`.
+The current schema version is `16`, set by `compendiumSchemaVersion` in `Sources/LeniaArchive/CompendiumSchemaVersion.swift`.
 
 Commands that depend on schema shape require an exact match: `analyze ecology`, `analyze taxonomy`, `index sanity`, and the canonical browse and warehouse surfaces.
 
 ## Tables
 
 - `compendium_meta`: single-row schema metadata (`schema_version`).
-- `runs`: indexed run roots and provenance (`run_id`, `run_dir`, host and output metadata, `config_hash`).
+- `runs`: indexed run roots and provenance (`run_id`, `run_dir`, host and output metadata, `config_hash`, and `engine_id NOT NULL`, `source_commit`, `receipt_sha256` from the run's `receipt.json`). `LeniaCLI index` refuses a run directory without a receipt unless `--engine-id` names its engine; such legacy runs keep `source_commit` and `receipt_sha256` null.
 - `campaigns`: run-scoped campaign IDs linked to runs.
 - `creatures`: browse and publish rows with denormalized metrics, taxonomy, morphometrics, and a required `canonical_specimen_id` link.
 - `creature_qc_events`: append-only catalog QC status changes for audit and review.
 - `exports`: records for exported configs tied to creatures, keyed independently from the user-facing `export_dir`.
-- `results`: optional per-seed records when indexing includes results.
-- `specimens`: strict canonical specimen rows for replayable and warehouse-derived analysis.
+- `results`: optional per-seed records when indexing includes results, with the same `engine_id`, `source_commit` and `receipt_sha256` as their run.
+- `specimens`: strict canonical specimen rows for replayable and warehouse-derived analysis, with a required `descriptor_version`.
 - `ingest_state`: incremental ingestion cursor by source file (`offset`, `size`, `mtime`).
 
 ## No migrations

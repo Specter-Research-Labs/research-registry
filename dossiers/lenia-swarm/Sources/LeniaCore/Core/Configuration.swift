@@ -135,11 +135,13 @@ func validateBaseConfig(_ config: LeniaBaseConfig) throws -> Int {
         try require(config.implementation.gradient_boundary != nil &&
                     config.implementation.alpha_mode != nil &&
                     config.implementation.kernel_profile != nil &&
+                    config.implementation.growth_profile != nil &&
                     config.implementation.flow_clip != nil,
-                    "implementation.mode=custom requires gradient_boundary, alpha_mode, kernel_profile, and flow_clip.")
+                    "implementation.mode=custom requires gradient_boundary, alpha_mode, kernel_profile, growth_profile, and flow_clip.")
         if let gradientBoundary = config.implementation.gradient_boundary,
            let alphaMode = config.implementation.alpha_mode,
            let kernelProfile = config.implementation.kernel_profile,
+           let growthProfile = config.implementation.growth_profile,
            let flowClip = config.implementation.flow_clip {
             let gradientOptions = ["periodic", "zero_pad"]
             try require(gradientOptions.contains(gradientBoundary),
@@ -150,11 +152,9 @@ func validateBaseConfig(_ config: LeniaBaseConfig) throws -> Int {
             let kernelOptions = ["flowlenia_2022_paper_equations", "flowlenia_2022_colab", "qd24_bucketed_v1", "qd24_bump4_v1", "qd24_quad4_v1", "qd24_step_v1", "qd24_life_v1"]
             try require(kernelOptions.contains(kernelProfile),
                         "implementation.kernel_profile must be one of: \(kernelOptions.joined(separator: ", ")).")
-            if let growthProfile = config.implementation.growth_profile {
-                let growthOptions = ["gaussian", "quad4", "stpz"]
-                try require(growthOptions.contains(growthProfile),
-                            "implementation.growth_profile must be one of: \(growthOptions.joined(separator: ", ")).")
-            }
+            let growthOptions = ["gaussian", "quad4", "stpz"]
+            try require(growthOptions.contains(growthProfile),
+                        "implementation.growth_profile must be one of: \(growthOptions.joined(separator: ", ")).")
             let clipOptions = ["none", "params_only", "always"]
             try require(clipOptions.contains(flowClip),
                         "implementation.flow_clip must be one of: \(clipOptions.joined(separator: ", ")).")

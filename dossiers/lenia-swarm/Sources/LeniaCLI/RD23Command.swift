@@ -62,8 +62,17 @@ struct RD23Command: AsyncParsableCommand {
         logger.info("Auxiliary variables: \(bundle.emulation.auxiliaryVariableCount)")
         logger.info("============================================================")
 
+        let receipt = try beginPaperRunReceipt(
+            outputDirectory: outputDirectoryURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            configFiles: try configDirectoryFiles(in: configDirectoryURL),
+            extraInputs: [],
+            backend: .mlx,
+            seeds: []
+        )
         let runner = ReactionDiffusionLenia2023Runner(configs: bundle, logger: logger)
         let summary = try runner.run(outputDirectory: outputDirectoryURL)
+        try receipt.finish()
 
         logger.info("Reaction-Diffusion 2023 complete")
         logger.info("Original runs: \(summary.original.count)")

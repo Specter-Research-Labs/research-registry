@@ -77,7 +77,7 @@ func promoteRunArtifacts(
     )
     let indexer = try executeCompendiumIngest(
         plan: CompendiumIngestPlan(
-            runInputs: [try makeRunInput(runDir: runDir)],
+            runInputs: [try makeRunInput(runDir: runDir, legacyEngineID: nil)],
             resolvedDBPath: compendiumPath
         ),
         rebuild: false,

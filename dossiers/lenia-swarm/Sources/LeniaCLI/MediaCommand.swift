@@ -555,10 +555,7 @@ private func renderEcologyMediaBundle(
         return (record, media.contactRow)
     }
 
-    let sourceRuntime = try loadRuntimeConfig(from: JSONEncoder().encode(baseConfig))
-    let resolvedBackend = try resolveReplaySimulatorBackend(runtimeConfig: sourceRuntime)
-    let replayBaseConfig = baseConfigBySettingBackend(baseConfig, backend: resolvedBackend)
-    let runtime = try loadRuntimeConfig(from: JSONEncoder().encode(replayBaseConfig))
+    let runtime = try loadRuntimeConfig(from: JSONEncoder().encode(baseConfig))
     let evaluator = FlowLeniaSimulator(runtimeConfig: runtime)
 
     let initialState = try ecologyMediaArray(

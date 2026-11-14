@@ -13,7 +13,7 @@ let package = Package(
         .executable(name: "LeniaStudio", targets: ["LeniaStudio"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-distributed-actors.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-distributed-actors.git", revision: "70f9f0a11fab1aeb82def2bccfe26704fad8cae7"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
         .package(url: "https://github.com/ml-explore/mlx-swift", from: "0.21.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.12.0"),

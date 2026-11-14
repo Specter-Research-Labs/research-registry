@@ -455,6 +455,25 @@ private func flowReplaySharedConfig(_ body: PreparedFlowReplay) throws -> Data {
     return try JSONSerialization.data(withJSONObject: ["base": base, "search": search], options: [.sortedKeys])
 }
 
+/// One receipt names one engine, so a replay batch whose records resolve to different backends is refused.
+func replayBatchBackend(inputs: [ReplayResolvedInput], backendRequest: String) throws -> FlowLeniaComputeBackend {
+    let backends = try Set(inputs.map { input -> FlowLeniaComputeBackend in
+        switch input.executionPlan {
+        case let .flow(baseConfig, searchConfig):
+            return try prepareFlowReplay(input, baseConfig: baseConfig, searchConfig: searchConfig, backendRequest: backendRequest)
+                .runtimeConfig.backend
+        case .qd24, .sensorimotor24:
+            return .mlx
+        }
+    })
+    guard backends.count == 1, let backend = backends.first else {
+        throw ValidationError(
+            "Replay inputs resolve to backends \(backends.map(\.rawValue).sorted()); replay each engine's records separately or pass one --backend."
+        )
+    }
+    return backend
+}
+
 func executeReplayResolvedInput(
     _ resolvedInput: ReplayResolvedInput,
     runID: String,
@@ -554,7 +573,32 @@ func materializeReplayBatch(
 
     logger.info("Resolved \(inputs.count) replay inputs from \(inputPath)")
 
-    try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
+    let replayOptions: [String: Any] = [
+        "backend_request": backendRequest,
+        "export": exportEnabled,
+        "batch_size": batchSize,
+        "development_trace": developmentTrace.map { options -> [String: Any] in
+            [
+                "interval": options.interval,
+                "field_resolution": options.fieldResolution,
+                "record_state": options.recordState,
+                "raw_steps": options.rawSteps.map { rawSteps -> Any in
+                    switch rawSteps {
+                    case .all: return "all"
+                    case let .steps(steps): return steps.sorted()
+                    }
+                } ?? NSNull(),
+            ]
+        } ?? NSNull(),
+    ]
+    let receipt = try beginRunReceipt(
+        directory: outputURL,
+        executableURL: try LeniaBuildInfo.runningExecutableURL(),
+        backend: try replayBatchBackend(inputs: inputs, backendRequest: backendRequest),
+        config: ResolvedRunConfig(parts: [("replay", try JSONSerialization.data(withJSONObject: replayOptions, options: [.sortedKeys]))]),
+        seeds: inputs.map { $0.sourceCreature.initialCondition.seed },
+        inputs: [URL(fileURLWithPath: inputPath)]
+    )
     let campaignsDir = outputURL.appendingPathComponent("campaigns", isDirectory: true)
     try FileManager.default.createDirectory(at: campaignsDir, withIntermediateDirectories: true)
 
@@ -715,6 +759,7 @@ func materializeReplayBatch(
         replayedAt: replayedAt
     )
     try replayEncoder().encode(summary).write(to: outputURL.appendingPathComponent("summary.json"))
+    try receipt.finish()
     logger.info("Replay completed (specimens=\(manifests.count), exports=\(exportCount), output=\(outputURL.path))")
     return summary
 }
@@ -845,7 +890,7 @@ func replayResolvedInput(
         )
         executionPlan = .sensorimotor24(payload: payload)
         sourceMode = projection.sourceMode ?? fallbackMode ?? "sensorimotor-2024"
-        sourceAlgorithm = projection.sourceAlgorithm ?? fallbackAlgorithm ?? "imgep"
+        sourceAlgorithm = projection.sourceAlgorithm ?? fallbackAlgorithm
     case .flowLeniaEcology2025ArenaReplayBundleV1:
         throw ValidationError("Flow Lenia ecology arena bundles are rendered as trajectories, not materialized as specimen replay bundles: \(record.exportDir)")
     }

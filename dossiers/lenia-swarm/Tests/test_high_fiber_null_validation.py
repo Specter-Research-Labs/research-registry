@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+from functools import partial
 from pathlib import Path
 
 import duckdb
+import pytest
 
 from lenia_swarm_analysis.morphospace.high_fiber_null_validation import (
     build_high_fiber_null_validation_packet,
@@ -17,18 +19,20 @@ def _insert_feature(
     source_algorithm: str,
     feature_space_id: str,
     values: dict[str, float],
+    engine_id: str = "engine-a",
 ) -> None:
     for axis_id, value in values.items():
         connection.execute(
             """
             INSERT INTO comparison_feature_values_vw
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 specimen_id,
                 "run-a",
                 "lenia_swarm",
                 source_algorithm,
+                engine_id,
                 feature_space_id,
                 axis_id,
                 value,
@@ -36,7 +40,7 @@ def _insert_feature(
         )
 
 
-def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path) -> None:
+def _fixture_connection(tmp_path: Path) -> tuple[duckdb.DuckDBPyConnection, str, Path]:
     connection = duckdb.connect(":memory:")
     connection.execute(
         """
@@ -54,6 +58,7 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
             run_id text,
             source_id text,
             source_algorithm text,
+            engine_id text,
             feature_space_id text,
             axis_id text,
             normalized_value double
@@ -73,7 +78,6 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
             [axis, index],
         )
 
-    source_algorithm = "fixture-algorithm"
     target_region = "component_count:mid|bilateral_symmetry:low|coverage:high|compactness:mid"
     source_packet = tmp_path / "source.json"
     source_packet.write_text(
@@ -81,7 +85,19 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
         encoding="utf-8",
     )
 
+    return connection, "fixture-algorithm", source_packet
+
+
+def _insert_family(
+    connection: duckdb.DuckDBPyConnection,
+    source_algorithm: str,
+    *,
+    second_engine_from: int | None = None,
+) -> None:
     for index in range(10):
+        engine_id = (
+            "engine-b" if second_engine_from is not None and index >= second_engine_from else "engine-a"
+        )
         specimen_id = f"specimen-{index}"
         in_target = index < 3
         common = {
@@ -101,6 +117,7 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
             source_algorithm=source_algorithm,
             feature_space_id="common_morphology_v1",
             values=common,
+            engine_id=engine_id,
         )
         _insert_feature(
             connection,
@@ -108,7 +125,13 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
             source_algorithm=source_algorithm,
             feature_space_id="lenia_terminal_v1",
             values=terminal,
+            engine_id=engine_id,
         )
+
+
+def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path) -> None:
+    connection, source_algorithm, source_packet = _fixture_connection(tmp_path)
+    _insert_family(connection, source_algorithm)
 
     packet = build_high_fiber_null_validation_packet(
         connection,
@@ -131,3 +154,22 @@ def test_high_fiber_null_validation_tests_terminal_label_shuffle(tmp_path: Path)
     assert len(family["exampleRanks"]["nearestTerminalCentroid"]) == 3
     assert len(family["exampleRanks"]["farthestTerminal"]) == 3
     assert family["exampleRanks"]["nearestTerminalCentroid"][0]["specimenId"] == "specimen-1"
+
+
+def test_high_fiber_null_validation_refuses_mixed_engines_unless_pooled(tmp_path: Path) -> None:
+    connection, source_algorithm, source_packet = _fixture_connection(tmp_path)
+    _insert_family(connection, source_algorithm, second_engine_from=5)
+    build = partial(
+        build_high_fiber_null_validation_packet,
+        connection,
+        source_packet_path=source_packet,
+        target_region_limit=1,
+        null_replicates=4,
+        seed=7,
+        min_region_count=2,
+        family_algorithms={"fixture": source_algorithm},
+    )
+    with pytest.raises(ValueError, match="mixes engines engine-a, engine-b"):
+        build()
+    packet = build(pool_engines=frozenset({"engine-a", "engine-b"}))
+    assert packet["method"]["engines"] == ["engine-a", "engine-b"]

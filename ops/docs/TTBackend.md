@@ -22,7 +22,10 @@ The user-facing entrypoint is `LeniaCLI tt replay`. It reads the
 campaign layout (`config.json`, `replay-manifest.json`,
 `development-trace.jsonl` per body, and `summary.json`), so
 `assess-creatures` and `classify-creatures` read TT replays and Metal replays
-alike. Paths must lie under the dossier root, which the container mounts at
+alike. `assess-creatures` takes the engine from the manifests' `engine` field
+and records it in the assessment, so `classify-creatures` and
+`compare-requalification` never combine TT and Metal verdicts unless
+`compare-requalification --pool-engines` names both. Paths must lie under the dossier root, which the container mounts at
 `/repo`.
 
 ```bash

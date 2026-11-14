@@ -6853,9 +6853,9 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(snapshot.metrics.occupancy, 0.0)
     }
 
-    func testFlowLeniaComputeBackendParsesConfigAliases() throws {
+    func testFlowLeniaComputeBackendParsesConfigValues() throws {
         XCTAssertEqual(try FlowLeniaComputeBackend(configValue: "mlx"), .mlx)
-        XCTAssertEqual(try FlowLeniaComputeBackend(configValue: "mlx-swift"), .mlx)
+        XCTAssertThrowsError(try FlowLeniaComputeBackend(configValue: "mlx-swift"))
         XCTAssertEqual(try FlowLeniaComputeBackend(configValue: "metal-full"), .metalFull)
         XCTAssertThrowsError(try FlowLeniaComputeBackend(configValue: "cuda"))
     }
@@ -7213,7 +7213,7 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(actual.finalMass, expected.finalMass, accuracy: 0.1)
     }
 
-    func testWorkerSupportsSimulationJobRespectsCanonicalMetalCapabilities() {
+    func testWorkerSupportsSimulationJobRespectsCanonicalMetalCapabilities() throws {
         let mlxOnlyStatus = WorkerStatus(
             capabilities: WorkerBackendCapabilities(
                 canonicalSearchBackends: [.mlx],
@@ -7226,7 +7226,8 @@ final class LeniaCoreTests: XCTestCase {
             currentJob: nil,
             jobsCompleted: 0,
             totalSeedsProcessed: 0,
-            isAvailable: true
+            isAvailable: true,
+            engineIDs: [:]
         )
         let fullStatus = WorkerStatus(
             capabilities: WorkerBackendCapabilities(
@@ -7240,15 +7241,16 @@ final class LeniaCoreTests: XCTestCase {
             currentJob: nil,
             jobsCompleted: 0,
             totalSeedsProcessed: 0,
-            isAvailable: true
+            isAvailable: true,
+            engineIDs: [:]
         )
 
-        XCTAssertTrue(workerSupportsSimulationJob(mlxOnlyStatus, job: makeSimulationJob(backend: "mlx")))
-        XCTAssertFalse(workerSupportsSimulationJob(mlxOnlyStatus, job: makeSimulationJob(backend: "metal-full")))
-        XCTAssertTrue(workerSupportsSimulationJob(fullStatus, job: makeSimulationJob(backend: "metal-full")))
+        XCTAssertTrue(try workerSupportsSimulationJob(mlxOnlyStatus, job: makeSimulationJob(backend: "mlx")))
+        XCTAssertFalse(try workerSupportsSimulationJob(mlxOnlyStatus, job: makeSimulationJob(backend: "metal-full")))
+        XCTAssertTrue(try workerSupportsSimulationJob(fullStatus, job: makeSimulationJob(backend: "metal-full")))
     }
 
-    func testWorkerSupportsSimulationJobAutoBackendRequiresMetalWorker() {
+    func testWorkerSupportsSimulationJobAutoBackendRequiresMetalWorker() throws {
         let mlxOnlyStatus = WorkerStatus(
             capabilities: WorkerBackendCapabilities(
                 canonicalSearchBackends: [.mlx],
@@ -7261,10 +7263,11 @@ final class LeniaCoreTests: XCTestCase {
             currentJob: nil,
             jobsCompleted: 0,
             totalSeedsProcessed: 0,
-            isAvailable: true
+            isAvailable: true,
+            engineIDs: [:]
         )
-        XCTAssertFalse(workerSupportsSimulationJob(mlxOnlyStatus, job: makeSimulationJob(backend: "auto")))
-        XCTAssertNil(materializeSimulationJob(makeSimulationJob(backend: "auto"), for: mlxOnlyStatus))
+        XCTAssertFalse(try workerSupportsSimulationJob(mlxOnlyStatus, job: makeSimulationJob(backend: "auto")))
+        XCTAssertNil(try materializeSimulationJob(makeSimulationJob(backend: "auto"), for: mlxOnlyStatus))
     }
 
     func testMaterializedSimulationJobPreservesRequestedBackendIntent() throws {
@@ -7280,7 +7283,8 @@ final class LeniaCoreTests: XCTestCase {
             currentJob: nil,
             jobsCompleted: 0,
             totalSeedsProcessed: 0,
-            isAvailable: true
+            isAvailable: true,
+            engineIDs: [:]
         )
 
         let materialized = try XCTUnwrap(materializeSimulationJob(makeSimulationJob(backend: "auto"), for: fullStatus))
@@ -7305,7 +7309,8 @@ final class LeniaCoreTests: XCTestCase {
             currentJob: nil,
             jobsCompleted: 0,
             totalSeedsProcessed: 0,
-            isAvailable: true
+            isAvailable: true,
+            engineIDs: [:]
         )
         let obstacleField = ObstacleFieldConfig(
             enabled: true,
@@ -7372,7 +7377,8 @@ final class LeniaCoreTests: XCTestCase {
             currentJob: nil,
             jobsCompleted: 0,
             totalSeedsProcessed: 0,
-            isAvailable: true
+            isAvailable: true,
+            engineIDs: [:]
         )
         var queue = [
             makeSimulationJob(backend: "metal-full"),
@@ -7387,7 +7393,7 @@ final class LeniaCoreTests: XCTestCase {
         XCTAssertEqual(queue.map(\.baseConfig.backend), ["metal-full", "auto"])
     }
 
-    func testReserveCompatibleSimulationJobReturnsNilWithoutCompatibleWorkerBackend() {
+    func testReserveCompatibleSimulationJobReturnsNilWithoutCompatibleWorkerBackend() throws {
         let mlxOnlyStatus = WorkerStatus(
             capabilities: WorkerBackendCapabilities(
                 canonicalSearchBackends: [.mlx],
@@ -7400,28 +7406,16 @@ final class LeniaCoreTests: XCTestCase {
             currentJob: nil,
             jobsCompleted: 0,
             totalSeedsProcessed: 0,
-            isAvailable: true
+            isAvailable: true,
+            engineIDs: [:]
         )
         var queue = [makeSimulationJob(backend: "metal-full")]
 
-        XCTAssertNil(reserveCompatibleSimulationJob(from: &queue, for: mlxOnlyStatus))
+        XCTAssertNil(try reserveCompatibleSimulationJob(from: &queue, for: mlxOnlyStatus))
         XCTAssertEqual(queue.map(\.baseConfig.backend), ["metal-full"])
     }
 
-    func testReserveCompatibleSimulationJobWithoutStatusPreservesFIFO() throws {
-        var queue = [
-            makeSimulationJob(backend: "auto"),
-            makeSimulationJob(backend: "mlx")
-        ]
-
-        let reserved = try XCTUnwrap(reserveCompatibleSimulationJob(from: &queue, for: nil))
-
-        XCTAssertEqual(reserved.baseConfig.backend, "auto")
-        XCTAssertNil(reserved.requestedBackend)
-        XCTAssertEqual(queue.map(\.baseConfig.backend), ["mlx"])
-    }
-
-    func testEcologyCampaignAutoBackendRequiresMetalCapability() {
+    func testEcologyCampaignAutoBackendRequiresMetalCapability() throws {
         let mlxOnly = WorkerBackendCapabilities(
             canonicalSearchBackends: [.mlx],
             canonicalFlowLeniaBackends: [.mlx],
@@ -7429,7 +7423,7 @@ final class LeniaCoreTests: XCTestCase {
             canonicalFlowLeniaPreferredBackend: .mlx
         )
 
-        XCTAssertNil(materializeCampaignJob(makeEcologyCampaignJob(backend: "auto"), for: mlxOnly))
+        XCTAssertNil(try materializeCampaignJob(makeEcologyCampaignJob(backend: "auto"), for: mlxOnly))
     }
 
     func testMaterializedEcologyCampaignAutoBackendUsesMetalFull() throws {

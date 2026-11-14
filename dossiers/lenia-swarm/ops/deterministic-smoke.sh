@@ -48,6 +48,7 @@ if [[ ! -x "$cli_bin" ]]; then
   echo "missing built CLI at: $cli_bin" >&2
   exit 2
 fi
+"$dossier_root/ops/write-buildinfo.sh" "$cli_bin"
 
 run_one() {
   local run_id="$1"

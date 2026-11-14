@@ -77,7 +77,7 @@ final class FlowSandboxMetalRuntimeState {
             commandQueue: commandQueue
         )
 
-        let library = Self.makeLibrary(
+        let library = FlowLeniaMetalFullPipeline.makeLibrary(
             device: device,
             source: Self.kernelSource(
                 parameterCount: parameterCount,
@@ -420,14 +420,6 @@ final class FlowSandboxMetalRuntimeState {
         }
     }
 
-    private static func makeLibrary(device: MTLDevice, source: String) -> MTLLibrary {
-        do {
-            return try device.makeLibrary(source: source, options: nil)
-        } catch {
-            preconditionFailure("Failed to compile Metal sandbox library: \(error)")
-        }
-    }
-
     private static func writeFloats(_ values: [Float], to buffer: MTLBuffer) {
         values.withUnsafeBytes { raw in
             guard let baseAddress = raw.baseAddress else { return }
@@ -477,7 +469,7 @@ final class FlowSandboxMetalRuntimeState {
         return (true, x0, y0, clampedPatchSize, max(0, value))
     }
 
-    private static func kernelSource(
+    static func kernelSource(
         parameterCount: Int,
         sx: Int,
         sy: Int

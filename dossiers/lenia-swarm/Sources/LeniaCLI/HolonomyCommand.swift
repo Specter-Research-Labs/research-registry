@@ -211,7 +211,19 @@ struct HolonomyCommand: AsyncParsableCommand {
             return
         }
 
-        try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
+        let bundleFiles = try configDirectoryFiles(in: bundleURL)
+        let receipt = try beginRunReceipt(
+            directory: outputURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            backend: try FlowLeniaComputeBackend(configValue: holonomyBundle.baseConfig.backend),
+            config: ResolvedRunConfig(parts: [
+                ("base", try researchEncodedJSON(holonomyBundle.baseConfig)),
+                ("search", try researchEncodedJSON(holonomyBundle.searchConfig)),
+                ("loop", try Data(contentsOf: loopURL)),
+            ]),
+            seeds: [holonomyBundle.baseConfig.`init`.seed],
+            inputs: bundleFiles.map(\.url) + [loopURL]
+        )
         try Data(contentsOf: loopURL).write(to: outputURL.appendingPathComponent("loop-spec.json"))
         let campaignsDir = outputURL.appendingPathComponent("campaigns", isDirectory: true)
         try FileManager.default.createDirectory(at: campaignsDir, withIntermediateDirectories: true)
@@ -435,6 +447,7 @@ struct HolonomyCommand: AsyncParsableCommand {
             replayedAt: replayedAt
         )
         try holonomyEncoder().encode(runManifest).write(to: outputURL.appendingPathComponent("holonomy-manifest.json"))
+        try receipt.finish()
 
         try promoteIfConfigured(
             options: promotion,

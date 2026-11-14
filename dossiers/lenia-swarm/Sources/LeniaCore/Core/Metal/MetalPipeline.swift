@@ -112,7 +112,17 @@ final class FlowLeniaMetalFullPipeline {
         self.commandQueue = commandQueue
         self.kernelBatchCount = FlowLeniaFieldLayout.kernelBatchCount(for: kernels)
         self.parameterMixMode = ParameterMixMode(configValue: parameterMix)
-        self.mixSeed = UInt32(bitPattern: Int32(mixSeed ?? 42))
+        switch self.parameterMixMode {
+        case .average:
+            // Invariant: the average-mix shader never reads uniforms.mixSeed.
+            self.mixSeed = 0
+        case .stochastic:
+            self.mixSeed = UInt32(bitPattern: Int32(requiredMixSeed(
+                mixSeed,
+                colabMode: config.implementation.mode == "flowlenia_2022_colab",
+                mixMode: parameterMix
+            )))
+        }
         guard self.kernelBatchCount == 1 || self.kernelBatchCount == batchCount else {
             preconditionFailure("Flow Metal full pipeline requires either one shared kernel set or one kernel set per batch element.")
         }
@@ -816,9 +826,27 @@ final class FlowLeniaMetalFullPipeline {
         }
     }
 
+    /// Pinned to the values Metal used when `options` was nil, so naming them changed no numerics.
+    static let compileOptionsDescriptor: [String: String] = [
+        "language_version": "3.2",
+        "math_mode": "fast",
+        "math_floating_point_functions": "fast",
+        "preserve_invariance": "false",
+    ]
+
+    static func makeCompileOptions() -> MTLCompileOptions {
+        let options = MTLCompileOptions()
+        options.languageVersion = .version3_2
+        options.mathMode = .fast
+        options.mathFloatingPointFunctions = .fast
+        options.preserveInvariance = false
+        return options
+    }
+
     static func makeLibrary(device: MTLDevice, source: String) -> MTLLibrary {
+        CompiledMetalSourceLedger.shared.record(source)
         do {
-            return try device.makeLibrary(source: source, options: nil)
+            return try device.makeLibrary(source: source, options: makeCompileOptions())
         } catch {
             preconditionFailure("Failed to compile Flow Metal library: \(error)")
         }

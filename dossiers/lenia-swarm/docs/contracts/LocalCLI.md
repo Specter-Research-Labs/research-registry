@@ -12,8 +12,10 @@ MLX Metal shaders are required. The metallib cache under `.build/lenia-metal-cac
 
 ```bash
 cd dossiers/lenia-swarm
-xcrun swift build -c release --product LeniaCLI
+make build
 ```
+
+`make build` runs the release `swift build` and then `ops/write-buildinfo.sh`, which writes `LeniaCLI.buildinfo.json` next to the binary (source commit, dirty flag, binary sha256, Swift version, C engine sha256) and, for a dirty tree, `LeniaCLI.source.patch`. Every command that writes research records refuses to start when the build info is missing or does not match the binary's bytes, so a binary built any other way, including `xcodebuild`, must be stamped with `ops/write-buildinfo.sh <binary>` before it runs research.
 
 ## Quickstart
 
@@ -88,10 +90,11 @@ The command fails with a validation error if any invariant is violated.
 
 Within `--output/<run_id>/`:
 
+- `receipt.json`: written before the first simulation. It records argv, the build info, the `engine_id` and engine details (backend, Metal reference-source digest, pinned compile options, C engine sha256), the host device and OS build, the resolved config and its sha256, the seeds, and the sha256 of every input file. Its own sha256 is the run's `receipt_sha256`, so it is never rewritten; `receipt.completion.json`, written at the end, holds the sha256 of every output file and of every Metal source compiled at run time. A dirty build also copies `LeniaCLI.source.patch` into the run directory.
 - `config.json`: copied base config.
 - `search.json`: copied search config.
 - `results.jsonl`: one line per simulation result.
-- `summary.json`: run metadata, collection counts, and frame settings.
+- `summary.json`: run metadata, collection counts, frame settings, and a `provenance` object with the run's `engine_id`, `source_commit` and `receipt_sha256`.
 - `top.json`: top-K passing results (only when at least one result passes).
 - `frames/` (optional): grayscale PNG frames.
 - `frames_color/` (optional): colorized PNG frames.
@@ -118,6 +121,7 @@ Inputs:
 
 Per run:
 
+- `receipt.json`, which names the engine and the build that produced the run,
 - copied `config.json` and `search.json` in the run directory,
 - `summary.json` with the run id and execution counts,
 - `results.jsonl` containing metrics and parameter payloads,
@@ -126,11 +130,12 @@ Per run:
 Per indexed record:
 
 - `run_id`,
+- `engine_id`, `source_commit` and `receipt_sha256` in the `runs` and `results` tables,
 - provenance fields in the `runs` table,
 - `config_hash` when available,
 - method and version tags for derived fields such as morphometrics and taxonomy.
 
-Results are not guaranteed bitwise identical across different hardware, compiler versions, or MLX backend revisions unless the experiment protocol pins them.
+Results are not guaranteed bitwise identical across different hardware, compiler versions, or MLX backend revisions unless the experiment protocol pins them. `engine_id` is a 16-hex-character hash over the backend, the Metal shader generators evaluated on a fixed set of reference variants, the pinned Metal compile options and the C engine sources. Two builds with the same `engine_id` run the same simulation code; a different `engine_id` means records must not be pooled without saying so. The source commit is recorded separately and does not change `engine_id`.
 
 ## Storage compaction
 

@@ -52,6 +52,7 @@ public distributed actor SwarmController {
     private let logger: Logger
     private let runContext: RunContext
     private let collectionConfig: CollectionConfig
+    private let expectedEngineIDs: [String: String]
 
     private var jobQueue: [SimulationJob]
     private var pendingJobs: [String: SimulationJob] = [:]
@@ -88,6 +89,7 @@ public distributed actor SwarmController {
         outputDir: String,
         seedsPerJob: Int,
         runContext: RunContext,
+        buildInfo: LeniaBuildInfo,
         logger: Logger,
         eventContinuation: AsyncStream<ControllerEvent>.Continuation? = nil
     ) throws {
@@ -100,6 +102,7 @@ public distributed actor SwarmController {
             ),
             outputRoot: outputDir,
             runContext: runContext,
+            buildInfo: buildInfo,
             logger: logger,
             eventContinuation: eventContinuation
         )
@@ -113,6 +116,7 @@ public distributed actor SwarmController {
         outputDir: String,
         seedsPerJob: Int,
         runContext: RunContext,
+        buildInfo: LeniaBuildInfo,
         logger: Logger,
         eventContinuation: AsyncStream<ControllerEvent>.Continuation? = nil
     ) throws {
@@ -125,6 +129,7 @@ public distributed actor SwarmController {
             ),
             outputRoot: outputDir,
             runContext: runContext,
+            buildInfo: buildInfo,
             logger: logger,
             eventContinuation: eventContinuation
         )
@@ -135,6 +140,7 @@ public distributed actor SwarmController {
         bootstrap: SwarmControllerBootstrap,
         outputRoot: String,
         runContext: RunContext,
+        buildInfo: LeniaBuildInfo,
         logger: Logger,
         eventContinuation: AsyncStream<ControllerEvent>.Continuation?
     ) throws {
@@ -155,6 +161,7 @@ public distributed actor SwarmController {
         self.logger = logger
         self.runContext = runContext
         self.collectionConfig = bootstrap.collectionConfig
+        self.expectedEngineIDs = LeniaEngineIdentity.engineIDs(for: [.mlx, .metalFull, .cpu], buildInfo: buildInfo)
         self.eventContinuation = eventContinuation
 
         try outputLayout.createDirectories()
@@ -192,16 +199,24 @@ public distributed actor SwarmController {
     private func workerJoined(_ worker: LeniaWorker) async {
         guard !isShuttingDown else { return }
 
-        workers.append(worker)
-
-        // Get worker ID and store in lookup map
-        let workerStatus = try? await worker.getStatus()
-        if let status = workerStatus {
-            workerIdMap[status.workerId] = worker
-            logger.info("Worker \(status.workerId) joined. Total workers: \(workers.count)")
-        } else {
-            logger.info("Worker joined. Total workers: \(workers.count)")
+        let workerStatus: WorkerStatus
+        do {
+            workerStatus = try await worker.getStatus()
+        } catch {
+            logger.error("Refusing worker \(worker.id): its status (and engine ids) could not be read: \(error)")
+            return
         }
+        let mismatches = workerStatus.engineMismatches(expected: expectedEngineIDs)
+        guard mismatches.isEmpty else {
+            logger.error(
+                "Refusing worker \(workerStatus.workerId): its engine differs from this controller (\(mismatches.joined(separator: "; "))). Run every node from the same build."
+            )
+            return
+        }
+
+        workers.append(worker)
+        workerIdMap[workerStatus.workerId] = worker
+        logger.info("Worker \(workerStatus.workerId) joined. Total workers: \(workers.count)")
 
         do {
             try await worker.updateRunContext(runContext)
@@ -232,9 +247,16 @@ public distributed actor SwarmController {
         workerTasks[ObjectIdentifier(worker)] = task
     }
 
-    private func dispatchLoop(for worker: LeniaWorker, status: WorkerStatus?) async {
+    private func dispatchLoop(for worker: LeniaWorker, status: WorkerStatus) async {
         while !isShuttingDown {
-            guard let job = reserveNextDispatchJob(for: status) else {
+            let reserved: SimulationJob?
+            do {
+                reserved = try reserveNextDispatchJob(for: status)
+            } catch {
+                failRun("Cannot resolve a backend for the next job: \(error)")
+                break
+            }
+            guard let job = reserved else {
                 if isDone() {
                     break
                 }
@@ -258,19 +280,28 @@ public distributed actor SwarmController {
         }
     }
 
-    private func reserveNextDispatchJob(for workerStatus: WorkerStatus?) -> SimulationJob? {
-        if let workerId = workerStatus?.workerId,
-           let campaignId = workerCampaignAssignments[workerId] {
-            return reserveNextCampaignJob(campaignId: campaignId, for: workerStatus)
+    private func reserveNextDispatchJob(for workerStatus: WorkerStatus) throws -> SimulationJob? {
+        if let campaignId = workerCampaignAssignments[workerStatus.workerId] {
+            return try reserveNextCampaignJob(campaignId: campaignId, for: workerStatus)
         }
-        return reserveCompatibleSimulationJob(from: &jobQueue, for: workerStatus)
+        return try reserveCompatibleSimulationJob(from: &jobQueue, for: workerStatus)
     }
 
-    private func reserveNextCampaignJob(campaignId: UUID, for workerStatus: WorkerStatus?) -> SimulationJob? {
+    private func reserveNextCampaignJob(campaignId: UUID, for workerStatus: WorkerStatus) throws -> SimulationJob? {
         guard var jobs = campaignJobQueues[campaignId] else { return nil }
-        let job = reserveCompatibleSimulationJob(from: &jobs, for: workerStatus)
+        let job = try reserveCompatibleSimulationJob(from: &jobs, for: workerStatus)
         campaignJobQueues[campaignId] = jobs
         return job
+    }
+
+    /// Stops dispatch and tells the host the run is unusable, so a provenance or persistence failure
+    /// never ends as a run that looks complete.
+    private func failRun(_ message: String) {
+        guard !isShuttingDown else { return }
+        logger.error("Controller run failed: \(message)")
+        isShuttingDown = true
+        closeAllAppendJSONLHandles()
+        eventContinuation?.yield(.failed(message))
     }
 
     private func markJobPending(_ job: SimulationJob) {
@@ -293,6 +324,12 @@ public distributed actor SwarmController {
         let campaignId = campaignJobMapping[job.id]
 
         if result.success {
+            guard let engineID = result.engineID, engineID == expectedEngineIDs[job.baseConfig.backend] else {
+                failRun(
+                    "Worker \(result.workerId) returned job \(job.id) from engine \(result.engineID ?? "missing"), but this controller expects \(expectedEngineIDs[job.baseConfig.backend] ?? "none") for backend \(job.baseConfig.backend)."
+                )
+                return
+            }
             if campaignId == nil {
                 completedJobCount += 1
                 processedSeedCount += job.count
@@ -358,13 +395,18 @@ public distributed actor SwarmController {
                 }
             }
 
-            if let campaignId = campaignId {
-                recordCampaignResults(
-                    campaignId: campaignId,
-                    results: results
-                )
-            } else {
-                recordOverallResults(results: results)
+            do {
+                if let campaignId = campaignId {
+                    try recordCampaignResults(
+                        campaignId: campaignId,
+                        results: results
+                    )
+                } else {
+                    try recordOverallResults(results: results)
+                }
+            } catch {
+                failRun("Could not persist results of job \(job.id): \(error)")
+                return
             }
 
             emitProgress()
@@ -954,15 +996,17 @@ public distributed actor SwarmController {
     private func recordCampaignResults(
         campaignId: UUID,
         results: [SimulationResultData]
-    ) {
-        updateCampaignArtifacts(campaignId) { artifacts in
-            persistResults(
-                results: results,
-                outputDir: artifacts.outputDir,
-                resultCount: &artifacts.resultCount,
-                topResults: &artifacts.topResults
-            )
+    ) throws {
+        guard var artifacts = campaignArtifacts[campaignId] else {
+            throw ConfigError.invalidConfig("Campaign \(campaignId) has no output artifacts to record results into.")
         }
+        try persistResults(
+            results: results,
+            outputDir: artifacts.outputDir,
+            resultCount: &artifacts.resultCount,
+            topResults: &artifacts.topResults
+        )
+        campaignArtifacts[campaignId] = artifacts
     }
 
     private func finalizeCampaignOutputs(campaignId: UUID) {
@@ -1072,8 +1116,8 @@ public distributed actor SwarmController {
         appendJSONLHandles.removeAll(keepingCapacity: true)
     }
 
-    private func recordOverallResults(results: [SimulationResultData]) {
-        persistResults(
+    private func recordOverallResults(results: [SimulationResultData]) throws {
+        try persistResults(
             results: results,
             outputDir: overallOutputDir,
             resultCount: &overallResultCount,
@@ -1086,33 +1130,21 @@ public distributed actor SwarmController {
         outputDir: URL,
         resultCount: inout Int,
         topResults: inout [SimulationResultData]
-    ) {
-        appendSimulationResults(results, to: outputDir.appendingPathComponent("results.jsonl"))
+    ) throws {
+        if !results.isEmpty {
+            try appendResearchJSONLines(results, to: appendJSONLHandle(for: outputDir.appendingPathComponent("results.jsonl")))
+        }
         resultCount += results.count
         mergeTopSimulationResults(results, into: &topResults, limit: topK, headroomMultiplier: 2)
-        appendActivitySummaries(results, to: outputDir)
+        try appendActivitySummaries(results, to: outputDir)
     }
 
-    private func appendSimulationResults(_ results: [SimulationResultData], to url: URL) {
-        guard !results.isEmpty else { return }
-        do {
-            try appendResearchJSONLines(results, to: appendJSONLHandle(for: url))
-        } catch {
-            logger.error("Failed to append simulation results to \(url.lastPathComponent): \(error)")
-        }
-    }
-
-    private func appendActivitySummaries(_ results: [SimulationResultData], to outputDir: URL) {
+    private func appendActivitySummaries(_ results: [SimulationResultData], to outputDir: URL) throws {
         guard let activityConfig = searchConfig.activity, activityConfig.enabled else { return }
         ensureActivityArtifact(in: outputDir)
-        let activityURL = outputDir.appendingPathComponent("activity.jsonl")
         let records = activitySummaryRecords(from: results, config: activityConfig)
         guard !records.isEmpty else { return }
-        do {
-            try appendResearchJSONLines(records, to: appendJSONLHandle(for: activityURL))
-        } catch {
-            logger.error("Failed to append activity summaries to \(activityURL.lastPathComponent): \(error)")
-        }
+        try appendResearchJSONLines(records, to: appendJSONLHandle(for: outputDir.appendingPathComponent("activity.jsonl")))
     }
 
     private func sanitizePathComponent(_ value: String) -> String {

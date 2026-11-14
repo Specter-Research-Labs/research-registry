@@ -79,7 +79,14 @@ struct EvaluateCommand: AsyncParsableCommand {
         logger.info("Loaded \(rules.count) genotypes from corpus")
 
         let simSearch = parsedSearch.toSearchConfig()
-        try FileManager.default.createDirectory(at: runDir, withIntermediateDirectories: true)
+        let receipt = try beginRunReceipt(
+            directory: runDir,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            backend: resolvedBackend,
+            config: ResolvedRunConfig(parts: [("base", baseConfigData), ("search", searchConfigData)]),
+            seeds: rowSeeds,
+            inputs: [URL(fileURLWithPath: configPath), URL(fileURLWithPath: searchPath), URL(fileURLWithPath: corpusPath)]
+        )
         let resultsURL = runDir.appendingPathComponent("results.jsonl")
         try Data().write(to: resultsURL, options: .atomic)
         let handle = try FileHandle(forWritingTo: resultsURL)
@@ -114,6 +121,8 @@ struct EvaluateCommand: AsyncParsableCommand {
             idx = end
             logger.info("Evaluated \(idx)/\(rules.count)")
         }
+        try handle.close()
+        try receipt.finish()
         logger.info(
             "Done (\(rules.count) creatures, \(String(format: "%.2f", Date().timeIntervalSince(start)))s) -> \(resultsURL.path)"
         )

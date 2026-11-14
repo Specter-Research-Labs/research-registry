@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import LeniaCore
 
 struct CompendiumIngestPlan {
     let runInputs: [RunInput]
@@ -9,7 +10,8 @@ struct CompendiumIngestPlan {
 func resolveCompendiumIngestPlan(
     outputRoots: [String],
     runDirs: [String],
-    dbPath: String?
+    dbPath: String?,
+    legacyEngineID: String?
 ) throws -> CompendiumIngestPlan {
     let hasOutputRoot = !outputRoots.isEmpty
     let hasRunDir = !runDirs.isEmpty
@@ -19,8 +21,8 @@ func resolveCompendiumIngestPlan(
     }
 
     let runInputs = try hasOutputRoot
-        ? collectRunInputs(outputRoots: outputRoots)
-        : runDirs.map { try makeRunInput(runDir: $0) }
+        ? collectRunInputs(outputRoots: outputRoots, legacyEngineID: legacyEngineID)
+        : runDirs.map { try makeRunInput(runDir: $0, legacyEngineID: legacyEngineID) }
     if hasOutputRoot && runInputs.isEmpty {
         throw ValidationError("No run directories found under output root(s).")
     }
@@ -49,7 +51,7 @@ func executeCompendiumIngest(
     return indexer
 }
 
-func collectRunInputs(outputRoots: [String]) throws -> [RunInput] {
+func collectRunInputs(outputRoots: [String], legacyEngineID: String?) throws -> [RunInput] {
     var inputs: [RunInput] = []
     for outputRoot in outputRoots {
         let rootURL = try existingDirectoryURL(path: outputRoot, label: "Output root")
@@ -83,7 +85,8 @@ func collectRunInputs(outputRoots: [String]) throws -> [RunInput] {
                         runKey: runKey(hostId: hostId, runId: runId),
                         hostId: hostId,
                         outputRoot: rootURL,
-                        runDirRelative: relativePath(from: rootURL, to: run)
+                        runDirRelative: relativePath(from: rootURL, to: run),
+                        provenance: try resolveRunProvenance(runDir: run, legacyEngineID: legacyEngineID)
                     )
                 )
             }
@@ -96,7 +99,7 @@ func collectRunInputs(outputRoots: [String]) throws -> [RunInput] {
         .sorted { $0.runDir.path < $1.runDir.path }
 }
 
-func makeRunInput(runDir: String) throws -> RunInput {
+func makeRunInput(runDir: String, legacyEngineID: String?) throws -> RunInput {
     let runURL = try existingDirectoryURL(path: runDir, label: "Run directory")
     let inferred = inferOutputRootAndHostId(from: runURL)
     let runId = try canonicalRunId(for: runURL)
@@ -106,7 +109,32 @@ func makeRunInput(runDir: String) throws -> RunInput {
         runKey: runKey(hostId: inferred.hostId, runId: runId),
         hostId: inferred.hostId,
         outputRoot: inferred.outputRoot,
-        runDirRelative: inferred.outputRoot.flatMap { relativePath(from: $0, to: runURL) }
+        runDirRelative: inferred.outputRoot.flatMap { relativePath(from: $0, to: runURL) },
+        provenance: try resolveRunProvenance(runDir: runURL, legacyEngineID: legacyEngineID)
+    )
+}
+
+/// A run names its engine through its receipt.json; a legacy directory written before receipts
+/// gets only the engine id the caller declares for it, with no source commit or receipt.
+func resolveRunProvenance(runDir: URL, legacyEngineID: String?) throws -> CompendiumRunProvenance {
+    guard FileManager.default.fileExists(atPath: runDir.appendingPathComponent(RunReceipt.fileName).path) else {
+        guard let legacyEngineID else {
+            throw ValidationError(
+                "Run directory \(runDir.path) has no \(RunReceipt.fileName). Pass --engine-id <id> to index a legacy run written before receipts."
+            )
+        }
+        return CompendiumRunProvenance(engineID: legacyEngineID, sourceCommit: nil, receiptSha256: nil)
+    }
+    let provenance = try RunReceiptSession.load(directory: runDir).provenance
+    if let legacyEngineID, legacyEngineID != provenance.engineID {
+        throw ValidationError(
+            "--engine-id \(legacyEngineID) contradicts \(runDir.path)/\(RunReceipt.fileName), which names engine \(provenance.engineID)."
+        )
+    }
+    return CompendiumRunProvenance(
+        engineID: provenance.engineID,
+        sourceCommit: provenance.sourceCommit,
+        receiptSha256: provenance.receiptSha256
     )
 }
 
@@ -181,6 +209,13 @@ struct RunInput {
     let hostId: String?
     let outputRoot: URL?
     let runDirRelative: String?
+    let provenance: CompendiumRunProvenance
+}
+
+struct CompendiumRunProvenance {
+    let engineID: String
+    let sourceCommit: String?
+    let receiptSha256: String?
 }
 
 private struct HolonomyRunIdentity: Decodable {

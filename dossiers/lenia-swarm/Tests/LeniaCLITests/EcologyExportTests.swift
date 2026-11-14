@@ -15,6 +15,7 @@ final class EcologyExportTests: XCTestCase {
         let overallDir = runDir.appendingPathComponent("overall", isDirectory: true)
         try fm.createDirectory(at: libraryDir, withIntermediateDirectories: true)
         try fm.createDirectory(at: overallDir, withIntermediateDirectories: true)
+        try writeFixtureReceipt(in: runDir)
 
         let creature = makeEcologyCreature(
             id: UUID(uuidString: "40404040-4040-4040-4040-404040404040")!,
@@ -94,6 +95,7 @@ final class EcologyExportTests: XCTestCase {
         let overallDir = runDir.appendingPathComponent("overall", isDirectory: true)
         try fm.createDirectory(at: libraryDir, withIntermediateDirectories: true)
         try fm.createDirectory(at: overallDir, withIntermediateDirectories: true)
+        try writeFixtureReceipt(in: runDir)
 
         let creatures = [
             makeEcologyCreature(
