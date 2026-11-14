@@ -69,7 +69,7 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         let p = ruleParams()
         let maps = channelMaps()
         let initial = centeredBlob()
-        let pos = flowSensorimotorPosGrid(sx: sx, sy: sy)
+        let pos = flowLeniaPositionGrid(sx: sx, sy: sy)
 
         let initialMass = flowSensorimotorMass(initial, config: cfg).item(Float.self)
         let final = flowSensorimotorRollout(
@@ -89,7 +89,7 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         let p = ruleParams()
         let maps = channelMaps()
         let initial = centeredBlob()
-        let pos = flowSensorimotorPosGrid(sx: sx, sy: sy)
+        let pos = flowLeniaPositionGrid(sx: sx, sy: sy)
 
         let inputs = [p.a, p.w, p.b, p.r, p.m, p.s, p.h, initial]
         let labels = ["a", "w", "b", "r", "m", "s", "h", "init"]
@@ -221,7 +221,7 @@ final class FlowSensorimotorPhysicsTests: XCTestCase {
         let cfg = config()
         let p = ruleParams()
         let maps = channelMaps()
-        let pos = flowSensorimotorPosGrid(sx: sx, sy: sy)
+        let pos = flowLeniaPositionGrid(sx: sx, sy: sy)
         let initial = centeredBlob()
 
         let final = flowSensorimotorRollout(

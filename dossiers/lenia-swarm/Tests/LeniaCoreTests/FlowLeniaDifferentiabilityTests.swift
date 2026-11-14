@@ -38,26 +38,14 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
     private let thetaA: Float = 1.0
     private let rolloutSteps = 12
 
-    private func centeredCoords() -> (MLXArray, MLXArray) {
-        let coordsX = MLXArray((0..<sx).map { Float($0 - sx / 2) })
-        let coordsY = MLXArray((0..<sy).map { Float($0 - sy / 2) })
-        return meshgrid(coordsX, coordsY)
-    }
-
     private func posGrid() -> MLXArray {
-        let coordsX = MLXArray((0..<sx).map { Float($0) })
-        let coordsY = MLXArray((0..<sy).map { Float($0) })
-        let (X, Y) = meshgrid(coordsX, coordsY)
-        var pos = MLX.stacked([X, Y], axis: -1) + MLXArray(Float(0.5))
-        pos = pos.expandedDimensions(axis: 0)
-        return pos.expandedDimensions(axis: -1)
+        flowLeniaPositionGrid(sx: sx, sy: sy)
     }
 
     // Centered concentration target reused as the goal-mask loss, mirroring the
     // paper's collapse/centroid embedding.
     private func goalMask() -> MLXArray {
-        let (X, Y) = centeredCoords()
-        let D = MLX.sqrt(X * X + Y * Y) / MLXArray(Float(10.0))
+        let D = flowLeniaKernelDistance(sx: sx, sy: sy) / MLXArray(Float(10.0))
         let inner = (D .< MLXArray(Float(0.5))).asType(.float32) * MLXArray(Float(0.85))
         let outer = (D .< MLXArray(Float(1.0))).asType(.float32) * MLXArray(Float(0.15))
         return (inner + outer) * MLXArray(Float(0.9))
@@ -75,29 +63,12 @@ final class FlowLeniaDifferentiabilityTests: XCTestCase {
     }
 
     private func buildFK(a: MLXArray, w: MLXArray, b: MLXArray, r: MLXArray) -> MLXArray {
-        let (X, Y) = centeredCoords()
-        let DBase = MLX.sqrt(X * X + Y * Y)
-        var kernels: [MLXArray] = []
-        kernels.reserveCapacity(nbK)
-        for k in 0..<nbK {
-            let divisor = r[k] * MLXArray(Float(28.0)) // (R + 15) with R = 13, the flowlenia_2022_colab scaling
-            let D = DBase / divisor
-            let profiled = kernelProfile(D, a: a[k], w: w[k], b: b[k], kernelProfile: "flowlenia_2022_colab")
-            let gate = sigmoid(-(D - MLXArray(Float(1.0))) * MLXArray(Float(10.0)))
-            kernels.append(gate * profiled)
-        }
-        let stacked = MLX.stacked(kernels, axis: 2)
-        let sumK = stacked.sum(axes: [0, 1], keepDims: true)
-        let normalized = stacked / (sumK + MLXArray(Float(1e-10)))
-        let shifted = fftshift2For(normalized)
-        let fK = MLXFFT.fft2(shifted, axes: [0, 1])
-        return fK.expandedDimensions(axis: 0)
-    }
-
-    private func fftshift2For(_ x: MLXArray) -> MLXArray {
-        var result = MLX.roll(x, shift: x.shape[0] / 2, axis: 0)
-        result = MLX.roll(result, shift: x.shape[1] / 2, axis: 1)
-        return result
+        flowSensorimotorKernelStack(a: a, w: w, b: b, r: r, config: FlowSensorimotorStepConfig(
+            sx: sx, sy: sy, nbK: nbK, channels: channels, learnableChannels: channels, dd: dd, sigma: sigma,
+            dt: dt, n: n, thetaA: thetaA, R: 13, kernelProfile: "flowlenia_2022_colab",
+            gradientBoundary: "periodic", alphaMode: "mass", flowClip: "none",
+            growthProfile: "flowlenia_2022_paper_equations", useTorus: true
+        ))
     }
 
     private func rollout(initial: MLXArray, fK: MLXArray, m: MLXArray, s: MLXArray, h: MLXArray,

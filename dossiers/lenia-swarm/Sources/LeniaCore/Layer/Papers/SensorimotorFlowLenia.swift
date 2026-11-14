@@ -1,7 +1,6 @@
 import Foundation
 import Logging
 import MLX
-import MLXFFT
 
 // Sensorimotor-agency discovery on Flow-Lenia: the same IMGEP diversity search +
 // gradient descent + curriculum as the Hamon 2024 sensorimotor protocol, but the
@@ -53,12 +52,7 @@ func flowSensorimotorKernelStack(
     guard config.kernelProfile == "flowlenia_2022_colab" else {
         fatalError("flow-lenia sensorimotor kernel stack requires the flowlenia_2022_colab profile, got \(config.kernelProfile)")
     }
-    let midX = config.sx / 2
-    let midY = config.sy / 2
-    let coordsX = MLXArray(Array(0..<config.sx).map { Float($0 - midX) })
-    let coordsY = MLXArray(Array(0..<config.sy).map { Float($0 - midY) })
-    let (X, Y) = meshgrid(coordsX, coordsY)
-    let DBase = MLX.sqrt(X * X + Y * Y)
+    let DBase = flowLeniaKernelDistance(sx: config.sx, sy: config.sy)
 
     let radiusBase = config.R + 15.0
     var kernels: [MLXArray] = []
@@ -72,20 +66,7 @@ func flowSensorimotorKernelStack(
     }
     let stacked = MLX.stacked(kernels, axis: 2)
     let sumK = stacked.sum(axes: [0, 1], keepDims: true)
-    let normalized = stacked / (sumK + MLXArray(Float(1e-10)))
-    let shifted = fftshift2(normalized)
-    let fK = MLXFFT.fft2(shifted, axes: [0, 1])
-    return fK.expandedDimensions(axis: 0)
-}
-
-// Reintegration position grid [1, sx, sy, 2, 1] in (row, col) order, cell-centered.
-func flowSensorimotorPosGrid(sx: Int, sy: Int) -> MLXArray {
-    let coordsX = MLXArray((0..<sx).map { Float($0) })
-    let coordsY = MLXArray((0..<sy).map { Float($0) })
-    let (X, Y) = meshgrid(coordsX, coordsY)
-    var pos = MLX.stacked([X, Y], axis: -1) + MLXArray(Float(0.5))
-    pos = pos.expandedDimensions(axis: 0)
-    return pos.expandedDimensions(axis: -1)
+    return flowLeniaKernelSpectrum(stacked / (sumK + MLXArray(Float(1e-10))))
 }
 
 // One differentiable, mass-conserving Flow-Lenia rollout. `initial` is
@@ -641,7 +622,7 @@ public final class FlowSensorimotorRunner {
         self.config = config
         self.logger = logger
         self.stepConfig = config.stepConfig
-        self.posGrid = flowSensorimotorPosGrid(sx: config.grid.sx, sy: config.grid.sy)
+        self.posGrid = flowLeniaPositionGrid(sx: config.grid.sx, sy: config.grid.sy)
         let nbK = config.physics.nbK
         self.c0Idxs = MLXArray((0..<nbK).map { _ in Int32(0) })
         self.c1Mask = MLXArray([Float](repeating: 1.0, count: nbK)).reshaped([1, nbK])
