@@ -1725,6 +1725,34 @@ def lean_distributed_sweep(
     _run_lean_variants(_build_lean_distributed_sweep_variants(locals()), summarize=not agent)
 
 
+@lean_app.command("closer-null")
+def lean_closer_null(
+    jobs: str = typer.Option(
+        ..., "--jobs", help="JSONL of {job, theorem, statement} with {name} for the declaration"
+    ),
+    out: str = typer.Option(..., "--out", help="JSONL of attempts; rows already there are kept"),
+    lean_project: str = typer.Option(..., "--lean-project"),
+    shard: int = typer.Option(..., "--shard", min=0, help="This process takes jobs shard::shards"),
+    shards: int = typer.Option(..., "--shards", min=1),
+) -> None:
+    """Try each fixed closer at every theorem's root and after `intros`, kernel-checking closes."""
+
+    import asyncio
+
+    from analysis.closer_null import run_null
+
+    counts = asyncio.run(
+        run_null(
+            Path(jobs).expanduser().resolve(),
+            Path(out).expanduser().resolve(),
+            Path(lean_project).expanduser().resolve(),
+            shard,
+            shards,
+        )
+    )
+    print(json.dumps(dict(sorted(counts.items()))))
+
+
 @corpus_app.command("build-lean-mathlib")
 def corpus_build_lean_mathlib(
     corpus_id: str = typer.Option("mathlib4", "--corpus-id"),
