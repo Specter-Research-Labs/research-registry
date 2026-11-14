@@ -16,6 +16,9 @@ typedef struct FLCPUConfig {
     int32_t n;
     int32_t alphaPerChannel;
     int32_t clipFlow;
+    /// 1 for a torus. 0 for walls: zero-padded Sobel stencils and transport clamped inside the
+    /// grid as the Metal general reintegration kernel does it; needs min(sx, sy) >= 2 dd + 1.
+    int32_t torus;
     int32_t threadCount;
     float dt;
     float sigma;

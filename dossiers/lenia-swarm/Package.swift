@@ -126,6 +126,15 @@ let package = Package(
             path: "Tests/LeniaCoreTests",
             resources: [.process("Fixtures")]
         ),
+        // Golden C engine hashes live apart from LeniaCoreTests, which needs Metal, so Linux can run them.
+        .testTarget(
+            name: "FlowLeniaCPUGoldenTests",
+            dependencies: [
+                "LeniaCore",
+                .product(name: "MLX", package: "mlx-swift"),
+            ],
+            path: "Tests/FlowLeniaCPUGoldenTests"
+        ),
         .testTarget(
             name: "LeniaCLITests",
             dependencies: [

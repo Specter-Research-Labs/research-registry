@@ -7,50 +7,6 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
         try LeniaMetalLibrarySupport.ensureAvailable()
     }
 
-
-    func testMatchesPinnedAuthorJAXAtOneAndEightSteps() throws {
-        struct Fixture: Decodable {
-            let input: String
-            let steps: [String: String]
-        }
-        let url = try XCTUnwrap(Bundle.module.url(forResource: "flowlenia-author", withExtension: "json"))
-        let fixture = try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: url))
-        func field(_ encoded: String) throws -> MLXArray {
-            let data = try XCTUnwrap(Data(base64Encoded: encoded))
-            let values = data.withUnsafeBytes { bytes in
-                stride(from: 0, to: bytes.count, by: 4).map {
-                    Float(bitPattern: UInt32(littleEndian: bytes.loadUnaligned(fromByteOffset: $0, as: UInt32.self)))
-                }
-            }
-            return MLXArray(values).reshaped([32, 32, 2])
-        }
-        let runtime = interactiveRuntimeConfig(backend: .mlx, authorReference: true)
-        let cfg = batchedConfigFromRuntime(runtime)
-        let kernels = compileKernels(params: runtime.params, config: cfg, c0: runtime.c0, c1: runtime.c1)
-        let direct = FlowLeniaBatched(config: cfg, kernels: kernels)
-        var state = try field(fixture.input).expandedDimensions(axis: 0)
-        for step in 1...8 {
-            state = direct.stepUncompiled(state)
-            if step == 1 || step == 8 {
-                let difference = maxAbsDifference(state[0], try field(XCTUnwrap(fixture.steps[String(step)])))
-                print("AUTHOR_REFERENCE backend=mlx-uncompiled step=\(step) max_abs=\(difference)")
-                XCTAssertLessThan(difference, 1e-4)
-            }
-        }
-        for backend in [FlowLeniaComputeBackend.mlx, .metalFull] {
-            let simulator = FlowLeniaInteractiveSimulator(
-                runtimeConfig: interactiveRuntimeConfig(backend: backend, authorReference: true))
-            let initial = FlowLeniaInteractiveState(step: 0, mass: try field(fixture.input), params: nil, food: nil)
-            for step in [1, 8] {
-                let actual = simulator.step(initial, count: step)
-                let expected = try field(XCTUnwrap(fixture.steps[String(step)]))
-                let difference = maxAbsDifference(actual.mass, expected)
-                print("AUTHOR_REFERENCE backend=\(backend) step=\(step) max_abs=\(difference)")
-                XCTAssertLessThan(difference, 1e-4)
-            }
-        }
-    }
-
     func testQuarterTurnAndReflectionCommuteWithOneStep() {
         let n = 32, channels = 2
         func transform(_ a: MLXArray, reflect: Bool) -> MLXArray {
@@ -252,6 +208,27 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
         XCTAssertLessThan(maxAbsDifference(firstSham.mass, secondSham.mass), 1e-6)
     }
 
+    func testCPUWallSimulatorTracksMetalThroughCircularWallPotentialBranches() {
+        let runtimes = [FlowLeniaComputeBackend.metalFull, .cpu].map {
+            interactiveRuntimeConfig(backend: $0, authorReference: true)
+        }
+        let simulators = runtimes.map { FlowLeniaInteractiveSimulator(runtimeConfig: $0) }
+        let checkpoints = simulators.map { $0.step($0.makeInitialState(), count: 3) }
+        XCTAssertLessThan(maxAbsDifference(checkpoints[0].mass, checkpoints[1].mass), 1e-5)
+
+        var potentialSteps: [FlowLeniaInteractiveState] = []
+        var shamSteps: [FlowLeniaInteractiveState] = []
+        for (simulator, checkpoint) in zip(simulators, checkpoints) {
+            simulator.setCircularWallPotential(centerX: 16, centerY: 16, radius: 3, height: 30)
+            potentialSteps.append(simulator.step(checkpoint, count: 4))
+            simulator.clearCircularWallPotential()
+            shamSteps.append(simulator.step(checkpoint, count: 4))
+        }
+        XCTAssertLessThan(maxAbsDifference(potentialSteps[0].mass, potentialSteps[1].mass), 1e-5)
+        XCTAssertLessThan(maxAbsDifference(shamSteps[0].mass, shamSteps[1].mass), 1e-5)
+        XCTAssertGreaterThan(maxAbsDifference(potentialSteps[1].mass, shamSteps[1].mass), 1e-3)
+    }
+
     func testDynamicCircularWallPotentialPreservesBranchStateAndClearsAcrossBackends() throws {
         for backend in [FlowLeniaComputeBackend.mlx, .metalFull] {
             let simulator = FlowLeniaInteractiveSimulator(
@@ -390,7 +367,7 @@ final class FlowLeniaInteractiveMetalTests: XCTestCase {
     }
 }
 
-private func interactiveRuntimeConfig(
+func interactiveRuntimeConfig(
     backend: FlowLeniaComputeBackend,
     embedded: Bool = false,
     mix: String = "avg",
@@ -477,7 +454,7 @@ private func founderTotals(_ founders: [Float], channels: Int, founderCount: Int
     return totals
 }
 
-private func maxAbsDifference(_ lhs: MLXArray, _ rhs: MLXArray) -> Float {
+func maxAbsDifference(_ lhs: MLXArray, _ rhs: MLXArray) -> Float {
     let left = lhs.asArray(Float.self)
     let right = rhs.asArray(Float.self)
     precondition(left.count == right.count)

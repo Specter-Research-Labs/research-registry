@@ -141,6 +141,30 @@ func fftshift2(_ x: MLXArray) -> MLXArray {
     return result
 }
 
+/// Distance [sx, sy] of each cell from the kernel origin at (sx / 2, sy / 2), array axis 0 first.
+func flowLeniaKernelDistance(sx: Int, sy: Int) -> MLXArray {
+    let coordsX = MLXArray(Array(0..<sx).map { Float($0 - sx / 2) })
+    let coordsY = MLXArray(Array(0..<sy).map { Float($0 - sy / 2) })
+    let (X, Y) = meshgrid(coordsX, coordsY)
+    return MLX.sqrt(X * X + Y * Y)
+}
+
+/// Spectra [1, sx, sy, K] of spatial kernels [sx, sy, K] built on flowLeniaKernelDistance.
+/// fftshift2 moves the (sx / 2, sy / 2) origin to index 0, so even sides give real spectra.
+func flowLeniaKernelSpectrum(_ spatialKernels: MLXArray) -> MLXArray {
+    MLXFFT.fft2(fftshift2(spatialKernels), axes: [0, 1]).expandedDimensions(axis: 0)
+}
+
+/// Cell-centered reintegration positions [1, sx, sy, 2, 1]: cell (x, y) sits at (x + 0.5, y + 0.5).
+/// meshgrid uses ij indexing; JAX defaults to xy, so its [Y, X] stacking must not be copied here.
+func flowLeniaPositionGrid(sx: Int, sy: Int) -> MLXArray {
+    let coordsX = MLXArray(Array(0..<sx).map { Float($0) })
+    let coordsY = MLXArray(Array(0..<sy).map { Float($0) })
+    let (X, Y) = meshgrid(coordsX, coordsY)
+    let pos = MLX.stacked([X, Y], axis: -1) + MLXArray(Float(0.5))
+    return pos.expandedDimensions(axis: 0).expandedDimensions(axis: -1)
+}
+
 func sigmoid(_ x: MLXArray) -> MLXArray {
     let one = MLXArray(Float(1.0))
     return one / (one + MLX.exp(-x))
@@ -160,16 +184,7 @@ func kernelProfile(_ D: MLXArray, a: MLXArray, w: MLXArray, b: MLXArray, kernelP
 }
 
 func normalizedSpatialKernelStack(params: ResolvedParams, config: BatchedConfig) -> MLXArray {
-    let midX = config.sx / 2
-    let midY = config.sy / 2
-
-    let coordsX = MLXArray(Array(0..<config.sx).map { Float($0 - midX) })
-    let coordsY = MLXArray(Array(0..<config.sy).map { Float($0 - midY) })
-
-    let (X, Y) = meshgrid(coordsX, coordsY)
-    let XY = X * X
-    let YY = Y * Y
-    let DBase = MLX.sqrt(XY + YY)
+    let DBase = flowLeniaKernelDistance(sx: config.sx, sy: config.sy)
 
     var kernels: [MLXArray] = []
     kernels.reserveCapacity(config.nbK)
@@ -273,11 +288,7 @@ public func compileKernels(
     c0: [Int],
     c1: [[Int]]
 ) -> CompiledKernels {
-    let nK = normalizedSpatialKernelStack(params: params, config: config)
-
-    let shifted = fftshift2(nK)
-    var fK = MLXFFT.fft2(shifted, axes: [0, 1])
-    fK = fK.expandedDimensions(axis: 0)
+    let fK = flowLeniaKernelSpectrum(normalizedSpatialKernelStack(params: params, config: config))
 
     let c0Idxs = MLXArray(c0.map { Int32($0) })
 
@@ -327,15 +338,13 @@ public func compilePopulationKernels(
     flatH.reserveCapacity(paramsBatch.count * config.nbK)
 
     for params in paramsBatch {
-        let nK = normalizedSpatialKernelStack(params: params, config: config)
-        let shifted = fftshift2(nK)
-        spectralKernels.append(MLXFFT.fft2(shifted, axes: [0, 1]))
+        spectralKernels.append(flowLeniaKernelSpectrum(normalizedSpatialKernelStack(params: params, config: config)))
         flatM.append(contentsOf: params.m)
         flatS.append(contentsOf: params.s)
         flatH.append(contentsOf: params.h)
     }
 
-    let fK = MLX.stacked(spectralKernels, axis: 0)
+    let fK = MLX.concatenated(spectralKernels, axis: 0)
     let c0Idxs = MLXArray(c0.map { Int32($0) })
 
     var maskFlat: [Float] = []
@@ -844,14 +853,7 @@ public final class FlowLeniaBatched: @unchecked Sendable {
         self.useTorus = config.border == "torus"
         self.recenterAdditive = recenterAdditive
 
-        let coordsX = MLXArray(Array(0..<config.sx).map { Float($0) })
-        let coordsY = MLXArray(Array(0..<config.sy).map { Float($0) })
-        let (X, Y) = meshgrid(coordsX, coordsY)
-        let halfArr = MLXArray(Float(0.5))
-        // Our meshgrid uses ij indexing; JAX defaults to xy, so its [Y, X] must not be copied here.
-        var pos = MLX.stacked([X, Y], axis: -1) + halfArr
-        pos = pos.expandedDimensions(axis: 0)
-        self.posGrid = pos.expandedDimensions(axis: -1)
+        self.posGrid = flowLeniaPositionGrid(sx: config.sx, sy: config.sy)
 
         // Split compilation: MLX compiler has issues combining FFT operations
         // with nested loops in a single compiled function. We compile them
@@ -1504,14 +1506,7 @@ public final class FlowLeniaParamsBatched: @unchecked Sendable {
         self.useTorus = config.border == "torus"
         self.implementationMode = config.implementation.mode
 
-        let coordsX = MLXArray(Array(0..<config.sx).map { Float($0) })
-        let coordsY = MLXArray(Array(0..<config.sy).map { Float($0) })
-        let (X, Y) = meshgrid(coordsX, coordsY)
-        let halfArr = MLXArray(Float(0.5))
-        // Our meshgrid uses ij indexing; JAX defaults to xy, so its [Y, X] must not be copied here.
-        var pos = MLX.stacked([X, Y], axis: -1) + halfArr
-        pos = pos.expandedDimensions(axis: 0)
-        self.posGrid = pos.expandedDimensions(axis: -1)
+        self.posGrid = flowLeniaPositionGrid(sx: config.sx, sy: config.sy)
     }
 
     public func step(_ ABatch: MLXArray, _ PBatch: MLXArray) -> (MLXArray, MLXArray) {

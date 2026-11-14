@@ -26,7 +26,7 @@ final class FlowLeniaSpatialConventionTests: XCTestCase {
 
     func testTransportMovesAlongItsOwnAxisIncludingRectangularEdges() {
         let sx = 9, sy = 12
-        let pos = flowSensorimotorPosGrid(sx: sx, sy: sy)
+        let pos = flowLeniaPositionGrid(sx: sx, sy: sy)
         for torus in [false, true] {
             for axis in 0..<2 {
                 for sign in [-1, 1] {

@@ -605,7 +605,7 @@ public final class FlowLeniaSimulator {
 
 }
 
-private struct FlowLeniaInteractiveMetalResidency {
+private struct FlowLeniaInteractiveResidency {
     let owner: UUID
     let generation: UInt64
 }
@@ -615,7 +615,7 @@ public struct FlowLeniaInteractiveState {
     public let mass: MLXArray
     public let params: MLXArray?
     public let food: MLXArray?
-    fileprivate let metalResidency: FlowLeniaInteractiveMetalResidency?
+    fileprivate let residency: FlowLeniaInteractiveResidency?
 
     public init(
         step: Int,
@@ -627,7 +627,7 @@ public struct FlowLeniaInteractiveState {
         self.mass = mass
         self.params = params
         self.food = food
-        self.metalResidency = nil
+        self.residency = nil
     }
 
     fileprivate init(
@@ -635,13 +635,13 @@ public struct FlowLeniaInteractiveState {
         mass: MLXArray,
         params: MLXArray?,
         food: MLXArray?,
-        metalResidency: FlowLeniaInteractiveMetalResidency
+        residency: FlowLeniaInteractiveResidency
     ) {
         self.step = step
         self.mass = mass
         self.params = params
         self.food = food
-        self.metalResidency = metalResidency
+        self.residency = residency
     }
 }
 
@@ -656,15 +656,16 @@ public final class FlowLeniaInteractiveSimulator {
     #if canImport(Metal)
     private let metalRunner: FlowLeniaMetalFullStateRunner?
     #endif
-    private let metalStaticParams: MLXArray?
+    private let cpuRunner: FlowLeniaCPUStateRunner?
+    private let staticParams: MLXArray?
     private let baseWallPotential: MLXArray?
     private let baseWallMask: MLXArray?
     private var wallMask: MLXArray?
     private let chemField: MLXArray?
     private let runtimeOperators: FlowLeniaRuntimeOperators
-    private let metalResidencyID = UUID()
-    private var metalResidencyGeneration: UInt64 = 0
-    private var metalResidentStep: Int?
+    private let residencyID = UUID()
+    private var residencyGeneration: UInt64 = 0
+    private var residentStep: Int?
 
     public init(runtimeConfig: LeniaRuntimeConfig, phantom: FlowLeniaPhantomSpec? = nil) {
         self.runtimeConfig = runtimeConfig
@@ -683,12 +684,33 @@ public final class FlowLeniaInteractiveSimulator {
                 "The requested Metal backend does not support this runtime contract."
             )
         }
+        if runtimeConfig.backend == .cpu {
+            precondition(
+                Self.supportsResidentCPU(runtimeConfig),
+                "Backend cpu needs fixed parameters (parameter_embedding.enabled=false), a mode other than qd24_additive_v1, and torus/periodic or wall/zero_pad boundaries."
+            )
+        }
         self.effectiveBackend = runtimeConfig.backend
         self.baseWallPotential = environmentPotential
 
         switch effectiveBackend {
         case .cpu:
-            preconditionFailure("The cpu backend serves search and replay only.")
+            self.massEngine = nil
+            self.paramsEngine = nil
+            #if canImport(Metal)
+            self.metalRunner = nil
+            #endif
+            self.cpuRunner = FlowLeniaCPUStateRunner(
+                config: batchedConfig,
+                kernels: kernels,
+                batchCount: 1,
+                wallPotential: environmentPotential,
+                matterWeights: context.runtimeOperators.matterWeights()
+            )
+            self.staticParams = MLX.broadcast(
+                kernels.h.reshaped([1, 1, 1, runtimeConfig.nbK]),
+                to: [1, runtimeConfig.sx, runtimeConfig.sy, runtimeConfig.nbK]
+            )
         case .mlx:
             self.massEngine = FlowLeniaBatched(
                 config: batchedConfig,
@@ -708,11 +730,13 @@ public final class FlowLeniaInteractiveSimulator {
             #if canImport(Metal)
             self.metalRunner = nil
             #endif
-            self.metalStaticParams = nil
+            self.cpuRunner = nil
+            self.staticParams = nil
         case .metalFull:
             #if canImport(Metal)
             self.massEngine = nil
             self.paramsEngine = nil
+            self.cpuRunner = nil
             let runner = FlowLeniaMetalFullStateRunner(
                 config: batchedConfig,
                 kernels: kernels,
@@ -726,7 +750,7 @@ public final class FlowLeniaInteractiveSimulator {
                 phantom: phantom
             )
             self.metalRunner = runner
-            self.metalStaticParams = runtimeConfig.parameterEmbedding.enabled
+            self.staticParams = runtimeConfig.parameterEmbedding.enabled
                 ? nil
                 : MLX.broadcast(
                     kernels.h.reshaped([1, 1, 1, runtimeConfig.nbK]),
@@ -761,6 +785,15 @@ public final class FlowLeniaInteractiveSimulator {
         return supportedMixes.contains(runtimeConfig.parameterEmbedding.mix)
     }
 
+    static func supportsResidentCPU(_ runtimeConfig: LeniaRuntimeConfig) -> Bool {
+        let validBoundaryPair =
+            (runtimeConfig.border == "torus" && runtimeConfig.implementation.gradientBoundary == "periodic")
+            || (runtimeConfig.border == "wall" && runtimeConfig.implementation.gradientBoundary == "zero_pad")
+        return runtimeConfig.implementation.mode != "qd24_additive_v1"
+            && !runtimeConfig.parameterEmbedding.enabled
+            && validBoundaryPair
+    }
+
     public func makeInitialState(seedOverride: Int? = nil) -> FlowLeniaInteractiveState {
         let seed = seedOverride ?? runtimeConfig.initSeed
         var mass = flowLeniaBuildInteractiveInitialState(runtimeConfig: runtimeConfig, seed: seed)
@@ -790,20 +823,16 @@ public final class FlowLeniaInteractiveSimulator {
             params: params,
             food: food
         )
-        #if canImport(Metal)
-        guard metalRunner != nil else {
+        guard residentRunner != nil else {
             return initialState
         }
-        synchronizeMetalRunner(with: initialState)
+        synchronizeResidentRunner(with: initialState)
         return residentState(
             step: initialState.step,
             mass: initialState.mass,
             params: initialState.params,
             food: initialState.food
         )
-        #else
-        return initialState
-        #endif
     }
 
     func capacityPilotLastFlow() -> [Float] {
@@ -838,7 +867,7 @@ public final class FlowLeniaInteractiveSimulator {
     public func setAncestry(_ founderMass: [Float], founderCount: Int, for state: FlowLeniaInteractiveState) {
         #if canImport(Metal)
         guard let metalRunner else { preconditionFailure("Ancestry tracing requires resident Metal.") }
-        precondition(isCurrentMetalResident(state), "Ancestry must be attached to the current resident state.")
+        precondition(isCurrentResident(state), "Ancestry must be attached to the current resident state.")
         metalRunner.setAncestry(founderMass: founderMass, founderCount: founderCount)
         #else
         preconditionFailure("Ancestry tracing requires resident Metal.")
@@ -848,7 +877,7 @@ public final class FlowLeniaInteractiveSimulator {
     public func ancestryFounderMass(for state: FlowLeniaInteractiveState) -> [Float] {
         #if canImport(Metal)
         guard let metalRunner else { preconditionFailure("Ancestry tracing requires resident Metal.") }
-        precondition(isCurrentMetalResident(state), "Founder mass is only defined for the current resident state.")
+        precondition(isCurrentResident(state), "Founder mass is only defined for the current resident state.")
         return metalRunner.materializeAncestry()
         #else
         preconditionFailure("Ancestry tracing requires resident Metal.")
@@ -869,6 +898,9 @@ public final class FlowLeniaInteractiveSimulator {
             return stepMetal(state, count: count, runner: metalRunner)
         }
         #endif
+        if let cpuRunner {
+            return stepCPU(state, count: count, runner: cpuRunner)
+        }
 
         var next = state
         for _ in 0..<count {
@@ -935,8 +967,8 @@ public final class FlowLeniaInteractiveSimulator {
         count: Int,
         runner: FlowLeniaMetalFullStateRunner
     ) -> FlowLeniaInteractiveState {
-        if !isCurrentMetalResident(state) {
-            synchronizeMetalRunner(with: state)
+        if !isCurrentResident(state) {
+            synchronizeResidentRunner(with: state)
         }
 
         runner.step(
@@ -965,8 +997,8 @@ public final class FlowLeniaInteractiveSimulator {
         }
         let food = runner.materializeFood()?.squeezed(axis: 0)
         let nextStep = state.step + count
-        metalResidentStep = nextStep
-        metalResidencyGeneration &+= 1
+        residentStep = nextStep
+        residencyGeneration &+= 1
         return residentState(
             step: nextStep,
             mass: mass,
@@ -977,29 +1009,59 @@ public final class FlowLeniaInteractiveSimulator {
 
     #endif
 
-    private func isCurrentMetalResident(_ state: FlowLeniaInteractiveState) -> Bool {
-        guard let residency = state.metalResidency else {
-            return false
+    /// Without parameter embedding, beam mutation, chemotaxis, food or wall masks, a resident
+    /// step is the bare field step; reset rejects the operators the cpu runner lacks.
+    private func stepCPU(
+        _ state: FlowLeniaInteractiveState,
+        count: Int,
+        runner: FlowLeniaCPUStateRunner
+    ) -> FlowLeniaInteractiveState {
+        if !isCurrentResident(state) {
+            synchronizeResidentRunner(with: state)
         }
-        return residency.owner == metalResidencyID
-            && residency.generation == metalResidencyGeneration
-            && metalResidentStep == state.step
+        runner.step(count: count)
+        let nextStep = state.step + count
+        residentStep = nextStep
+        residencyGeneration &+= 1
+        return residentState(
+            step: nextStep,
+            mass: runner.materializeMass().squeezed(axis: 0),
+            params: nil,
+            food: nil
+        )
     }
 
-    #if canImport(Metal)
-    private func synchronizeMetalRunner(with state: FlowLeniaInteractiveState) {
-        guard let metalRunner else {
-            return
+    private var residentRunner: (any FlowLeniaFieldRunner)? {
+        #if canImport(Metal)
+        if let metalRunner {
+            return metalRunner
+        }
+        #endif
+        return cpuRunner
+    }
+
+    private func isCurrentResident(_ state: FlowLeniaInteractiveState) -> Bool {
+        guard let residency = state.residency else {
+            return false
+        }
+        return residency.owner == residencyID
+            && residency.generation == residencyGeneration
+            && residentStep == state.step
+    }
+
+    private func synchronizeResidentRunner(with state: FlowLeniaInteractiveState) {
+        guard let runner = residentRunner else {
+            preconditionFailure("FlowLeniaInteractiveSimulator synchronizes only resident backends.")
         }
         let paramsBatch: MLXArray
         if let params = state.params {
             paramsBatch = params.expandedDimensions(axis: 0)
-        } else if let metalStaticParams {
-            paramsBatch = metalStaticParams
+        } else if let staticParams {
+            paramsBatch = staticParams
         } else {
-            preconditionFailure("FlowLeniaInteractiveSimulator Metal step requires a parameter field.")
+            preconditionFailure("FlowLeniaInteractiveSimulator resident step requires a parameter field.")
         }
-        metalRunner.reset(
+        runner.reset(
             mass: state.mass.expandedDimensions(axis: 0),
             params: paramsBatch,
             wallMask: wallMask,
@@ -1011,10 +1073,9 @@ public final class FlowLeniaInteractiveSimulator {
             ),
             mixStep: state.step
         )
-        metalResidentStep = state.step
-        metalResidencyGeneration &+= 1
+        residentStep = state.step
+        residencyGeneration &+= 1
     }
-    #endif
 
     private func residentState(
         step: Int,
@@ -1027,9 +1088,9 @@ public final class FlowLeniaInteractiveSimulator {
             mass: mass,
             params: params,
             food: food,
-            metalResidency: FlowLeniaInteractiveMetalResidency(
-                owner: metalResidencyID,
-                generation: metalResidencyGeneration
+            residency: FlowLeniaInteractiveResidency(
+                owner: residencyID,
+                generation: residencyGeneration
             )
         )
     }
@@ -1064,7 +1125,8 @@ public final class FlowLeniaInteractiveSimulator {
         #if canImport(Metal)
         metalRunner?.setWallPotential(potential)
         #endif
-        metalResidentStep = nil
+        cpuRunner?.setWallPotential(potential)
+        residentStep = nil
     }
 
     public func clearCircularWallPotential() {
@@ -1073,7 +1135,8 @@ public final class FlowLeniaInteractiveSimulator {
         #if canImport(Metal)
         metalRunner?.setWallPotential(baseWallPotential)
         #endif
-        metalResidentStep = nil
+        cpuRunner?.setWallPotential(baseWallPotential)
+        residentStep = nil
     }
 
     public func setHardCircularObstacle(centerX: Float, centerY: Float, radius: Float) {
@@ -1087,12 +1150,12 @@ public final class FlowLeniaInteractiveSimulator {
             periodic: runtimeConfig.border == "torus"
         ).expandedDimensions(axes: [0, 3])
         wallMask = baseWallMask.map { $0 * obstacleMask } ?? obstacleMask
-        metalResidentStep = nil
+        residentStep = nil
     }
 
     public func clearHardObstacle() {
         wallMask = baseWallMask
-        metalResidentStep = nil
+        residentStep = nil
     }
 
     public func diagnostics(for state: FlowLeniaInteractiveState) -> LeniaDiagnosticsFrame {
