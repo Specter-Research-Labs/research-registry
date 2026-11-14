@@ -8,11 +8,13 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
+import torch
 from leantree.core.lean import LeanGoal
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from prover.providers.base import TacticProvider
 from prover.providers.reprover_client import get_default_device
+from prover.providers.weights import hub_weights, pinned_revision
 
 if TYPE_CHECKING:
     from prover.adapters.lean import LeanAdapter
@@ -68,9 +70,13 @@ class InternLMStepProverTacticProvider(TacticProvider):
     def _ensure_loaded(self) -> None:
         if self._loaded:
             return
-        self._tokenizer = AutoTokenizer.from_pretrained(self._model_id, trust_remote_code=True)
+        revision = pinned_revision(self._model_id)
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            self._model_id, revision=revision, trust_remote_code=True
+        )
         model = AutoModelForCausalLM.from_pretrained(
             self._model_id,
+            revision=revision,
             trust_remote_code=True,
         )
         self._model = cast(Any, model).to(self._device)
@@ -78,6 +84,16 @@ class InternLMStepProverTacticProvider(TacticProvider):
         if self._tokenizer.pad_token_id is None and self._tokenizer.eos_token_id is not None:
             self._tokenizer.pad_token = self._tokenizer.eos_token
         self._loaded = True
+
+    def weights(self) -> dict[str, Any]:
+        self._ensure_loaded()
+        return hub_weights(self._model_id)
+
+    def set_seed(self, seed: int) -> None:
+        self._cache.clear()
+        # Model loading may consume randomness, so seed after initialization.
+        self._ensure_loaded()
+        torch.manual_seed(seed)
 
     def _cache_get(self, prompt: str) -> list[tuple[str, float]] | None:
         cached = self._cache.get(prompt)

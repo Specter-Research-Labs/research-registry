@@ -18,8 +18,15 @@ from experiments.distributed_mcts import (
 )
 from prover import FilteredTacticProvider, mcts_search
 from prover.mcts import BackpropStrategy, ExpansionPolicy, coerce_expansion_policy
-from prover.providers import DeepSeekTacticProvider, ReProverTacticProvider, TacticProvider
+from prover.providers import (
+    BFSProverTacticProvider,
+    DeepSeekTacticProvider,
+    InternLMStepProverTacticProvider,
+    ReProverTacticProvider,
+    TacticProvider,
+)
 from prover.providers.base import GoalAwareTacticProvider
+from prover.providers.deepseek import DEEPSEEK_TEMPERATURE, DEEPSEEK_TOP_P
 from prover.providers.reprover_client import ReProverModel
 from run_capabilities import build_lean_run_capabilities
 
@@ -206,6 +213,7 @@ def provider_config(provider: TacticProvider) -> dict[str, Any]:
                 "max_input_length": ReProverModel.DEFAULT_MAX_INPUT_LENGTH,
                 "max_length": ReProverModel.DEFAULT_MAX_LENGTH,
                 "beam_limit": ReProverModel.DEFAULT_BEAM_LIMIT,
+                "weights": provider.weights(),
             }
         )
         return config
@@ -219,13 +227,37 @@ def provider_config(provider: TacticProvider) -> dict[str, Any]:
                 "model_path": provider._model_path,
                 "cache_size": provider._cache_size,
                 "num_samples": provider._num_samples,
+                "temperature": DEEPSEEK_TEMPERATURE,
+                "top_p": DEEPSEEK_TOP_P,
                 "model_id": provider.MODEL_ID,
                 "max_input_length": provider.MAX_INPUT_LENGTH,
                 "max_new_tokens": provider.MAX_NEW_TOKENS,
                 "stop_sequences": provider.STOP_SEQUENCES,
                 "system_prompt": provider.SYSTEM_PROMPT,
+                "weights": provider.weights(),
             }
         )
+        return config
+
+    if isinstance(provider, (BFSProverTacticProvider, InternLMStepProverTacticProvider)):
+        config.update(
+            {
+                "provider": "bfs" if isinstance(provider, BFSProverTacticProvider) else "internlm",
+                "device": provider._device,
+                "cache_size": provider._cache_size,
+                "num_samples": provider._num_samples,
+                "use_sampling": provider._use_sampling,
+                "temperature": provider._temperature,
+                "top_p": provider._top_p,
+                "beam_limit": provider._beam_limit,
+                "model_id": provider._model_id,
+                "max_input_length": provider.MAX_INPUT_LENGTH,
+                "max_new_tokens": provider.MAX_NEW_TOKENS,
+                "weights": provider.weights(),
+            }
+        )
+        if isinstance(provider, InternLMStepProverTacticProvider):
+            config["proof_before_steps"] = provider._proof_before_steps
         return config
 
     if isinstance(provider, GoalAwareTacticProvider):
@@ -239,8 +271,7 @@ def provider_config(provider: TacticProvider) -> dict[str, Any]:
         )
         return config
 
-    config["provider"] = "unknown"
-    return config
+    raise TypeError(f"provider_config has no entry for {type(provider).__name__}")
 
 
 def build_resolved_config(
@@ -366,6 +397,7 @@ def build_intervention_metadata(
     blocked_tactics: list[str],
     requested_names: list[str],
     extra: list[dict[str, Any]],
+    premise_lesions: bool,
 ) -> dict[str, Any]:
     return {
         "wild_only": wild_only,
@@ -373,6 +405,7 @@ def build_intervention_metadata(
         "blocked_tactics": blocked_tactics,
         "requested_names": requested_names,
         "extra": extra,
+        "premise_lesions": premise_lesions,
     }
 
 
@@ -489,9 +522,11 @@ def _build_shared_run_config(
     blocked_tactics: list[str],
     requested_interventions: list[str],
     extra_intervention_payloads: list[dict[str, Any]],
+    premise_lesions: bool,
     providers_meta: dict[str, Any],
     runtime_include_executable: bool,
     runtime_include_uv_python: bool,
+    provenance: dict[str, Any],
     solution_artifacts: bool | None = None,
     include_corpus_artifact_key: bool = False,
     include_problem_space: bool = False,
@@ -589,11 +624,13 @@ def _build_shared_run_config(
             blocked_tactics=blocked_tactics,
             requested_names=requested_interventions,
             extra=extra_intervention_payloads,
+            premise_lesions=premise_lesions,
         ),
         "runtime": build_runtime_metadata(
             include_executable=runtime_include_executable,
             include_uv_python=runtime_include_uv_python,
         ),
+        "provenance": provenance,
     }
     if include_corpus_artifact_key or corpus_artifact_ref is not None:
         config["corpus_artifact"] = corpus_artifact_ref
@@ -659,6 +696,8 @@ def build_run_config(
     blocked_tactics: list[str],
     requested_interventions: list[str],
     extra_intervention_payloads: list[dict[str, Any]],
+    premise_lesions: bool,
+    provenance: dict[str, Any],
 ) -> dict[str, Any]:
     provider_desc = provider.describe()
     config = _build_shared_run_config(
@@ -704,6 +743,7 @@ def build_run_config(
         blocked_tactics=blocked_tactics,
         requested_interventions=requested_interventions,
         extra_intervention_payloads=extra_intervention_payloads,
+        premise_lesions=premise_lesions,
         providers_meta={
             "names": [provider_name],
             "primary": provider_name,
@@ -712,6 +752,7 @@ def build_run_config(
             "config": provider_config(provider),
         },
         runtime_include_executable=True,
+        provenance=provenance,
         runtime_include_uv_python=True,
         solution_artifacts=collect_solution_artifacts,
         include_corpus_artifact_key=True,
@@ -774,6 +815,8 @@ def build_multi_provider_run_config(
     blocked_tactics: list[str],
     requested_interventions: list[str],
     extra_intervention_payloads: list[dict[str, Any]],
+    premise_lesions: bool,
+    provenance: dict[str, Any],
 ) -> dict[str, Any]:
     config = _build_shared_run_config(
         resolved_run_id=resolved_run_id,
@@ -818,11 +861,13 @@ def build_multi_provider_run_config(
         blocked_tactics=blocked_tactics,
         requested_interventions=requested_interventions,
         extra_intervention_payloads=extra_intervention_payloads,
+        premise_lesions=premise_lesions,
         providers_meta={
             "names": providers,
             "multi_provider": True,
         },
         runtime_include_executable=False,
+        provenance=provenance,
         runtime_include_uv_python=False,
     )
     config.update(

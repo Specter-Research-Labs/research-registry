@@ -10,7 +10,10 @@ from prover.providers.base import (
     TacticProvider,
     goal_signature,
     normalize_tactic,
+    tactic_families,
     tactic_family,
+    tactic_head,
+    tactic_leaves,
 )
 
 if TYPE_CHECKING:
@@ -101,6 +104,18 @@ def _names_premise(premises: frozenset[str], tactic: str) -> bool:
     )
 
 
+def _runs_blocked_tactic(blocked: frozenset[str], tactic: str) -> bool:
+    """Whether any primitive tactic inside `tactic` is blocked by head or verbatim.
+
+    Combinators and nested `by` blocks are looked through, so blocking `norm_num`
+    also blocks `simp <;> norm_num`, `first | ring | norm_num1` and `exact (by norm_num)`.
+    """
+    for leaf in tactic_leaves(tactic):
+        if tactic_head(leaf) in blocked or normalize_tactic(leaf) in blocked:
+            return True
+    return False
+
+
 class FilteredTacticProvider(TacticProvider):
     def __init__(
         self,
@@ -160,14 +175,7 @@ class FilteredTacticProvider(TacticProvider):
         )
 
     def set_seed(self, seed: int) -> None:
-        set_seed = getattr(self.base, "set_seed", None)
-        if callable(set_seed):
-            set_seed(seed)
-
-    def clear_cache(self) -> None:
-        clear_cache = getattr(self.base, "clear_cache", None)
-        if callable(clear_cache):
-            clear_cache()
+        self.base.set_seed(seed)
         self.last_blocked = []
         self._budget_counts = {}
 
@@ -223,12 +231,11 @@ class FilteredTacticProvider(TacticProvider):
         if not self.peg_rules:
             return None
         tactic_norm = normalize_tactic(tactic)
-        family = tactic_family(tactic_norm)
 
         for rule in self.peg_rules:
             if rule.condition and not _goal_matches_condition(goal, rule.condition):
                 continue
-            if rule.blocked_tactics and self._matches_tactic(rule.blocked_tactics, tactic_norm):
+            if rule.blocked_tactics and _runs_blocked_tactic(rule.blocked_tactics, tactic):
                 return BlockedTactic(
                     tactic=tactic,
                     tactic_norm=tactic_norm,
@@ -238,7 +245,7 @@ class FilteredTacticProvider(TacticProvider):
                     goal_sig=goal_sig,
                     provider_id=self.provider_id,
                 )
-            if rule.blocked_families and family in rule.blocked_families:
+            if rule.blocked_families and tactic_families(tactic) & rule.blocked_families:
                 return BlockedTactic(
                     tactic=tactic,
                     tactic_norm=tactic_norm,
@@ -310,13 +317,3 @@ class FilteredTacticProvider(TacticProvider):
         counter.total += 1
         counter.families[family] = counter.families.get(family, 0) + 1
 
-    @staticmethod
-    def _matches_tactic(blocked_tactics: frozenset[str], tactic_norm: str) -> bool:
-        tactic_name = tactic_norm.split(" ", 1)[0]
-        if tactic_name in blocked_tactics or tactic_norm in blocked_tactics:
-            return True
-        return any(
-            tactic_name.startswith(blocked_tactic)
-            and tactic_name[len(blocked_tactic):].isdigit()
-            for blocked_tactic in blocked_tactics
-        )

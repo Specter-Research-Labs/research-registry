@@ -1,10 +1,14 @@
 import asyncio
+import math
 from dataclasses import dataclass
 
+import pytest
+
+from experiments.distributed_mcts import DistributedMCTSConfig, distributed_mcts_search
 from prover.adapters.lean import TacticPreview
 from prover.goal_signature import GoalSignatureConfig
 from prover.history import ExplorationHistory, TacticOutcome
-from prover.mcts import mcts_search
+from prover.mcts import BackpropStrategy, mcts_search
 from prover.proof import ProofGraph
 
 
@@ -171,24 +175,47 @@ class BranchDedupProvider:
         return "fake"
 
 
-def test_tactic_with_cyclic_child_is_not_expanded():
+def _search(kind: str, adapter, provider, graph: ProofGraph, history: ExplorationHistory):
     goal_sig_config = GoalSignatureConfig(scheme="text")
-    adapter = DedupAdapter()
-    provider = DedupProvider()
-    graph = ProofGraph()
-    history = ExplorationHistory.create("theorem", None)
-
-    tree = asyncio.run(
-        mcts_search(
+    if kind == "centralized":
+        return asyncio.run(
+            mcts_search(
+                "theorem",
+                adapter,
+                provider,
+                graph=graph,
+                history=history,
+                max_iterations=1,
+                goal_sig_config=goal_sig_config,
+            )
+        )
+    config = DistributedMCTSConfig(
+        agents=1,
+        max_iterations=1,
+        max_inflight_expansions=1,
+        c=math.sqrt(2),
+        backprop_strategy=BackpropStrategy.UNIFORM,
+        virtual_loss=0,
+        adapter_mode="single",
+    )
+    return asyncio.run(
+        distributed_mcts_search(
             "theorem",
             adapter,
             provider,
-            graph=graph,
-            history=history,
-            max_iterations=1,
+            graph,
+            history,
             goal_sig_config=goal_sig_config,
+            config=config,
         )
     )
+
+
+@pytest.mark.parametrize("kind", ["centralized", "distributed"])
+def test_tactic_with_cyclic_child_is_not_expanded(kind: str):
+    graph = ProofGraph()
+    history = ExplorationHistory.create("theorem", None)
+    tree = _search(kind, DedupAdapter(), DedupProvider(), graph, history)
 
     # c2 repeats the root goal. Dropping it would let c1 alone close a proof that
     # still owes c2, so the whole tactic is rejected rather than half expanded.
@@ -214,16 +241,11 @@ class TwinGoalAdapter(DedupAdapter):
         return preview
 
 
-def test_sibling_obligations_with_equal_goals_are_both_kept():
-    tree = asyncio.run(
-        mcts_search(
-            "theorem",
-            TwinGoalAdapter(),
-            DedupProvider(),
-            max_iterations=1,
-            goal_sig_config=GoalSignatureConfig(scheme="text"),
-        )
-    )
+@pytest.mark.parametrize("kind", ["centralized", "distributed"])
+def test_sibling_obligations_with_equal_goals_are_both_kept(kind: str):
+    graph = ProofGraph()
+    history = ExplorationHistory.create("theorem", None)
+    tree = _search(kind, TwinGoalAdapter(), DedupProvider(), graph, history)
     root = tree.nodes_by_mvar["root"]
     assert [n.mvar_id for n in root.children["split"]] == ["c1", "c2"]
 

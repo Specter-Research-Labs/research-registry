@@ -6,8 +6,10 @@ import torch
 from transformers import AutoModel, AutoModelForSeq2SeqLM, AutoTokenizer
 
 from prover.providers.shared_prefix_decode import sample_shared_encoder
+from prover.providers.weights import pinned_revision
 
 REPROVER_MODEL_ID = "kaiyuy/leandojo-lean4-tacgen-byt5-small"
+RETRIEVER_MODEL_ID = "kaiyuy/leandojo-lean4-retriever-byt5-small"
 REPROVER_MAX_INPUT_LENGTH = 2300
 REPROVER_DEFAULT_MAX_LENGTH = 256
 REPROVER_BEAM_LIMIT = 4
@@ -17,10 +19,12 @@ BYT5_OFFSET = 3
 
 
 def decode_byt5(ids: list[int]) -> str:
-    """ByT5 decoding with special tokens skipped: ids 3-258 are the bytes 0-255, everything else is a special token.
+    """ByT5 decoding with special tokens skipped.
 
-    `ByT5Tokenizer.decode` gives the same string but re-sorts its added-token table for every token, which made
-    decoding the sampled tactics cost more than generating them.
+    Ids 3-258 are the bytes 0-255; everything else is a special token.
+    `ByT5Tokenizer.decode` gives the same string but re-sorts its added-token
+    table for every token, which made decoding the sampled tactics cost more
+    than generating them.
     """
     data = bytes(i - BYT5_OFFSET for i in ids if BYT5_OFFSET <= i < BYT5_OFFSET + 256)
     return data.decode("utf-8", errors="ignore")
@@ -60,12 +64,15 @@ class ReProverModel:
         self._server_seeds: random.Random | None = None
 
     def load(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
+        revision = pinned_revision(self.MODEL_ID)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID, revision=revision)
         if self.sample_socket is not None:
             return
         # Decoding is bound by reading the weights each step, so on a CPU they are held in bfloat16.
         dtype = torch.bfloat16 if self.device == "cpu" else torch.float32
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(self.MODEL_ID, dtype=dtype).to(self.device)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            self.MODEL_ID, revision=revision, dtype=dtype
+        ).to(self.device)
         self.model.eval()
 
     def _decode(self, sequence: torch.Tensor) -> str:
@@ -95,7 +102,8 @@ class ReProverModel:
         ).to(self.device)
 
         if self.use_sampling:
-            # Sampled sequences carry no scores, so every tactic gets the same probability and keeps sample order.
+            # Sampled sequences carry no scores, so every tactic gets the same
+            # probability and keeps sample order.
             sequences = sample_shared_encoder(
                 self.model,
                 inputs["input_ids"],
@@ -233,8 +241,9 @@ class PremiseRetriever:
         self.premise_names: list[str] = []
 
     def load(self):
-        self.tokenizer = AutoTokenizer.from_pretrained("kaiyuy/leandojo-lean4-retriever-byt5-small")
-        self.encoder = AutoModel.from_pretrained("kaiyuy/leandojo-lean4-retriever-byt5-small").to(
+        revision = pinned_revision(RETRIEVER_MODEL_ID)
+        self.tokenizer = AutoTokenizer.from_pretrained(RETRIEVER_MODEL_ID, revision=revision)
+        self.encoder = AutoModel.from_pretrained(RETRIEVER_MODEL_ID, revision=revision).to(
             self.device
         )
         self.encoder.eval()

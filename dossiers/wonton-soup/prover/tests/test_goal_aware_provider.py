@@ -17,6 +17,9 @@ class StaticProvider(TacticProvider):
     def __init__(self, tactics_with_probs: list[tuple[str, float]]):
         self.tactics_with_probs = tactics_with_probs
 
+    def set_seed(self, seed: int) -> None:
+        pass
+
     async def suggest_tactics_with_probs_async(
         self,
         goal: LeanGoal,

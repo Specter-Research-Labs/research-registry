@@ -11,7 +11,7 @@ import numpy as np
 from analysis.learning_common import build_sig_features, load_goal_cache
 from analysis.logs import iter_provider_runs, read_json, relpath_under, write_json_atomic
 from prover.goal_features import FEATURE_DIM
-from prover.mcts import TACTIC_FAMILIES
+from prover.providers.base import TACTIC_FAMILIES
 
 
 def _sigmoid(x: float) -> float:

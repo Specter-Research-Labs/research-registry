@@ -33,6 +33,7 @@ from typing import Any
 import torch
 
 from prover.providers.reprover_client import REPROVER_MODEL_ID
+from prover.providers.weights import pinned_revision
 
 
 def nucleus_sample(
@@ -226,7 +227,9 @@ def serve(socket_path: Path, dtype: torch.dtype, threads: int) -> None:
     from transformers import AutoModelForSeq2SeqLM
 
     torch.set_num_threads(threads)
-    model = AutoModelForSeq2SeqLM.from_pretrained(REPROVER_MODEL_ID, dtype=dtype).eval()
+    model = AutoModelForSeq2SeqLM.from_pretrained(
+        REPROVER_MODEL_ID, revision=pinned_revision(REPROVER_MODEL_ID), dtype=dtype
+    ).eval()
     sampler = BatchedSampler(model)
 
     class Handler(socketserver.StreamRequestHandler):

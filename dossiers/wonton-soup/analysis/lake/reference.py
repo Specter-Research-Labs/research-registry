@@ -10,7 +10,7 @@ from typing import Any
 import duckdb
 
 from analysis.lake.db import resolve_lake_paths, utc_timestamp
-from prover.mcts import TACTIC_FAMILIES
+from prover.providers.base import TACTIC_FAMILIES
 
 
 def _stable_ref_id(kind: str, payload: dict[str, Any]) -> str:

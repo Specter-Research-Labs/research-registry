@@ -19,26 +19,18 @@ from prover.history import (
     TacticOutcome,
 )
 from prover.intervention import BlockedTactic, PegKind
-from prover.providers.base import goal_signature, normalize_tactic, tactic_family
+from prover.providers.base import (
+    TACTIC_FAMILIES,
+    goal_signature,
+    normalize_tactic,
+    tactic_family,
+)
 
 if TYPE_CHECKING:
-    from prover.adapters.lean import LeanAdapter
+    from prover.adapters.lean import LeanAdapter, TacticPreview
     from prover.goal_cache import GoalCache
     from prover.proof import ProofGraph
     from prover.providers.base import TacticProvider
-
-TACTIC_FAMILIES = [
-    "simplify", "rewrite", "intro", "split", "cases",
-    "closer", "contradiction", "arith", "automation", "other",
-]
-
-
-def _family_index(fam: str) -> int:
-    try:
-        return TACTIC_FAMILIES.index(fam)
-    except ValueError:
-        return len(TACTIC_FAMILIES) - 1
-
 
 def _get_goal_sigs(
     goal,
@@ -428,36 +420,39 @@ class MCTSTree:
         }
 
     def extract_winning_tactics(self) -> list[dict] | None:
+        """Return the proof as goal-ordered steps, parent before its subgoals.
+
+        A tactic is taken only when every child subgoal is solved, and the steps
+        of a partially solved sibling set are discarded, so the path never mixes
+        steps from a failed alternative into the chosen one.
+        """
         if not self.is_solved():
             return None
 
-        result: list[dict] = []
-
-        def find_solution(node: MCTSNode) -> bool:
+        def solve(node: MCTSNode) -> list[dict] | None:
             if node.is_terminal:
-                for tactic, children in node.children.items():
-                    if not children:
-                        result.append({
-                            "goal": node.goal_type,
-                            "tactic": tactic,
-                            "mvar_id": node.mvar_id,
-                        })
-                        return True
-                return False
-
+                closing = [tactic for tactic, children in node.children.items() if not children]
+                if not closing:
+                    raise ValueError(f"terminal node {node.mvar_id} has no closing tactic")
+                return [{"goal": node.goal_type, "tactic": closing[0], "mvar_id": node.mvar_id}]
+            if node.is_dead:
+                return None
             for tactic, children in node.children.items():
-                if all(find_solution(child) for child in children):
-                    result.append({
-                        "goal": node.goal_type,
-                        "tactic": tactic,
-                        "mvar_id": node.mvar_id,
-                    })
-                    return True
+                if not children:
+                    continue
+                steps = [{"goal": node.goal_type, "tactic": tactic, "mvar_id": node.mvar_id}]
+                for child in children:
+                    child_steps = solve(child)
+                    if child_steps is None:
+                        break
+                    steps.extend(child_steps)
+                else:
+                    return steps
+            return None
 
-            return False
-
-        find_solution(self.root)
-        result.reverse()
+        result = solve(self.root)
+        if result is None:
+            raise ValueError("solved tree has no extractable solution path")
         return result
 
 
@@ -479,6 +474,42 @@ def _blocked_goal_sigs_for_expansion(node: MCTSNode) -> set[str]:
             blocked.add(current.goal_sig)
         current = current.parent
     return blocked
+
+
+def child_obligations(
+    node: MCTSNode,
+    preview: TacticPreview,
+    goal_cache: GoalCache | None,
+    sig_config: GoalSignatureConfig,
+) -> tuple[list[str], list[str], list[str], list[str]] | None:
+    """Child goals a tactic leaves open, or None when the tactic must be rejected.
+
+    Every child is an obligation, so a child that repeats an ancestor's goal
+    rejects the whole tactic; dropping it alone would turn a partial proof into a
+    success. Sibling children with equal goals are separate obligations and are
+    all kept. Lean can list one unsolved goal twice after a tactic; the repeated
+    state id is a single obligation.
+    """
+    blocked_goal_sigs = _blocked_goal_sigs_for_expansion(node)
+    mvars: list[str] = []
+    goal_types: list[str] = []
+    sigs: list[str] = []
+    sigs_strict: list[str] = []
+    for state_id, child_goal in zip(preview.child_mvar_ids, preview.child_goals, strict=True):
+        if child_goal.mvar_id is None:
+            raise ValueError(f"Child goal has no mvar_id: {child_goal.type}")
+        sig, sig_strict = _get_goal_sigs(child_goal, state_id, goal_cache, sig_config)
+        if sig in blocked_goal_sigs:
+            return None
+        if state_id in mvars:
+            continue
+        mvars.append(state_id)
+        goal_types.append(child_goal.type)
+        sigs.append(sig)
+        sigs_strict.append(sig_strict)
+    if not mvars:
+        return None
+    return mvars, goal_types, sigs, sigs_strict
 
 
 ProgressCallback = Callable[[int, int, int, int, int, str | None, str | None], bool]
@@ -518,10 +549,6 @@ class MCTSTraceWriter:
             self._last_flush = time.monotonic()
 
     def close(self) -> None:
-        try:
-            self.handle.flush()
-        except Exception:
-            pass
         self.handle.close()
 
     def __enter__(self) -> "MCTSTraceWriter":
@@ -813,39 +840,7 @@ async def mcts_search(
             )
             continue
 
-        try:
-            goal = adapter.get_goal(node.mvar_id)
-        except Exception:
-            mark_dead(node, "adapter_exception:get_goal")
-            logger.exception(
-                "MCTS adapter.get_goal failed for mvar_id=%s; treating as no-moves",
-                node.mvar_id,
-            )
-            tree.backpropagate(node, success=False)
-            if history:
-                history.record_iteration(
-                    IterationRecord(
-                        iteration=iteration,
-                        selected_path=selected_path,
-                        attempts=attempts,
-                        backprop_success=False,
-                        terminal_reached=False,
-                    )
-                )
-            solved_now = tree.is_solved()
-            trace_iteration(
-                iteration,
-                "adapter_exception",
-                node,
-                selected_path,
-                attempts,
-                tactics_with_probs,
-                expanded,
-                terminal_reached,
-                backprop_success,
-                solved_now,
-            )
-            continue
+        goal = adapter.get_goal(node.mvar_id)
         if goal is None:
             mark_dead(node, "missing_goal")
             tree.backpropagate(node, success=False)
@@ -893,43 +888,9 @@ async def mcts_search(
         last_goal_sig = goal_sig
         provider_id = getattr(tactic_provider, "provider_id", None)
         record_attempt = getattr(tactic_provider, "record_attempt", None)
-        try:
-            tactics_with_probs = await tactic_provider.suggest_tactics_with_probs_async(
-                goal, node.mvar_id, adapter
-            )
-        except Exception:
-            mark_dead(node, "provider_exception")
-            logger.exception(
-                "MCTS tactic provider failed for mvar_id=%s provider=%s; treating as no-moves",
-                node.mvar_id,
-                tactic_provider.describe(),
-            )
-            tree.backpropagate(node, success=False)
-            expanded = False
-            if history:
-                history.record_iteration(
-                    IterationRecord(
-                        iteration=iteration,
-                        selected_path=selected_path,
-                        attempts=attempts,
-                        backprop_success=False,
-                        terminal_reached=False,
-                    )
-                )
-            solved_now = tree.is_solved()
-            trace_iteration(
-                iteration,
-                "provider_exception",
-                node,
-                selected_path,
-                attempts,
-                [],
-                expanded,
-                terminal_reached,
-                backprop_success,
-                solved_now,
-            )
-            continue
+        tactics_with_probs = await tactic_provider.suggest_tactics_with_probs_async(
+            goal, node.mvar_id, adapter
+        )
         if search_policy == SearchPolicy.UCB1:
             tactics_with_probs.sort(key=lambda x: x[1], reverse=True)
             if tactic_ranker is not None:
@@ -1019,22 +980,14 @@ async def mcts_search(
                         )
                     )
                 continue
-            except Exception:
-                logger.exception(
-                    "MCTS adapter.preview_tactic failed for mvar_id=%s tactic=%s; "
-                    "treating as failure",
-                    node.mvar_id,
-                    tactic,
-                )
-                preview = None
             if record_attempt is not None:
                 record_attempt(tactic=tactic, goal_sig=goal_sig, budget_key=node.mvar_id)
 
             if preview is None:
                 tactic_norm = normalize_tactic(tactic)
                 if goal_cache is not None:
-                    fam = tactic_family(tactic_norm)
-                    goal_cache.record_outcome(node.mvar_id, _family_index(fam), success=False)
+                    family_idx = TACTIC_FAMILIES.index(tactic_family(tactic_norm))
+                    goal_cache.record_outcome(node.mvar_id, family_idx, success=False)
                 if history:
                     attempts.append(
                         TacticAttempt(
@@ -1077,47 +1030,8 @@ async def mcts_search(
                     break
                 continue
 
-            novel_mvars = []
-            novel_goal_types = []
-            novel_goal_sigs = []
-            novel_goal_sigs_strict = []
-            blocked_goal_sigs = _blocked_goal_sigs_for_expansion(node)
-            for state_id, child_goal in zip(preview.child_mvar_ids, preview.child_goals):
-                if child_goal.mvar_id is None:
-                    raise ValueError(f"Child goal has no mvar_id: {child_goal.type}")
-                hyp_types = [h.type for h in child_goal.hypotheses]
-                hyp_exprs = [h.type_expr for h in child_goal.hypotheses]
-                if goal_cache is None:
-                    sig = goal_signature(child_goal, goal_sig_config)
-                else:
-                    sig = goal_cache.add_goal(
-                        mvar_id=state_id,
-                        type_str=child_goal.type,
-                        type_expr=child_goal.type_expr,
-                        hyp_types=hyp_types,
-                        hyp_exprs=hyp_exprs,
-                    )
-                if sig in blocked_goal_sigs:
-                    # Every child is an obligation: pruning one must reject the
-                    # whole tactic, never turn a partial proof into a success.
-                    novel_mvars.clear()
-                    break
-                # Lean can list one unsolved goal twice after a tactic; it is a single obligation.
-                if state_id in novel_mvars:
-                    continue
-                sig_strict = compute_goal_signature_strict(
-                    type_str=child_goal.type,
-                    type_expr=child_goal.type_expr,
-                    hyp_types=hyp_types,
-                    hyp_exprs=hyp_exprs,
-                    config=goal_sig_config,
-                )
-                novel_mvars.append(state_id)
-                novel_goal_types.append(child_goal.type)
-                novel_goal_sigs.append(sig)
-                novel_goal_sigs_strict.append(sig_strict)
-
-            if not novel_mvars:
+            obligations = child_obligations(node, preview, goal_cache, goal_sig_config)
+            if obligations is None:
                 if history:
                     attempts.append(
                         TacticAttempt(
@@ -1135,6 +1049,7 @@ async def mcts_search(
                         )
                     )
                 continue
+            novel_mvars, novel_goal_types, novel_goal_sigs, novel_goal_sigs_strict = obligations
 
             if history:
                 attempts.append(
@@ -1179,16 +1094,7 @@ async def mcts_search(
             novel_goal_sigs_strict,
             closes_goal,
         ) in pending_expansions:
-            try:
-                adapter.commit_tactic(preview)
-            except Exception:
-                logger.exception(
-                    "MCTS adapter.commit_tactic failed for mvar_id=%s tactic=%s; "
-                    "skipping this branch",
-                    node.mvar_id,
-                    tactic,
-                )
-                continue
+            adapter.commit_tactic(preview)
             expanded = True
             last_tactic = tactic
             if closes_goal:
@@ -1196,7 +1102,7 @@ async def mcts_search(
 
             if goal_cache is not None:
                 fam = tactic_family(tactic_norm)
-                goal_cache.record_outcome(node.mvar_id, _family_index(fam), success=True)
+                goal_cache.record_outcome(node.mvar_id, TACTIC_FAMILIES.index(fam), success=True)
 
             tree.expand(
                 node,

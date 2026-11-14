@@ -93,6 +93,7 @@ LEAN_SHARED_OPTION_NAMES = LEAN_PARSER_PREFIX_OPTION_NAMES + (
     "analysis",
     "no_solution_artifacts",
     "baseline_solved_only",
+    "premise_lesions",
     "intervention_name",
     "extra_intervention",
 )
@@ -151,6 +152,7 @@ _HELP = {
     "mcts_mode": "MCTS mode",
     "mcts_expansion_policy": "MCTS expansion policy",
     "deepseek_backend": "DeepSeek backend",
+    "premise_lesions": "Add one lesion per premise of the checked wild-type proof",
 }
 
 _CHOICES = {
@@ -207,6 +209,7 @@ _FLAG_OPTIONS = {
     "analysis",
     "no_solution_artifacts",
     "baseline_solved_only",
+    "premise_lesions",
     "no_sync",
 }
 

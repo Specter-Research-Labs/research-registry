@@ -8,7 +8,6 @@ from typing import Any, Callable
 
 import numpy as np
 
-from prover.mcts import TACTIC_FAMILIES
 from prover.providers.base import normalize_tactic, tactic_family
 
 
@@ -129,8 +128,6 @@ def family_prior_ranker(
         for i, (tactic, provider_score) in enumerate(tactics_with_probs):
             t_norm = normalize_tactic(tactic)
             fam = tactic_family(t_norm)
-            if fam not in TACTIC_FAMILIES:
-                fam = "other"
             m = model.score(goal_features, fam)
             combined = (alpha * m) + ((1.0 - alpha) * float(provider_score))
             scored.append((combined, float(provider_score), i, tactic, provider_score))

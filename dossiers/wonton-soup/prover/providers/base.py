@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import time
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
@@ -18,38 +19,187 @@ def normalize_tactic(tactic: str) -> str:
     return " ".join(tactic.strip().split())
 
 
-def tactic_family(tactic: str) -> str:
-    tactic_norm = normalize_tactic(tactic)
-    head = tactic_norm.split(" ", 1)[0].lower()
-    base_head = head.rstrip("0123456789") or head
+TACTIC_FAMILY_TABLE: dict[str, tuple[str, ...]] = {
+    "simplify": ("simp", "simp_all", "simp_rw"),
+    "rewrite": ("rw", "rewrite"),
+    "intro": ("intro", "intros"),
+    "split": (
+        "constructor",
+        "left",
+        "right",
+        "use",
+        "apply And.intro",
+        "apply Iff.intro",
+        "apply Or.inl",
+        "apply Or.inr",
+    ),
+    "cases": ("cases", "induction"),
+    "closer": ("exact", "assumption", "trivial"),
+    "contradiction": ("exfalso", "contradiction"),
+    "arith": ("linarith", "nlinarith", "omega", "ring", "norm_num"),
+    "automation": ("aesop", "aesop?"),
+}
+TACTIC_FAMILIES: tuple[str, ...] = (*TACTIC_FAMILY_TABLE, "other")
 
-    if base_head in {"simp", "simp_all", "simp_rw"}:
-        return "simplify"
-    if base_head in {"rw", "rewrite"}:
-        return "rewrite"
-    if base_head in {"intro", "intros"}:
-        return "intro"
-    if base_head in {"constructor"}:
-        return "split"
-    if base_head in {"left", "right"}:
-        return "split"
-    if tactic_norm.startswith("apply And.intro") or tactic_norm.startswith("apply Iff.intro"):
-        return "split"
-    if tactic_norm.startswith("apply Or.inl") or tactic_norm.startswith("apply Or.inr"):
-        return "split"
-    if base_head == "use":
-        return "split"
-    if base_head in {"cases", "induction"}:
-        return "cases"
-    if base_head in {"exact", "assumption", "trivial"}:
-        return "closer"
-    if base_head in {"exfalso", "contradiction"}:
-        return "contradiction"
-    if base_head in {"linarith", "nlinarith", "omega", "ring", "norm_num"}:
-        return "arith"
-    if base_head in {"aesop", "aesop?"}:
-        return "automation"
-    return head
+_HEAD_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_'.?!]*")
+_OPENERS = {"(": ")", "[": "]", "{": "}", "\u27e8": "\u27e9"}
+_CLOSERS = set(_OPENERS.values())
+_COMBINATOR_RE = re.compile(
+    r"(?:[\u00b7.](?=\s)|try|all_goals|any_goals|repeat'?|focus|classical|with_reducible"
+    r"|iterate\s+\d+|on_goal\s+-?\d+\s*=>|case'?\s[^=]*?=>|next\b[^=]*?=>)\s*"
+)
+_BY_RE = re.compile(r"(?<![\w.'])by(?![\w'])")
+_ALTERNATIVE_HEADS = frozenset({"cases", "induction", "match"})
+
+
+def _split_top(text: str, seps: tuple[str, ...]) -> list[str]:
+    """Split at separators outside brackets; longer separators must come first."""
+    parts: list[str] = []
+    depth = 0
+    start = 0
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if ch in _OPENERS:
+            depth += 1
+        elif ch in _CLOSERS:
+            depth -= 1
+        elif depth == 0:
+            sep = next((s for s in seps if text.startswith(s, i)), None)
+            if sep is not None:
+                parts.append(text[start:i])
+                i += len(sep)
+                start = i
+                continue
+        i += 1
+    parts.append(text[start:])
+    return parts
+
+
+def _enclosed(text: str) -> bool:
+    """Whether `text` is one bracket pair, such as `(simp; ring)`."""
+    if not text or text[0] != "(" or text[-1] != ")":
+        return False
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch in _OPENERS:
+            depth += 1
+        elif ch in _CLOSERS:
+            depth -= 1
+            if depth == 0:
+                return i == len(text) - 1
+    return False
+
+
+def _by_blocks(leaf: str) -> list[str]:
+    """Outermost tactic blocks nested in terms, as in `exact (by simp)` or `⟨by simp, h⟩`.
+
+    A block runs to the bracket or comma that closes the term it sits in; blocks
+    nested inside it are found when the block itself is parsed.
+    """
+    blocks = []
+    pos = 0
+    while (match := _BY_RE.search(leaf, pos)) is not None:
+        depth = 0
+        end = len(leaf)
+        for i in range(match.end(), len(leaf)):
+            ch = leaf[i]
+            if depth == 0 and (ch in _CLOSERS or ch == ","):
+                end = i
+                break
+            if ch in _OPENERS:
+                depth += 1
+            elif ch in _CLOSERS:
+                depth -= 1
+        blocks.append(leaf[match.end() : end])
+        pos = end
+    return blocks
+
+
+def _collect_leaves(text: str, leaves: list[str]) -> None:
+    for segment in _split_top(text, ("<;>", ";", "\n")):
+        _collect_segment(segment.strip(), leaves)
+
+
+def _collect_segment(segment: str, leaves: list[str]) -> None:
+    if not segment:
+        return
+    if _enclosed(segment):
+        _collect_leaves(segment[1:-1], leaves)
+        return
+    if segment.startswith("|"):
+        arm = _split_top(segment, ("=>",))
+        if len(arm) > 1:
+            _collect_leaves("=>".join(arm[1:]), leaves)
+        return
+    combinator = _COMBINATOR_RE.match(segment)
+    if combinator is not None and combinator.end() > 0:
+        _collect_leaves(segment[combinator.end() :], leaves)
+        return
+    if segment.startswith("first") and segment[5:].lstrip().startswith("|"):
+        for alternative in _split_top(segment[5:], ("|",)):
+            _collect_leaves(alternative, leaves)
+        return
+    leaves.append(segment)
+    for block in _by_blocks(segment):
+        _collect_leaves(block, leaves)
+    alternatives = _split_top(segment, ("|",))
+    if tactic_head(segment) in _ALTERNATIVE_HEADS and len(alternatives) > 1:
+        for alternative in alternatives[1:]:
+            arm = _split_top(alternative, ("=>",))
+            if len(arm) > 1:
+                _collect_leaves("=>".join(arm[1:]), leaves)
+
+
+def tactic_leaves(tactic: str) -> list[str]:
+    """The primitive tactics a tactic runs, with combinators and nesting removed.
+
+    `simp <;> first | ring | linarith` has leaves `simp`, `ring` and `linarith`;
+    `try (exact (by norm_num))` has `exact (by norm_num)` and `norm_num`.
+    """
+    leaves: list[str] = []
+    _collect_leaves(normalize_layout(tactic), leaves)
+    return leaves
+
+
+def normalize_layout(tactic: str) -> str:
+    return "\n".join(line.strip() for line in tactic.strip().splitlines())
+
+
+def tactic_head(leaf: str) -> str | None:
+    """Leading tactic name of a leaf, with numeric aliases such as `norm_num1` folded."""
+    match = _HEAD_RE.match(leaf.strip())
+    if match is None:
+        return None
+    head = match.group(0)
+    return head.rstrip("0123456789") or head
+
+
+def tactic_heads(tactic: str) -> frozenset[str]:
+    return frozenset(h for leaf in tactic_leaves(tactic) if (h := tactic_head(leaf)) is not None)
+
+
+def _leaf_family(leaf: str) -> str:
+    head = tactic_head(leaf)
+    if head is None:
+        return "other"
+    words = [head, *normalize_tactic(leaf).split(" ")[1:]]
+    for family, entries in TACTIC_FAMILY_TABLE.items():
+        for entry in entries:
+            entry_words = entry.split(" ")
+            if words[: len(entry_words)] == entry_words:
+                return family
+    return "other"
+
+
+def tactic_family(tactic: str) -> str:
+    """Family of the first primitive tactic; tactics outside the table are `other`."""
+    leaves = tactic_leaves(tactic)
+    return _leaf_family(leaves[0]) if leaves else "other"
+
+
+def tactic_families(tactic: str) -> frozenset[str]:
+    return frozenset(_leaf_family(leaf) for leaf in tactic_leaves(tactic))
 
 
 def goal_signature(goal: LeanGoal, config: GoalSignatureConfig) -> str:
@@ -67,6 +217,11 @@ class TacticProvider(ABC):
         adapter: LeanAdapter,
         n: int = 10,
     ) -> list[tuple[str, float]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_seed(self, seed: int) -> None:
+        """Reset caches and sampling state so later suggestions depend only on `seed`."""
         raise NotImplementedError
 
     def describe(self) -> str:
@@ -113,6 +268,9 @@ class GoalAwareTacticProvider(TacticProvider):
             self.base_tactics = self.base_tactics + self.SLOW_TACTICS
         self.last_latency_ms: float | None = None
         self.avg_latency_ms: float | None = None
+
+    def set_seed(self, seed: int) -> None:
+        """Suggestions are a deterministic function of the goal, so there is no state to reset."""
 
     def _record_stats(self, start_time: float) -> None:
         elapsed_ms = (time.time() - start_time) * 1000
@@ -367,6 +525,9 @@ class AesopTacticProvider(TacticProvider):
 
     def describe(self) -> str:
         return f"{self.__class__.__name__}(search={self.search_tactic})"
+
+    def set_seed(self, seed: int) -> None:
+        """Suggestions come from Lean's `aesop?`, which does not sample."""
 
     async def suggest_tactics_with_probs_async(
         self,

@@ -81,6 +81,22 @@ Minimal example:
 
 Multi-provider runs include provider arrays/metadata and per-provider subrun configs.
 
+Lean runs also record what produced them:
+
+- `seed`: required; providers that cannot be seeded refuse to run
+- `provenance.source`: `base_commit` on trunk, `dirty`, and `patch_sha256`;
+  when dirty, the dossier's diff against `base_commit` is written to
+  `source.patch` in the run directory
+- `provenance.lean`: `toolchain` and the Mathlib `rev`
+- `provenance.python`: `leantree` version and `uv_lock_sha256`
+- `provenance.tactic_limit`: per-tactic heartbeat budget, the wall-clock guard
+  that only catches a hung REPL, and the declaration budget for the kernel check
+- `providers_meta.config.weights`: pinned model revision and the sha256 of every
+  weight file; DeepSeek also records `temperature` and `top_p`
+- `premise_lesions`: whether premise lesions were generated
+
+A resumed run must have the same `provenance` as the run it resumes.
+
 ## `summary.json.gz`
 
 Purpose: main aggregate payload for the run.
@@ -94,11 +110,19 @@ Core shape:
   "theorems": [
     {
       "name": "or_left",
-      "wild_type": {"solved": true, "iterations": 2, "k_search_efficiency": {}},
+      "wild_type": {
+        "solved": true,
+        "tree_solved": true,
+        "check_status": "checked",
+        "iterations": 2,
+        "k_search_efficiency": {}
+      },
       "interventions": [
         {
           "name": "block_left",
           "solved": true,
+          "tree_solved": true,
+          "check_status": "checked",
           "ged_search_graph": {
             "value": 2.0,
             "normalized": 0.12,

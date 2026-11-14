@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from prover.mcts import TACTIC_FAMILIES
 from prover.providers.base import normalize_tactic, tactic_family
 from runtime_paths import resolve_artifacts_root as _resolve_runtime_artifacts_root
 
@@ -285,13 +284,6 @@ def load_candidates_for_iterations(
     if remaining:
         notes.append(f"missing_trace_iterations:{len(remaining)}")
     return found, notes
-
-
-def family_index(fam: str) -> int:
-    try:
-        return TACTIC_FAMILIES.index(fam)
-    except ValueError:
-        return len(TACTIC_FAMILIES) - 1
 
 
 @dataclass(frozen=True)

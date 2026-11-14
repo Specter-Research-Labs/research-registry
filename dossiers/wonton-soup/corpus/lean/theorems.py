@@ -1,12 +1,9 @@
 # ruff: noqa: E402, E501
 import hashlib
-import re
 from dataclasses import dataclass, field
 
 from prover.history import ExplorationHistory
-from prover.providers.base import normalize_tactic
-
-_TACTIC_HEAD_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_'.?]*")
+from prover.providers.base import tactic_heads
 
 
 @dataclass
@@ -21,6 +18,7 @@ class Intervention:
 class Theorem:
     name: str
     statement: str
+    library_name: str | None = None
 
     def generate_interventions(self, wild_type_history: ExplorationHistory) -> list[Intervention]:
         if wild_type_history.solution_path is not None:
@@ -28,20 +26,14 @@ class Theorem:
         else:
             used_tactics = sorted(wild_type_history.attempted_tactics())
 
-        used_heads = {
-            head
-            for tactic in used_tactics
-            if tactic and (head := _tactic_head(tactic)) is not None
-        }
+        used_heads = {head for tactic in used_tactics for head in tactic_heads(tactic)}
         interventions = [
             Intervention(name=f"block_{head}", blocked={head})
             for head in sorted(used_heads)
         ]
 
         attempted_heads = {
-            head
-            for tactic in wild_type_history.attempted_tactics()
-            if (head := _tactic_head(tactic)) is not None
+            head for tactic in wild_type_history.attempted_tactics() for head in tactic_heads(tactic)
         }
         unused_heads = sorted(attempted_heads - used_heads)
         if unused_heads:
@@ -62,16 +54,6 @@ class Theorem:
             )
 
         return interventions
-
-
-def _tactic_head(tactic: str) -> str | None:
-    tactic_norm = normalize_tactic(tactic)
-    if not tactic_norm:
-        return None
-    head = tactic_norm.split(" ", 1)[0]
-    if _TACTIC_HEAD_RE.fullmatch(head) is None:
-        return None
-    return head.rstrip("0123456789") or head
 
 
 def _deterministic_nonpath_control(theorem_name: str, unused_heads: list[str]) -> str:
