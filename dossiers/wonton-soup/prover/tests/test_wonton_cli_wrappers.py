@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import click
 import pytest
@@ -97,6 +98,74 @@ def test_lean_suite_runs_main_and_basin_with_expected_overrides(monkeypatch) -> 
     assert calls[1]["wild_only"] is False
     assert calls[1]["with_interventions"] is False
     assert calls[1]["analysis"] is False
+
+
+def test_lean_distributed_sweep_runs_baseline_then_each_perturbation(monkeypatch) -> None:
+    import wonton
+
+    calls = _capture_keyword_calls(monkeypatch, wonton, "_run_lean_command")
+
+    wonton.lean_distributed_sweep(
+        run_id="dmcts",
+        block_fraction=[0.1, 0.25],
+        delay_prob=[0.5],
+        adaptation=True,
+        mcts_agents=4,
+        mcts_inflight=2,
+        mcts_block_duration=3,
+        mcts_block_seed=7,
+        mcts_reroute_blocked=True,
+        mcts_reroute_max=2,
+        mcts_delay_duration=2,
+        mcts_delay_seed=5,
+        sync=False,
+    )
+
+    by_run = {call["run_id"]: call for call in calls}
+    assert list(by_run) == [
+        "dmcts-baseline",
+        "dmcts-damage-block-f0.1",
+        "dmcts-adapt-block-f0.1",
+        "dmcts-damage-block-f0.25",
+        "dmcts-adapt-block-f0.25",
+        "dmcts-damage-delay-p0.5",
+    ]
+    assert all(call["mcts_mode"] == "distributed" and call["mcts_agents"] == 4 for call in calls)
+    baseline = by_run["dmcts-baseline"]
+    assert baseline["mcts_block_fraction"] is None and baseline["mcts_block_seed"] is None
+    assert baseline["mcts_delay_prob"] is None and baseline["mcts_delay_seed"] is None
+    assert baseline["mcts_reroute_blocked"] is False
+    damage = by_run["dmcts-damage-block-f0.25"]
+    assert (damage["mcts_block_fraction"], damage["mcts_block_duration"]) == (0.25, 3)
+    assert damage["mcts_reroute_blocked"] is False and damage["mcts_reroute_max"] is None
+    adapt = by_run["dmcts-adapt-block-f0.1"]
+    assert (adapt["mcts_reroute_blocked"], adapt["mcts_reroute_max"]) == (True, 2)
+    delay = by_run["dmcts-damage-delay-p0.5"]
+    assert (delay["mcts_delay_prob"], delay["mcts_delay_seed"]) == (0.5, 5)
+    assert delay["mcts_block_fraction"] is None and delay["mcts_block_duration"] is None
+
+
+def test_lean_distributed_sweep_rejects_adaptation_options_without_adaptation(
+    monkeypatch,
+) -> None:
+    import pytest
+    import typer
+
+    import wonton
+
+    _capture_keyword_calls(monkeypatch, wonton, "_run_lean_command")
+
+    with pytest.raises(typer.Exit):
+        wonton.lean_distributed_sweep(
+            run_id="dmcts",
+            block_fraction=[0.1],
+            mcts_agents=4,
+            mcts_inflight=2,
+            mcts_block_duration=3,
+            mcts_block_seed=7,
+            mcts_unfreeze_after=2,
+            sync=False,
+        )
 
 
 def test_lean_run_wrapper_leaves_validation_to_runtime(monkeypatch) -> None:
@@ -517,32 +586,25 @@ def test_postprocess_single_run_dry_run_skips_processing(
     assert not (run_dir / "postprocess_metrics.json").exists()
 
 
-def test_verify_run_local_wrapper_passes_args(monkeypatch, tmp_path) -> None:
+def test_verify_run_local_wrapper_passes_args(monkeypatch, tmp_path, capsys) -> None:
     import analysis.verify_run_local as verify_mod
     import wonton
+    from analysis.logs import ProviderRun
 
     captured: dict[str, object] = {}
 
-    def fake_verify_run_local(run_dir, *, theorem_names, limit, lean_project, force):
+    def fake_verify_run_local(run_dir, *, theorem_names, limit, lean_project):
         captured["run_dir"] = run_dir
         captured["theorem_names"] = theorem_names
         captured["limit"] = limit
         captured["lean_project"] = lean_project
-        captured["force"] = force
+        check = SimpleNamespace(status="checked")
         return [
-            {
-                "run_dir": str(run_dir),
-                "provider": None,
-                "counts": {
-                    "eligible": 1,
-                    "verified": 1,
-                    "candidate_failed": 0,
-                    "replay_failed": 0,
-                    "input_failed": 0,
-                    "skipped_existing": 0,
-                    "skipped_unsolved": 0,
-                },
-            }
+            verify_mod.ProviderVerdicts(
+                provider_run=ProviderRun(run_dir=run_dir, provider=None),
+                verdicts_path=run_dir / verify_mod.VERDICTS_NAME,
+                checks=[(None, check), (None, check)],
+            )
         ]
 
     monkeypatch.setattr(verify_mod, "verify_run_local", fake_verify_run_local)
@@ -552,21 +614,20 @@ def test_verify_run_local_wrapper_passes_args(monkeypatch, tmp_path) -> None:
         theorem=["t1", "t2"],
         limit=5,
         lean_project=str(tmp_path / "lean_project"),
-        force=True,
     )
 
     assert captured["run_dir"] == tmp_path.resolve()
     assert captured["theorem_names"] == ["t1", "t2"]
     assert captured["limit"] == 5
     assert captured["lean_project"] == (tmp_path / "lean_project").resolve()
-    assert captured["force"] is True
+    assert "provider=single: variants=2 checked=2" in capsys.readouterr().out
 
 
 def test_inspect_proof_ir_wrapper_passes_configs_and_writes_output(monkeypatch, tmp_path) -> None:
     import analysis.inspect_proof_ir as inspect_mod
     import wonton
 
-    captured: dict[str, object] = {}
+    captured: dict[str, Any] = {}
 
     def fake_inspect_theorem_ir(run_dir, **kwargs):
         captured["run_dir"] = run_dir

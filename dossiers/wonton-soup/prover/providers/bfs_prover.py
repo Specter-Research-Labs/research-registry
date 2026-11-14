@@ -67,7 +67,9 @@ class BFSProverTacticProvider(TacticProvider):
         if self._loaded:
             return
         revision = pinned_revision(self._model_id)
-        self._tokenizer = AutoTokenizer.from_pretrained(self._model_id, revision=revision)
+        self._tokenizer = cast(
+            Any, AutoTokenizer.from_pretrained(self._model_id, revision=revision)
+        )
         model = AutoModelForCausalLM.from_pretrained(self._model_id, revision=revision)
         self._model = cast(Any, model).to(self._device)
         self._model.eval()

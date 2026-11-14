@@ -8,7 +8,7 @@ import re
 import shutil
 import statistics
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -167,7 +167,7 @@ def _derive_feasible_slice(
     manifest = {
         **parent_manifest,
         "build_id": derived_build_id,
-        "created_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "provenance": provenance,
         "build_config": build_config,
         "counts": {"items_total": len(items)},
@@ -467,11 +467,11 @@ def run_lean_capability_sweep(
     # Use the run's explicit selection list as the source of truth for item_id ordering, so
     # capability sweeps can run on deterministic samples/shards without requiring basin outputs
     # for the full corpus.
-    item_ids = None
+    item_ids: list[str] | None = None
     if isinstance(selection, dict):
         selected = selection.get("selected_theorems")
         if isinstance(selected, list) and all(isinstance(x, str) and x for x in selected):
-            item_ids = list(selected)
+            item_ids = [str(x) for x in selected]
     if item_ids is None:
         items_path = items_build_dir / str(manifest.get("items_file") or "items.jsonl")
         item_ids = [

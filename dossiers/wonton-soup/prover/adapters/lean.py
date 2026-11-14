@@ -516,9 +516,6 @@ class LeanAdapter:
             raise KeyError(f"Unknown mvar_id: {mvar_id}")
         return self.states[mvar_id].branch.is_solved
 
-    def get_proof_term(self) -> ExprDAG | None:
-        return self.completed_proof_term
-
     async def replay_solution_path(
         self,
         theorem_with_sorry: str,
@@ -678,42 +675,3 @@ class LeanAdapter:
             if goal.mvar_id == raw_id:
                 return goal
         return None
-
-    async def check_def_eq_async(self, expr1_dag: dict, expr2_dag: dict) -> bool:
-        return await self.env.check_def_eq_async(expr1_dag, expr2_dag)
-
-    async def get_tactic_suggestions(
-        self, mvar_id: str, search_tactic: str = "aesop?"
-    ) -> list[str]:
-        if mvar_id not in self.states:
-            raise KeyError(f"Unknown mvar_id: {mvar_id}")
-
-        state = self.states[mvar_id]
-        self.env.rollback_to(state.checkpoint)
-
-        try:
-            response = await state.branch._send_tactic_async(
-                heartbeat_limited(search_tactic), timeout=TACTIC_WALL_GUARD_MS
-            )
-        except LeanInteractionException as exc:
-            if str(exc) == REPL_TIMEOUT_MESSAGE:
-                raise TacticWallTimeout(
-                    f"{search_tactic!r} exceeded the {TACTIC_WALL_GUARD_MS} ms wall guard"
-                ) from exc
-            raise
-        if "messages" not in response:
-            raise ValueError(f"Lean response missing messages for {search_tactic}")
-
-        messages = response.get("messages", [])
-        suggestions = []
-
-        for msg in messages:
-            data = msg.get("data", "")
-            if "Try this:" in data:
-                parts = data.split("Try this:")
-                if len(parts) > 1:
-                    suggestion_text = parts[1].strip()
-                    if suggestion_text:
-                        suggestions.append(suggestion_text)
-
-        return suggestions

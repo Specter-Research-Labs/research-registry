@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import inspect
 import json
 import os
 import shlex
 from contextlib import contextmanager
+from dataclasses import dataclass, fields
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -379,33 +379,13 @@ def _auto_sync_paths(paths: list[Path], *, reason: str) -> None:
             break
 
 
-def _validate_sampling_args(args, *, allow_limit_with_sample: bool) -> None:
-    if args.sample is None:
-        return
-    if args.seed is None:
-        _die("--seed is required when --sample is set")
-    if not allow_limit_with_sample and args.limit is not None:
-        _die("Use --sample or --limit, not both")
-
-
-def _validate_lean_flag_conflicts(args) -> None:
-    if args.wild_only and args.with_interventions:
-        _die("--wild-only and --with-interventions are mutually exclusive")
-    if args.trace_mcts and args.no_trace_mcts:
-        _die("--trace-mcts and --no-trace-mcts are mutually exclusive")
-
-
 def _validate_backend_args(args) -> None:
     if args.backend == Backend.lean:
         _die("`run --backend lean` is unsupported")
     if _is_set(args.limit):
         _die("--limit is not valid for --backend coq")
-    _validate_sampling_args(args, allow_limit_with_sample=True)
-
-
-def _validate_lean_args(args) -> None:
-    _validate_sampling_args(args, allow_limit_with_sample=False)
-    _validate_lean_flag_conflicts(args)
+    if args.sample is not None and args.seed is None:
+        _die("--seed is required when --sample is set")
 
 
 def _has_ymd_prefix(value: str) -> bool:
@@ -874,49 +854,34 @@ def _run_coq(args) -> Path:
     return _run_external_corpus(args, log_dir=log_dir, run_batch=_run_batch)
 
 
-_EXTERNAL_COMMAND_RUN_DEFAULTS: dict[str, Any] = {
-    "agent": False,
-    "limit": None,
-    "theorem": None,
-    "offset": None,
-    "sample": None,
-    "seed": None,
-    "log_dir": None,
-    "source": None,
-    "theorem_file": None,
-    "serapi_binary": None,
-    "serapi_args": None,
-    "doc_name": None,
-    "coq_mode": None,
-    "modules": None,
-    "limit_per_module": None,
-    "limit_total": None,
-    "stdlib_root": None,
-    "coqc_binary": None,
-}
-
-
+@dataclass
 class ExternalInvocation:
-    def __init__(self, *, backend: Backend, **kwargs: Any) -> None:
-        self.backend = backend
-        for name, default in _EXTERNAL_COMMAND_RUN_DEFAULTS.items():
-            setattr(self, name, kwargs.get(name, default))
+    backend: Backend
+    agent: bool = False
+    limit: int | None = None
+    theorem: list[str] | None = None
+    offset: int | None = None
+    sample: int | None = None
+    seed: int | None = None
+    log_dir: str | None = None
+    source: str | None = None
+    theorem_file: str | None = None
+    serapi_binary: str | None = None
+    serapi_args: list[str] | None = None
+    doc_name: str | None = None
+    coq_mode: CoqMode | None = None
+    modules: list[str] | None = None
+    limit_per_module: int | None = None
+    limit_total: int | None = None
+    stdlib_root: str | None = None
+    coqc_binary: str | None = None
 
-    @classmethod
-    def from_values(cls, *, backend: Backend, values: dict[str, Any]) -> "ExternalInvocation":
-        return cls(
-            backend=backend,
-            **{
-                name: _coerce_typer_option(values.get(name), default)
-                for name, default in _EXTERNAL_COMMAND_RUN_DEFAULTS.items()
-            },
-        )
 
-
-def _external_alias_kwargs(backend: Backend, values: dict[str, Any]) -> dict[str, Any]:
-    return {"backend": backend} | {
-        name: _coerce_typer_option(values.get(name), default)
-        for name, default in _EXTERNAL_COMMAND_RUN_DEFAULTS.items()
+def _external_option_values(values: dict[str, Any]) -> dict[str, Any]:
+    return {
+        field.name: _coerce_typer_option(values.get(field.name), field.default)
+        for field in fields(ExternalInvocation)
+        if field.name != "backend"
     }
 
 
@@ -957,7 +922,9 @@ def run(
     stdlib_root: str | None = typer.Option(None, "--stdlib-root"),
     coqc_binary: str | None = typer.Option(None, "--coqc-binary"),
 ) -> None:
-    _run_external_invocation(ExternalInvocation.from_values(backend=backend, values=locals()))
+    _run_external_invocation(
+        ExternalInvocation(backend=backend, **_external_option_values(locals()))
+    )
 
 
 @app.command()
@@ -1143,48 +1110,35 @@ def verify_run_local_command(
     limit: int | None = typer.Option(
         None,
         "--limit",
-        help="Maximum solved theorems to verify per provider",
+        help="Maximum theorems with a closed search tree to verify per provider",
     ),
     lean_project: str | None = typer.Option(
         None,
         "--lean-project",
         help="Override Lean project path recorded in run_config.json",
     ),
-    force: bool = typer.Option(
-        False,
-        "--force",
-        help="Overwrite existing theorem-level verification artifacts",
-    ),
 ) -> None:
-    from analysis.verify_run_local import VERIFY_LOCAL_SUMMARY_NAME, verify_run_local
+    """Kernel-check every tree-solved variant and write kernel_verdicts.parquet."""
+    from collections import Counter
+
+    from analysis.verify_run_local import verify_run_local
 
     target = Path(os.path.expanduser(run_dir)).resolve()
     if not target.exists():
         _die(f"Run dir not found: {target}")
 
-    reports = verify_run_local(
+    results = verify_run_local(
         target,
         theorem_names=theorem,
         limit=limit,
         lean_project=Path(lean_project).expanduser().resolve() if lean_project else None,
-        force=force,
     )
-    for report in reports:
-        counts = report.get("counts") if isinstance(report, dict) else None
-        run_dir_value = report.get("run_dir") if isinstance(report, dict) else None
-        provider = report.get("provider") if isinstance(report, dict) else None
-        if not isinstance(counts, dict) or not isinstance(run_dir_value, str):
-            raise ValueError("verify-run-local produced an invalid report payload")
-        label = _provider_label(provider)
+    for result in results:
+        counts = Counter(check.status for _, check in result.checks)
+        statuses = " ".join(f"{status}={n}" for status, n in sorted(counts.items()))
         typer.echo(
-            f"{label}: "
-            f"verified={counts.get('verified', 0)}/{counts.get('eligible', 0)} "
-            f"candidate_failed={counts.get('candidate_failed', 0)} "
-            f"replay_failed={counts.get('replay_failed', 0)} "
-            f"input_failed={counts.get('input_failed', 0)} "
-            f"skipped_existing={counts.get('skipped_existing', 0)} "
-            f"skipped_unsolved={counts.get('skipped_unsolved', 0)} "
-            f"-> {Path(run_dir_value) / VERIFY_LOCAL_SUMMARY_NAME}"
+            f"{_provider_label(result.provider_run.provider)}: "
+            f"variants={len(result.checks)} {statuses} -> {result.verdicts_path}"
         )
 
 
@@ -1208,7 +1162,7 @@ def coq(
     log_dir: str | None = typer.Option(None, "--log-dir"),
     agent: bool = typer.Option(False, "--agent"),
 ) -> None:
-    run(**_external_alias_kwargs(Backend.coq, locals()))
+    run(backend=Backend.coq, **_external_option_values(locals()))
 
 
 _LEAN_COMMAND_OPTION_NAMES = (
@@ -1235,24 +1189,8 @@ class LeanInvocation:
         return cls(**{name: kwargs[name] for name in _LEAN_COMMAND_PARAM_NAMES})
 
 
-def _build_lean_command_signature() -> inspect.Signature:
-    return inspect.Signature(
-        [
-            inspect.Parameter(
-                name,
-                inspect.Parameter.KEYWORD_ONLY,
-                default=True if name == "no_sync" else _lean_options.option_default(name),
-            )
-            for name in _LEAN_COMMAND_PARAM_NAMES
-        ]
-    )
-
-
 def _run_lean_command(**kwargs: Any) -> None:
     _run_lean_backend(LeanInvocation.from_kwargs(kwargs))
-
-
-_run_lean_command.__signature__ = _build_lean_command_signature()
 
 
 def _collect_lean_command_kwargs(
@@ -1309,6 +1247,66 @@ def _build_lean_suite_variants(values: dict[str, Any]) -> dict[str, dict[str, An
             "basin_blind": blind,
             "analysis": False,
         },
+    }
+
+
+def _sweep_label(value: float) -> str:
+    return f"{value:.3f}".rstrip("0").rstrip(".")
+
+
+def _build_lean_distributed_sweep_variants(values: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    block_fractions = _coerce_typer_option(values["block_fraction"], None) or []
+    delay_probs = _coerce_typer_option(values["delay_prob"], None) or []
+    adaptation = _coerce_typer_option(values["adaptation"], False)
+    if not block_fractions and not delay_probs:
+        _die("Provide --block-fraction and/or --delay-prob for a sweep")
+    common = _collect_lean_command_kwargs(
+        values, mcts_mode="distributed", resume=False, basin_seeds=None, basin_blind=False
+    )
+    if block_fractions and (
+        common["mcts_block_duration"] is None or common["mcts_block_seed"] is None
+    ):
+        _die("--block-fraction requires --mcts-block-duration and --mcts-block-seed")
+    if delay_probs and (common["mcts_delay_duration"] is None or common["mcts_delay_seed"] is None):
+        _die("--delay-prob requires --mcts-delay-duration and --mcts-delay-seed")
+    has_adaptation_options = bool(common["mcts_reroute_blocked"]) or any(
+        common[name] is not None for name in ("mcts_unfreeze_after", "mcts_unfreeze_prob")
+    )
+    if adaptation:
+        if not block_fractions:
+            _die("--adaptation requires --block-fraction")
+        if not has_adaptation_options:
+            _die("--adaptation requires --mcts-reroute-blocked or --mcts-unfreeze-*")
+    elif has_adaptation_options:
+        _die("--mcts-reroute-* and --mcts-unfreeze-* apply only to --adaptation runs")
+
+    no_block = {
+        "mcts_block_fraction": None,
+        "mcts_block_duration": None,
+        "mcts_block_seed": None,
+        "mcts_block_immovable_fraction": None,
+    }
+    no_adaptation = {
+        "mcts_reroute_blocked": False,
+        "mcts_reroute_max": None,
+        "mcts_unfreeze_after": None,
+        "mcts_unfreeze_prob": None,
+    }
+    no_delay = {"mcts_delay_prob": None, "mcts_delay_duration": None, "mcts_delay_seed": None}
+    scenarios: dict[str, dict[str, Any]] = {"baseline": no_block | no_adaptation | no_delay}
+    for fraction in block_fractions:
+        label = _sweep_label(fraction)
+        damage = no_adaptation | no_delay | {"mcts_block_fraction": fraction}
+        scenarios[f"damage-block-f{label}"] = damage
+        if adaptation:
+            scenarios[f"adapt-block-f{label}"] = no_delay | {"mcts_block_fraction": fraction}
+    for probability in delay_probs:
+        scenarios[f"damage-delay-p{_sweep_label(probability)}"] = (
+            no_block | no_adaptation | {"mcts_delay_prob": probability}
+        )
+    return {
+        name: common | overrides | {"run_id": f"{values['run_id']}-{name}"}
+        for name, overrides in scenarios.items()
     }
 
 
@@ -1639,6 +1637,92 @@ def lean_suite(
     sync: bool = typer.Option(False, "--sync/--no-sync", help="Sync outputs to remote"),
 ) -> None:
     _run_lean_variants(_build_lean_suite_variants(locals()), summarize=not agent)
+
+
+@lean_app.command("distributed-sweep")
+def lean_distributed_sweep(
+    run_id: str = typer.Option(
+        ..., "--run-id", help="Run id prefix; each scenario runs as <run-id>-<scenario>"
+    ),
+    block_fraction: list[float] | None = typer.Option(
+        None,
+        "--block-fraction",
+        help="Scheduler block fraction to sweep (repeatable); one damage-block run per value",
+    ),
+    delay_prob: list[float] | None = typer.Option(
+        None,
+        "--delay-prob",
+        help="Controller delay probability to sweep (repeatable); one damage-delay run per value",
+    ),
+    adaptation: bool = typer.Option(
+        False,
+        "--adaptation",
+        help="Add an adapt-block run per block fraction using the reroute/unfreeze options",
+    ),
+    agent: bool = typer.Option(False, "--agent", help="Agent-optimized output"),
+    mode: str | None = _lean_typer_option("mode"),
+    corpus: str | None = _lean_typer_option("corpus"),
+    provider: str | None = _lean_typer_option("provider"),
+    providers: str | None = _lean_typer_option("providers"),
+    all_providers: bool = _lean_typer_option("all_providers"),
+    budget: str | None = _lean_typer_option("budget"),
+    limit: int | None = _lean_typer_option("limit"),
+    theorem: list[str] | None = _lean_typer_option("theorem"),
+    lean_project: str | None = _lean_typer_option("lean_project"),
+    wild_only: bool = typer.Option(False, "--wild-only", help="Skip interventions"),
+    with_interventions: bool = typer.Option(
+        False, "--with-interventions", help="Run intervention comparisons"
+    ),
+    trace_mcts: bool = typer.Option(False, "--trace-mcts", help="Enable MCTS tracing"),
+    no_trace_mcts: bool = typer.Option(False, "--no-trace-mcts", help="Disable MCTS tracing"),
+    mcts_expansion_policy: str | None = _lean_typer_option("mcts_expansion_policy"),
+    mcts_agents: int | None = _lean_typer_option("mcts_agents"),
+    mcts_inflight: int | None = _lean_typer_option("mcts_inflight"),
+    mcts_block_duration: int | None = _lean_typer_option("mcts_block_duration"),
+    mcts_block_seed: int | None = _lean_typer_option("mcts_block_seed"),
+    mcts_block_immovable_fraction: float | None = _lean_typer_option(
+        "mcts_block_immovable_fraction"
+    ),
+    mcts_unfreeze_after: int | None = _lean_typer_option("mcts_unfreeze_after"),
+    mcts_unfreeze_prob: float | None = _lean_typer_option("mcts_unfreeze_prob"),
+    mcts_reroute_blocked: bool = _lean_typer_option("mcts_reroute_blocked"),
+    mcts_reroute_max: int | None = _lean_typer_option("mcts_reroute_max"),
+    mcts_delay_duration: int | None = _lean_typer_option("mcts_delay_duration"),
+    mcts_delay_seed: int | None = _lean_typer_option("mcts_delay_seed"),
+    mcts_virtual_loss: int | None = _lean_typer_option("mcts_virtual_loss"),
+    mcts_depth_bias: float | None = _lean_typer_option("mcts_depth_bias"),
+    mcts_path_bias: float | None = _lean_typer_option("mcts_path_bias"),
+    mcts_history_cache: bool = _lean_typer_option("mcts_history_cache"),
+    mcts_deterministic_inference: bool = _lean_typer_option("mcts_deterministic_inference"),
+    allow_easy: bool = _lean_typer_option("allow_easy"),
+    debug: bool = _lean_typer_option("debug"),
+    plain: bool = _lean_typer_option("plain"),
+    sampling: bool = _lean_typer_option("sampling"),
+    deepseek_num_samples: int | None = _lean_typer_option("deepseek_num_samples"),
+    deepseek_model_path: str | None = _lean_typer_option("deepseek_model_path"),
+    deepseek_backend: str = _lean_typer_option("deepseek_backend"),
+    bfs_num_samples: int | None = _lean_typer_option("bfs_num_samples"),
+    internlm_num_samples: int | None = _lean_typer_option("internlm_num_samples"),
+    device: str | None = _lean_typer_option("device"),
+    workers: int | None = _lean_typer_option("workers"),
+    offset: int | None = _lean_typer_option("offset"),
+    sample: int | None = _lean_typer_option("sample"),
+    seed: int | None = _lean_typer_option("seed"),
+    search_seed: int | None = _lean_typer_option("search_seed"),
+    goal_sig: str | None = _lean_typer_option("goal_sig"),
+    analysis: bool = _lean_typer_option("analysis"),
+    no_solution_artifacts: bool = _lean_typer_option("no_solution_artifacts"),
+    baseline_solved_only: bool = _lean_typer_option("baseline_solved_only"),
+    premise_lesions: bool = _lean_typer_option("premise_lesions"),
+    intervention_name: list[str] | None = _lean_typer_option("intervention_name"),
+    extra_intervention: list[str] | None = _lean_typer_option("extra_intervention"),
+    tactic_ranker: str | None = _lean_typer_option("tactic_ranker"),
+    tactic_ranker_model: str | None = _lean_typer_option("tactic_ranker_model"),
+    tactic_ranker_alpha: float | None = _lean_typer_option("tactic_ranker_alpha"),
+    sync: bool = typer.Option(False, "--sync/--no-sync", help="Sync outputs to remote"),
+) -> None:
+    """Distributed MCTS robustness sweep: a baseline, then one run per perturbation."""
+    _run_lean_variants(_build_lean_distributed_sweep_variants(locals()), summarize=not agent)
 
 
 @corpus_app.command("build-lean-mathlib")

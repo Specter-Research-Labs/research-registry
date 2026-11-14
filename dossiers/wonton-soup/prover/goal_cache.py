@@ -77,9 +77,6 @@ class GoalCache:
             occ.outcomes[family] = []
         occ.outcomes[family].append(success)
 
-    def get_sig(self, mvar_id: str) -> str | None:
-        return self.mvar_to_sig.get(mvar_id)
-
     def get_features(self, sig: str) -> np.ndarray:
         entry = self.entries.get(sig)
         if entry is None:

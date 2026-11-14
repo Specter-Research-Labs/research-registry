@@ -5,13 +5,12 @@ import pytest
 from corpus.artifacts import CorpusArtifactError, compute_build_id, parse_corpus_ref
 
 
-def test_parse_corpus_ref_round_trip_minimal() -> None:
+def test_parse_corpus_ref_minimal() -> None:
     ref = parse_corpus_ref("lean:mathlib4")
     assert ref.backend == "lean"
     assert ref.corpus_id == "mathlib4"
     assert ref.build_id is None
     assert ref.derived is None
-    assert ref.to_string() == "lean:mathlib4"
 
 
 def test_parse_corpus_ref_parses_build_and_derived_and_normalizes_slashes() -> None:
@@ -20,7 +19,6 @@ def test_parse_corpus_ref_parses_build_and_derived_and_normalizes_slashes() -> N
     assert ref.corpus_id == "mathlib4"
     assert ref.build_id == "b123"
     assert ref.derived == "valid/feasible"
-    assert ref.to_string() == "lean:mathlib4@b123#valid/feasible"
 
 
 @pytest.mark.parametrize(

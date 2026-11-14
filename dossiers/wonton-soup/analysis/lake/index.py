@@ -217,7 +217,9 @@ def _canonical_root_for_run(
     run_dir: Path,
     roots: list[tuple[str, Path]],
 ) -> tuple[str, str]:
-    candidates = [(root_id, root_path) for root_id, root_path in roots if _path_is_under(run_dir, root_path)]
+    candidates = [
+        (root_id, root_path) for root_id, root_path in roots if _path_is_under(run_dir, root_path)
+    ]
     if not candidates:
         raise RuntimeError(f"No enclosing log root found for run_dir {run_dir}")
     candidates.sort(key=lambda item: (len(item[1].parts), len(str(item[1])), str(item[1])))

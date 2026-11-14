@@ -53,11 +53,13 @@ postprocess logic changes.
 Runs that check proofs in the kernel store `tree_solved`, `check_status`,
 `term_hash`, `premises` and `self_citation` on `theorem_wild` and
 `theorem_intervention`, and their provenance on `runs`. Older runs only know
-that the search tree closed. A replay study re-elaborates their proofs offline,
-and its per-variant verdicts are ingested from Parquet:
+that the search tree closed. `verify-run-local` replays every variant whose
+tree closed through the same kernel check a run applies in-run, writes
+`kernel_verdicts.parquet` into each provider run dir, and the lake ingests it:
 
 ```bash
-uv run python wonton.py lake ingest-verdicts --parquet <dependency_rows.parquet>
+uv run python wonton.py verify-run-local --run-dir <run_dir>
+uv run python wonton.py lake ingest-verdicts --parquet <run_dir>/kernel_verdicts.parquet
 ```
 
 The file needs `run_key`, `theorem`, `variant`, `status`, `replay_status`,

@@ -4,6 +4,8 @@ import gzip
 import json
 from pathlib import Path
 
+import pytest
+
 from analysis.lake.db import connect, ensure_schema, root_id_for_path, run_key_for_run_dir
 from analysis.lake.extract import extract_facts
 from analysis.lake.index import index_logs
@@ -182,3 +184,14 @@ def test_inspect_score_k_run_requires_summary(tmp_path: Path) -> None:
     ready = inspect_score_k_run(run_dir)
     assert ready.eligible is True
     assert ready.reason is None
+
+
+def test_reference_with_missing_family_counts_fails_loudly() -> None:
+    from analysis.lake.score_k import _p_success
+    from prover.providers.base import TACTIC_FAMILIES
+
+    n = len(TACTIC_FAMILIES) - 1
+    short = {"attempts": [1] * n, "successes": [0] * n}
+    reference = {"alpha": 1.0, "global": short, "by_sig": {}}
+    with pytest.raises(ValueError, match="reference counts cover"):
+        _p_success(reference, "sig", TACTIC_FAMILIES[0])

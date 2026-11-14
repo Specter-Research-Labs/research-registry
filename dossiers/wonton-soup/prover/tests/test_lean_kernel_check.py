@@ -9,7 +9,7 @@ from prover.goal_signature import GoalSignatureConfig
 from prover.history import ExplorationHistory, TacticOutcome
 from prover.mcts import mcts_search
 from prover.providers.base import TacticProvider
-from prover.tests import LEAN_PROJECT, needs_lean
+from prover.tests import lean_project
 
 IMPLICIT_SIMP = "theorem {name} (l : List ℕ) : (l ++ []).length = l.length := by\n  sorry"
 
@@ -47,8 +47,7 @@ class _ListProvider(TacticProvider):
 async def _search(statement: str, tactics: list[str], max_iterations: int, after):
     from prover.adapters.lean import LeanAdapter
 
-    assert LEAN_PROJECT is not None
-    adapter = await LeanAdapter.create(LEAN_PROJECT)
+    adapter = await LeanAdapter.create(lean_project())
     async with adapter:
         history = ExplorationHistory.create("t")
         tree = await mcts_search(
@@ -76,7 +75,6 @@ def _check(statement: str, *, library_name: str | None, blocked: frozenset[str])
     return asyncio.run(_search(statement, ["simp"], 4, after))
 
 
-@needs_lean
 def test_kernel_check_records_premises_term_hash_and_self_citation():
     check = _check(
         IMPLICIT_SIMP.format(name="kc_ok"), library_name="List.append_nil", blocked=frozenset()
@@ -88,7 +86,6 @@ def test_kernel_check_records_premises_term_hash_and_self_citation():
     assert check.self_citation is True
 
 
-@needs_lean
 def test_kernel_check_rejects_proof_that_uses_a_blocked_premise():
     check = _check(
         IMPLICIT_SIMP.format(name="kc_blocked"),
@@ -130,7 +127,6 @@ def _cpu_load():
             burner.wait()
 
 
-@needs_lean
 def test_same_seed_gives_same_trace_under_cpu_load():
     quiet = _heavy_trace()
     with _cpu_load():

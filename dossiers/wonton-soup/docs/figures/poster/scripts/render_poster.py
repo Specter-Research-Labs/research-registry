@@ -62,7 +62,7 @@ def svg_text(
         f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" font-family="{family}" '
         f'font-size="{size}" font-weight="{weight}" fill="{fill}">'
         + "".join(tspans)
-        + f"</text>"
+        + "</text>"
     )
 
 

@@ -157,7 +157,8 @@ class GoalSigTedDistance:
         if entry is None:
             self.tree_errors[sig] = "missing_sig_in_goal_cache"
             return None
-        if entry.type_expr is None or any(h is None for h in entry.hyp_exprs):
+        hyp_exprs = [h for h in entry.hyp_exprs if h is not None]
+        if entry.type_expr is None or len(hyp_exprs) != len(entry.hyp_exprs):
             self.tree_errors[sig] = "missing_ast_for_sig"
             return None
 
@@ -167,7 +168,6 @@ class GoalSigTedDistance:
                 strict=False,
                 max_nodes=self.max_goal_tree_nodes,
             )
-            hyp_exprs = list(entry.hyp_exprs)
             hyp_exprs.sort(key=lambda dag: hash_normalized_goal_ast(dag, strict=False))
             hyp_trees = tuple(
                 goal_ast_dag_to_tree(h, strict=False, max_nodes=self.max_goal_tree_nodes)

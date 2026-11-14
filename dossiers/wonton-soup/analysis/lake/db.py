@@ -128,11 +128,6 @@ def run_key_for_run_dir(run_dir: Path) -> str:
     return _stable_id(str(run_dir.resolve()))
 
 
-def run_key_for(root_id: str, rel_run_dir: str) -> str:
-    # Legacy v5 identity helper kept for compatibility with older callers/tests.
-    return _stable_id(root_id, rel_run_dir)
-
-
 def run_dir_where_clause(*, root: Path, column: str = "run_dir") -> tuple[str, list[str]]:
     resolved = str(root.resolve())
     return f"({column} = ? OR {column} LIKE ?)", [resolved, resolved + "/%"]

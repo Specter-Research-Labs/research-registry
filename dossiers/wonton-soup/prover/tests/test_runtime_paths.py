@@ -81,7 +81,6 @@ def test_local_runtime_roots_use_runtime_env_when_set(
     monkeypatch.setenv("SPECTER_RUNTIME_ROOT", str(tmp_path))
     runtime_root = tmp_path / rp.DOSSIER_NAME
     assert rp.local_runtime_logs_root() == runtime_root / "logs"
-    assert rp.local_runtime_log_archives_root() == runtime_root / "log-archives"
     assert rp.local_runtime_artifacts_root() == runtime_root / "artifacts"
     assert rp.local_runtime_corpora_root() == runtime_root / "corpora"
 

@@ -162,14 +162,6 @@ class CorpusRef:
     build_id: str | None = None
     derived: str | None = None
 
-    def to_string(self) -> str:
-        suffix = ""
-        if self.build_id is not None:
-            suffix += f"@{self.build_id}"
-        if self.derived is not None:
-            suffix += f"#{self.derived}"
-        return f"{self.backend}:{self.corpus_id}{suffix}"
-
 
 def parse_corpus_ref(raw: str) -> CorpusRef:
     """Parse a corpus ref string: <backend>:<corpus_id>[@<build_id>][#<derived_path>]."""

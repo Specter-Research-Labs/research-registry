@@ -1,12 +1,13 @@
-"""Sample many continuations of one prompt while keeping a single copy of everything computed from the prompt.
+"""Sample many continuations of one prompt, keeping one copy of everything computed from it.
 
-Generating n samples through `generate(num_return_sequences=n)` copies the prompt's cache (a decoder-only model's
-prompt keys and values, or an encoder-decoder model's encoder output) n times; on a CPU that copying and the per-step
-overhead of `generate` dominate the runtime. Here the prompt-derived keys and values stay at batch size one, and each
-step attends to them by folding the n samples into the query rows, with a separate small cache for generated tokens.
+Generating n samples through `generate(num_return_sequences=n)` copies the prompt's cache (a
+decoder-only model's prompt keys and values, or an encoder-decoder model's encoder output) n times;
+on a CPU that copying and the per-step overhead of `generate` dominate the runtime. Here the
+prompt-derived keys and values stay at batch size one, and each step attends to them by folding the
+n samples into the query rows, with a separate small cache for generated tokens.
 """
 
-from typing import Any
+from typing import Any, cast
 
 
 def sample_shared_prefix(
@@ -33,7 +34,7 @@ def sample_shared_prefix(
     with torch.no_grad():
         cache = DynamicCache(config=config)
         model(input_ids=input_ids[:, :-1], past_key_values=cache, use_cache=True)
-        prefix = [(layer.keys, layer.values) for layer in cache.layers]
+        prefix = [(layer.keys, layer.values) for layer in cast(list[Any], cache.layers)]
         prefix_len = input_ids.shape[1] - 1
         suffix = [
             (
@@ -58,15 +59,23 @@ def sample_shared_prefix(
                 ks[:, :, step : step + 1] = k
                 vs[:, :, step : step + 1] = v
                 seen = step + 1
-                # (1, heads, n, head_dim): the samples become query rows against the single prompt cache.
+                # (1, heads, n, head_dim): the samples become query rows against the single
+                # prompt cache.
                 q_rows = q.permute(2, 1, 0, 3)
                 scores_prefix = torch.matmul(q_rows, kp.transpose(-1, -2)) * attn.scaling
                 scores_suffix = torch.matmul(q, ks[:, :, :seen].transpose(-1, -2)) * attn.scaling
-                scores = torch.cat([scores_prefix, scores_suffix.permute(2, 1, 0, 3).reshape(1, heads, n, seen)], -1)
+                scores = torch.cat(
+                    [scores_prefix, scores_suffix.permute(2, 1, 0, 3).reshape(1, heads, n, seen)],
+                    -1,
+                )
                 weights = scores.float().softmax(-1).to(dtype)
                 out_prefix = torch.matmul(weights[..., :prefix_len], vp)
                 w_suffix = weights[..., prefix_len:].permute(2, 1, 0, 3).reshape(n, heads, 1, seen)
-                out_suffix = torch.matmul(w_suffix, vs[:, :, :seen]).permute(2, 1, 0, 3).reshape(1, heads, n, head_dim)
+                out_suffix = (
+                    torch.matmul(w_suffix, vs[:, :, :seen])
+                    .permute(2, 1, 0, 3)
+                    .reshape(1, heads, n, head_dim)
+                )
                 out = (out_prefix + out_suffix).permute(2, 0, 1, 3).reshape(n, 1, heads * head_dim)
                 x = x + attn.o_proj(out)
                 x = x + layer.mlp(layer.post_attention_layernorm(x))
@@ -89,7 +98,7 @@ def sample_shared_encoder(
     temperature: float,
     top_p: float,
 ) -> Any:
-    """T5 encoder-decoder sampling; finished samples are padded with the pad token, as `generate` does."""
+    """T5 encoder-decoder sampling; finished samples are pad-filled the way `generate` does."""
     import torch
 
     config = model.config
@@ -103,8 +112,14 @@ def sample_shared_encoder(
         encoded = model.encoder(input_ids=input_ids).last_hidden_state
         cross = [
             (
-                block.layer[1].EncDecAttention.k(encoded).view(1, -1, heads, head_dim).transpose(1, 2),
-                block.layer[1].EncDecAttention.v(encoded).view(1, -1, heads, head_dim).transpose(1, 2),
+                block.layer[1]
+                .EncDecAttention.k(encoded)
+                .view(1, -1, heads, head_dim)
+                .transpose(1, 2),
+                block.layer[1]
+                .EncDecAttention.v(encoded)
+                .view(1, -1, heads, head_dim)
+                .transpose(1, 2),
             )
             for block in blocks
         ]
@@ -122,7 +137,9 @@ def sample_shared_encoder(
         generated = []
         for step in range(max_new_tokens):
             seen = step + 1
-            position_bias = bias_attention.compute_bias(1, seen, device=device, past_seen_tokens=step)
+            position_bias = bias_attention.compute_bias(
+                1, seen, device=device, past_seen_tokens=step
+            )
             x = decoder.embed_tokens(tokens)
             for block, (kc, vc), (ks, vs) in zip(blocks, cross, self_kv):
                 attn = block.layer[0].SelfAttention
@@ -136,10 +153,16 @@ def sample_shared_encoder(
 
                 cross_attn = block.layer[1].EncDecAttention
                 h = block.layer[1].layer_norm(x)
-                # (1, heads, n, head_dim): the samples become query rows against the single encoder output.
+                # (1, heads, n, head_dim): the samples become query rows against the single
+                # encoder output.
                 q_rows = cross_attn.q(h).view(n, heads, head_dim).transpose(0, 1).unsqueeze(0)
                 weights = torch.matmul(q_rows, kc.transpose(-1, -2)).float().softmax(-1).to(dtype)
-                out = torch.matmul(weights, vc).squeeze(0).transpose(0, 1).reshape(n, 1, heads * head_dim)
+                out = (
+                    torch.matmul(weights, vc)
+                    .squeeze(0)
+                    .transpose(0, 1)
+                    .reshape(n, 1, heads * head_dim)
+                )
                 x = x + cross_attn.o(out)
 
                 x = x + block.layer[2].DenseReluDense(block.layer[2].layer_norm(x))

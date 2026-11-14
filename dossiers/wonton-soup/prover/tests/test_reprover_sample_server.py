@@ -3,10 +3,8 @@ import threading
 import time
 from pathlib import Path
 
-import pytest
-
-torch = pytest.importorskip("torch")
-transformers = pytest.importorskip("transformers")
+import torch
+import transformers
 
 from prover.providers import reprover_sample_server
 from prover.providers.reprover_sample_server import BatchedSampler, Request, request_samples
@@ -23,11 +21,11 @@ def _tiny_t5():
         num_decoder_layers=2,
         num_heads=4,
         feed_forward_proj="gated-gelu",
-        tie_word_embeddings=False,
-        decoder_start_token_id=0,
         eos_token_id=1,
         pad_token_id=0,
     )
+    config.scale_decoder_outputs = False
+    config.decoder_start_token_id = 0
     return transformers.T5ForConditionalGeneration(config).eval()
 
 

@@ -29,7 +29,6 @@ from orchestrator.lean_metadata import (
 from orchestrator.lean_metadata import write_run_config as _write_run_config
 from orchestrator.lean_options import BUDGET_PRESETS
 from orchestrator.lean_progress import CorpusProgress
-from orchestrator.lean_progress import ProgressCallback as _ProgressCallback
 from orchestrator.provenance import record_run_provenance
 from prover.mcts import ExpansionPolicy, coerce_expansion_policy
 from run_capabilities import default_run_capabilities, normalize_run_capabilities
@@ -264,8 +263,6 @@ class CrashedTheorem:
             payload["repl_messages"] = self.repl_messages
         return payload
 
-
-ProgressCallback = _ProgressCallback
 
 def handle_lean_exception(
     e: LeanInteractionException | LeanProcessException,
