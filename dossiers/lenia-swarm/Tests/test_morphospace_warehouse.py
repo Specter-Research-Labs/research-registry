@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import sqlite3
 from datetime import datetime
@@ -25,6 +26,7 @@ from lenia_swarm_analysis.morphospace.derive_status import derive_status
 from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
 from lenia_swarm_analysis.morphospace.ingest_library import ingest_library_index
 from lenia_swarm_analysis.morphospace.ingest_replay import ingest_replay_batch
+from lenia_swarm_analysis.morphospace.provenance import LENIA_SOURCE_ID
 from lenia_swarm_analysis.morphospace.run_topology import run_topology
 from lenia_swarm_analysis.morphospace.schema import SCHEMA_VERSION
 from lenia_swarm_analysis.morphospace.warehouse import (
@@ -88,6 +90,13 @@ def _write_json(path: Path, value: object) -> None:
 def _write_jsonl(path: Path, rows: Sequence[object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+
+
+def _write_receipt(run_dir: Path, engine_id: str = "engine-a") -> None:
+    _write_json(
+        run_dir / "receipt.json",
+        {"receipt_version": 1, "engine_id": engine_id, "build": {"source_commit": "a" * 40}},
+    )
 
 
 def _scalar_int(connection: Any, query: str) -> int:
@@ -247,6 +256,7 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "centerVelocity": 0.04,
                 "pathTortuosity": 3.5,
             },
+            "descriptorVersion": 1,
         },
         {
             "specimenId": "specimen-b",
@@ -282,15 +292,18 @@ def _make_replay_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
                 "centerVelocity": 0.02,
                 "pathTortuosity": 2.8,
             },
+            "descriptorVersion": 1,
         },
     ]
     _write_jsonl(traces_path, summary_rows)
+    _write_receipt(tmp_path)
     return traces_path, {"rows": summary_rows}
 
 
 def _make_replay_root_fixture(tmp_path: Path) -> tuple[Path, Path]:
     traces_path, fixture = _make_replay_fixture(tmp_path / "source")
     replay_root = tmp_path / "replay-root"
+    _write_receipt(replay_root)
     rows = fixture["rows"]
     if not isinstance(rows, list):
         raise AssertionError("fixture rows must be a list")
@@ -315,6 +328,7 @@ def _make_replay_root_fixture(tmp_path: Path) -> tuple[Path, Path]:
             [
                 {
                     "descriptor_bundle": {
+                        "descriptorVersion": 1,
                         "terminal": row["terminal"],
                         "trajectory": row["trajectory"],
                     }
@@ -336,6 +350,7 @@ def _make_replay_root_fixture(tmp_path: Path) -> tuple[Path, Path]:
                         "name": row["specimenName"],
                         "initialConditionFamily": row["initialConditionFamily"],
                         "descriptorBundle": {
+                            "descriptorVersion": 1,
                             "terminal": row["terminal"],
                             "trajectory": row["trajectory"],
                         },
@@ -442,9 +457,24 @@ def _make_compendium_fixture(
                 trajectory_descriptor_json TEXT,
                 runtime_family TEXT,
                 runtime_capabilities_json TEXT,
-                specimen_manifest_json TEXT
+                specimen_manifest_json TEXT,
+                descriptor_version INTEGER NOT NULL
             )
             """
+        )
+        connection.execute(
+            """
+            CREATE TABLE runs (
+                run_id TEXT PRIMARY KEY,
+                engine_id TEXT NOT NULL,
+                source_commit TEXT,
+                receipt_sha256 TEXT
+            )
+            """
+        )
+        connection.execute(
+            "INSERT INTO runs VALUES (?, ?, ?, ?)",
+            ("run-1", "engine-a", "a" * 40, "b" * 64),
         )
         terminal = _terminal(
             mass=15.0,
@@ -492,7 +522,7 @@ def _make_compendium_fixture(
         )
         connection.execute(
             """
-            INSERT INTO specimens VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO specimens VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 "specimen-1",
@@ -512,6 +542,7 @@ def _make_compendium_fixture(
                 None,
                 None,
                 json.dumps(specimen_manifest) if specimen_manifest is not None else None,
+                1,
             ),
         )
         connection.commit()
@@ -547,6 +578,7 @@ def test_morphospace_library_ingest_accepts_numeric_recorded_at(tmp_path: Path) 
                     "id": "creature-1",
                     "initialConditionFamily": "initfam:v2:single_patch:abcd",
                     "descriptorBundle": {
+                        "descriptorVersion": 1,
                         "terminal": _terminal(
                             mass=15.0,
                             occupancy=0.14,
@@ -569,6 +601,7 @@ def test_morphospace_library_ingest_accepts_numeric_recorded_at(tmp_path: Path) 
     ).decode("ascii")
     _write_jsonl(library_path, [payload])
 
+    _write_receipt(tmp_path)
     connection = connect_database(tmp_path / "morphospace.duckdb")
     try:
         study_id = ingest_library_index(connection, index_path=library_path)
@@ -655,6 +688,7 @@ def test_morphospace_library_ingest_prefers_specimen_manifest_contract(tmp_path:
                     "name": "manifest-preferred",
                     "initialConditionFamily": "row-init",
                     "descriptorBundle": {
+                        "descriptorVersion": 1,
                         "terminal": _terminal(
                             mass=15.0,
                             occupancy=0.14,
@@ -672,6 +706,7 @@ def test_morphospace_library_ingest_prefers_specimen_manifest_contract(tmp_path:
         ],
     )
 
+    _write_receipt(tmp_path)
     connection = connect_database(tmp_path / "library-manifest.duckdb")
     try:
         ingest_library_index(connection, index_path=library_path)
@@ -715,6 +750,57 @@ def test_morphospace_library_ingest_prefers_specimen_manifest_contract(tmp_path:
             "manifest-runtime",
             "manifest-canonical",
         )
+    finally:
+        connection.close()
+
+
+def test_morphospace_replay_ingest_records_receipt_provenance(tmp_path: Path) -> None:
+    traces_path, _fixture = _make_replay_fixture(tmp_path)
+    receipt_sha256 = hashlib.sha256((tmp_path / "receipt.json").read_bytes()).hexdigest()
+
+    connection = connect_database(tmp_path / "morphospace.duckdb")
+    try:
+        ingest_replay_batch(connection, development_traces_path=traces_path)
+        rows = connection.execute(
+            """
+            SELECT engine_id, source_commit, receipt_sha256, descriptor_version
+            FROM specimens ORDER BY specimen_id
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+    assert rows == [("engine-a", "a" * 40, receipt_sha256, 1)] * 2
+
+
+def test_morphospace_replay_ingest_requires_engine_for_legacy_runs(tmp_path: Path) -> None:
+    traces_path, _fixture = _make_replay_fixture(tmp_path)
+    (tmp_path / "receipt.json").unlink()
+
+    connection = connect_database(tmp_path / "morphospace.duckdb")
+    try:
+        with pytest.raises(ValueError, match="has no receipt.json; pass --engine-id"):
+            ingest_replay_batch(connection, development_traces_path=traces_path)
+        ingest_replay_batch(
+            connection,
+            development_traces_path=traces_path,
+            legacy_engine_id="legacy-engine",
+        )
+        rows = connection.execute(
+            "SELECT DISTINCT engine_id, source_commit, receipt_sha256 FROM specimens"
+        ).fetchall()
+    finally:
+        connection.close()
+    assert rows == [("legacy-engine", None, None)]
+
+    _write_receipt(tmp_path, engine_id="engine-a")
+    connection = connect_database(tmp_path / "other.duckdb")
+    try:
+        with pytest.raises(ValueError, match="contradicts"):
+            ingest_replay_batch(
+                connection,
+                development_traces_path=traces_path,
+                legacy_engine_id="legacy-engine",
+            )
     finally:
         connection.close()
 
@@ -915,7 +1001,7 @@ def test_morphospace_compendium_ingest_preserves_raw_rows_and_metadata(
     connection = connect_database(tmp_path / "compendium.duckdb")
     try:
         study_id = ingest_compendium(connection, compendium_path=compendium_path)
-        assert _scalar_int(connection, "SELECT COUNT(*) FROM raw_sqlite_rows") == 3
+        assert _scalar_int(connection, "SELECT COUNT(*) FROM raw_sqlite_rows") == 4
         specimen = connection.execute(
             """
             SELECT source_creature_id, search_is_stable_candidate, export_dir
@@ -1242,11 +1328,13 @@ def test_morphospace_cli_exports_supported_warehouse_packets(
     assert discovery_payload["summary"]["candidateCount"] == 1
 
 
-def test_morphospace_cli_compares_feature_cohorts(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
+def _make_cohort_warehouse(
+    warehouse_path: Path,
+    *,
+    source_id: str,
+    left_engine: str | None,
+    right_engine: str | None,
 ) -> None:
-    warehouse_path = tmp_path / "cohorts.duckdb"
     connection = connect_database(warehouse_path)
     try:
         study_id = register_study(
@@ -1256,7 +1344,7 @@ def test_morphospace_cli_compares_feature_cohorts(
         )
         upsert_morphospace_source(
             connection,
-            source_id="synthetic_fixture",
+            source_id=source_id,
             source_kind="fixture",
             label="Synthetic fixture",
         )
@@ -1293,12 +1381,13 @@ def test_morphospace_cli_compares_feature_cohorts(
             context_kind="baseline",
             label="baseline",
         )
-        for specimen_id, run_id, source_algorithm, canonical_family, values in [
+        for specimen_id, run_id, source_algorithm, canonical_family, engine_id, values in [
             (
                 "fixture-left",
                 "run-left-nofood",
                 "manual-left",
                 "left-family",
+                left_engine,
                 {"x": 0.0, "y": 0.0},
             ),
             (
@@ -1306,6 +1395,7 @@ def test_morphospace_cli_compares_feature_cohorts(
                 "run-right-food",
                 "manual-right",
                 "right-family",
+                right_engine,
                 {"x": 3.0, "y": 4.0},
             ),
         ]:
@@ -1319,6 +1409,7 @@ def test_morphospace_cli_compares_feature_cohorts(
                     "source_mode": "cohort-test",
                     "source_algorithm": source_algorithm,
                     "canonical_family": canonical_family,
+                    "engine_id": engine_id,
                     "provenance_json": {},
                 },
             )
@@ -1329,7 +1420,7 @@ def test_morphospace_cli_compares_feature_cohorts(
                 observation_id=observation_id,
                 specimen_id=specimen_id,
                 study_id=study_id,
-                source_id="synthetic_fixture",
+                source_id=source_id,
                 context_id=context_id,
                 observation_kind="fixture_embedding",
             )
@@ -1345,36 +1436,51 @@ def test_morphospace_cli_compares_feature_cohorts(
     finally:
         connection.close()
 
-    assert morphospace_main(
-        [
-            "compare-feature-cohorts",
-            "--warehouse",
-            str(warehouse_path),
-            "--feature-space-id",
-            "fixture_space",
-            "--left-label",
-            "left",
-            "--left-run-id-contains",
-            "run-left",
-            "--left-source-mode",
-            "cohort-test",
-            "--left-source-algorithm",
-            "manual-left",
-            "--left-canonical-family",
-            "left-family",
-            "--right-label",
-            "right",
-            "--right-run-id-contains",
-            "run-right",
-            "--right-source-mode",
-            "cohort-test",
-            "--right-source-algorithm",
-            "manual-right",
-            "--right-canonical-family",
-            "right-family",
-            "--json",
-        ]
-    ) == 0
+
+def _compare_cohort_args(warehouse_path: Path) -> list[str]:
+    return [
+        "compare-feature-cohorts",
+        "--warehouse",
+        str(warehouse_path),
+        "--feature-space-id",
+        "fixture_space",
+        "--left-label",
+        "left",
+        "--left-run-id-contains",
+        "run-left",
+        "--left-source-mode",
+        "cohort-test",
+        "--left-source-algorithm",
+        "manual-left",
+        "--left-canonical-family",
+        "left-family",
+        "--right-label",
+        "right",
+        "--right-run-id-contains",
+        "run-right",
+        "--right-source-mode",
+        "cohort-test",
+        "--right-source-algorithm",
+        "manual-right",
+        "--right-canonical-family",
+        "right-family",
+        "--json",
+    ]
+
+
+def test_morphospace_cli_compares_feature_cohorts(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    warehouse_path = tmp_path / "cohorts.duckdb"
+    _make_cohort_warehouse(
+        warehouse_path,
+        source_id="synthetic_fixture",
+        left_engine=None,
+        right_engine=None,
+    )
+
+    assert morphospace_main(_compare_cohort_args(warehouse_path)) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["packetKind"] == "comparative_feature_cohort_comparison_v1"
     assert payload["summary"]["left"]["observationCount"] == 1
@@ -1391,6 +1497,57 @@ def test_morphospace_cli_compares_feature_cohorts(
     assert payload["nearestMatches"]["leftToRight"][0]["left"]["specimenId"] == "fixture-left"
     assert payload["nearestMatches"]["leftToRight"][0]["right"]["specimenId"] == "fixture-right"
     assert payload["nearestMatches"]["leftToRight"][0]["axisDeltas"][0]["axisId"] == "y"
+
+
+def test_morphospace_cli_refuses_lenia_cohorts_from_different_engines(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    warehouse_path = tmp_path / "cohorts.duckdb"
+    _make_cohort_warehouse(
+        warehouse_path,
+        source_id=LENIA_SOURCE_ID,
+        left_engine="engine-a",
+        right_engine="engine-b",
+    )
+
+    with pytest.raises(ValueError, match="mixes engines engine-a, engine-b"):
+        morphospace_main(_compare_cohort_args(warehouse_path))
+    with pytest.raises(ValueError, match="engines engine-b that --pool-engines does not name"):
+        morphospace_main(
+            [*_compare_cohort_args(warehouse_path), "--pool-engines", "engine-a,engine-c"]
+        )
+
+    assert morphospace_main(
+        [*_compare_cohort_args(warehouse_path), "--pool-engines", "engine-a,engine-b"]
+    ) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["summary"]["crossDistance"]["mean"] == 5.0
+
+
+def test_upsert_specimen_refuses_merge_across_engines(tmp_path: Path) -> None:
+    connection = connect_database(tmp_path / "warehouse.duckdb")
+    try:
+        study_id = register_study(connection, study_kind="fixture", label="engines")
+        row = {
+            "specimen_id": "specimen-1",
+            "study_id": study_id,
+            "source_kind": "result",
+            "engine_id": "engine-a",
+            "provenance_json": {"first": True},
+        }
+        upsert_specimen(connection, row)
+        upsert_specimen(connection, {**row, "provenance_json": {"second": True}})
+        with pytest.raises(ValueError, match="already recorded from engine engine-a"):
+            upsert_specimen(connection, {**row, "engine_id": "engine-b"})
+        stored = connection.execute(
+            "SELECT engine_id, provenance_json FROM specimens WHERE specimen_id = 'specimen-1'"
+        ).fetchone()
+        assert stored is not None
+        assert stored[0] == "engine-a"
+        assert json.loads(stored[1]) == {"first": True, "second": True}
+    finally:
+        connection.close()
 
 
 def test_feature_tda_profile_bounds_thresholded_large_cohorts(
@@ -1487,6 +1644,7 @@ def test_feature_tda_profile_bounds_thresholded_large_cohorts(
                     "source_kind": "fixture",
                     "source_mode": "unit",
                     "source_algorithm": "manual",
+                    "engine_id": None,
                     "provenance_json": {},
                 },
             )

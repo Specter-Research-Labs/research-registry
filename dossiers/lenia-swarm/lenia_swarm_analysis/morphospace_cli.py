@@ -11,7 +11,11 @@ from lenia_swarm_analysis.morphospace.atlas_evidence import (
 )
 from lenia_swarm_analysis.morphospace.catalog_qc import apply_shape_behavior_qc
 from lenia_swarm_analysis.morphospace.common_morphology import derive_common_morphology
-from lenia_swarm_analysis.morphospace.creature_definition import assess_replay, classify_ensemble
+from lenia_swarm_analysis.morphospace.creature_definition import (
+    assess_replay,
+    classify_ensemble,
+    sweep_thresholds,
+)
 from lenia_swarm_analysis.morphospace.derive_anatomy import derive_anatomy
 from lenia_swarm_analysis.morphospace.derive_axes import derive_axes
 from lenia_swarm_analysis.morphospace.derive_lenia_features import (
@@ -46,6 +50,7 @@ from lenia_swarm_analysis.morphospace.ingest_embryomaker import (
 )
 from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_reference_bundle
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
+from lenia_swarm_analysis.morphospace.provenance import parse_pool_engines
 from lenia_swarm_analysis.morphospace.regeneration import (
     PROFILES,
     retire_restart_fields,
@@ -103,6 +108,20 @@ def _reshape_spec(value: str) -> tuple[str, float]:
 
 def _add_json(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--json", action="store_true")
+
+
+def _add_pool_engines(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--pool-engines",
+        help="comma-separated engine ids to pool explicitly; mixed engines are refused otherwise",
+    )
+
+
+def _add_legacy_assessment_engine(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--engine-id",
+        help="engine of assessments written before engines were recorded; refused when one names another",
+    )
 
 
 def _add_feature_filter_args(parser: argparse.ArgumentParser) -> None:
@@ -229,6 +248,7 @@ def promote_results_packet(
     source_mode: str,
     source_algorithm: str,
     batch_size: int,
+    legacy_engine_id: str | None,
 ) -> dict[str, Any]:
     return promote_results_jsonl(
         compendium_path=compendium_path,
@@ -237,6 +257,7 @@ def promote_results_packet(
         source_mode=source_mode,
         source_algorithm=source_algorithm,
         batch_size=batch_size,
+        legacy_engine_id=legacy_engine_id,
     )
 
 
@@ -418,6 +439,7 @@ def export_feature_matrix_packet(
     observation_kind: str | None = None,
     source_algorithm: str | None = None,
     canonical_family: str | None = None,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
         return export_feature_matrix(
@@ -433,6 +455,7 @@ def export_feature_matrix_packet(
             observation_kind=observation_kind,
             source_algorithm=source_algorithm,
             canonical_family=canonical_family,
+            pool_engines=pool_engines,
         )
 
     return _using_warehouse(warehouse_path, run, read_only=True)
@@ -454,6 +477,7 @@ def run_feature_tda_packet(
     canonical_family: str | None = None,
     max_homology_dim: int = 1,
     summary_only: bool = False,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
         payload = run_feature_tda(
@@ -470,6 +494,7 @@ def run_feature_tda_packet(
             source_algorithm=source_algorithm,
             canonical_family=canonical_family,
             max_homology_dim=max_homology_dim,
+            pool_engines=pool_engines,
         )
         return _feature_tda_summary_payload(payload) if summary_only else payload
 
@@ -494,6 +519,7 @@ def run_feature_tda_profile_packet(
     max_homology_dim: int = 1,
     stratify_by: str = "rule_family_key",
     seed: int = 0,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
         return run_feature_tda_profile(
@@ -513,6 +539,7 @@ def run_feature_tda_profile_packet(
             max_homology_dim=max_homology_dim,
             stratify_by=stratify_by,
             seed=seed,
+            pool_engines=pool_engines,
         )
 
     return _using_warehouse(warehouse_path, run, read_only=True)
@@ -543,6 +570,7 @@ def compare_feature_cohorts_packet(
     right_observation_kind: str | None = None,
     right_source_algorithm: str | None = None,
     right_canonical_family: str | None = None,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
         return compare_feature_cohorts(
@@ -569,6 +597,7 @@ def compare_feature_cohorts_packet(
             right_observation_kind=right_observation_kind,
             right_source_algorithm=right_source_algorithm,
             right_canonical_family=right_canonical_family,
+            pool_engines=pool_engines,
         )
 
     return _using_warehouse(warehouse_path, run, read_only=True)
@@ -625,6 +654,7 @@ def build_high_fiber_null_validation(
     seed: int = 20260527,
     min_region_count: int = 128,
     output_path: Path | None = None,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     def run(connection: Any) -> dict[str, Any]:
         return build_high_fiber_null_validation_packet(
@@ -634,6 +664,7 @@ def build_high_fiber_null_validation(
             null_replicates=null_replicates,
             seed=seed,
             min_region_count=min_region_count,
+            pool_engines=pool_engines,
         )
 
     payload = _using_warehouse(warehouse_path, run, read_only=True)
@@ -725,6 +756,10 @@ def _build_parser() -> argparse.ArgumentParser:
     promote.add_argument("--source-mode", default="atlas-random")
     promote.add_argument("--source-algorithm", default="fl-2c20-motion-scorev2")
     promote.add_argument("--batch-size", type=int, default=2048)
+    promote.add_argument(
+        "--engine-id",
+        help="engine of a legacy run dir without receipt.json; refused when a receipt names another",
+    )
     _add_json(promote)
     promote.set_defaults(
         handler=lambda args: promote_results_packet(
@@ -734,6 +769,7 @@ def _build_parser() -> argparse.ArgumentParser:
             source_mode=str(args.source_mode),
             source_algorithm=str(args.source_algorithm),
             batch_size=int(args.batch_size),
+            legacy_engine_id=args.engine_id,
         )
     )
 
@@ -899,6 +935,7 @@ def _build_parser() -> argparse.ArgumentParser:
     matrix.add_argument("--feature-space-id", required=True)
     matrix.add_argument("--value-column", default="normalized_value")
     _add_feature_filter_args(matrix)
+    _add_pool_engines(matrix)
     _add_json(matrix)
     matrix.set_defaults(
         handler=lambda args: export_feature_matrix_packet(
@@ -906,6 +943,7 @@ def _build_parser() -> argparse.ArgumentParser:
             feature_space_id=str(args.feature_space_id),
             value_column=str(args.value_column),
             **_feature_filter_kwargs(args),
+            pool_engines=parse_pool_engines(args.pool_engines),
         )
     )
 
@@ -919,6 +957,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_feature_filter_args(feature_tda)
     feature_tda.add_argument("--max-homology-dim", type=int, default=1)
     feature_tda.add_argument("--summary-only", action="store_true")
+    _add_pool_engines(feature_tda)
     _add_json(feature_tda)
     feature_tda.set_defaults(
         handler=lambda args: run_feature_tda_packet(
@@ -928,6 +967,7 @@ def _build_parser() -> argparse.ArgumentParser:
             **_feature_filter_kwargs(args),
             max_homology_dim=int(args.max_homology_dim),
             summary_only=bool(args.summary_only),
+            pool_engines=parse_pool_engines(args.pool_engines),
         )
     )
 
@@ -943,6 +983,7 @@ def _build_parser() -> argparse.ArgumentParser:
     feature_tda_profile.add_argument("--max-homology-dim", type=int, default=1)
     feature_tda_profile.add_argument("--stratify-by", default="rule_family_key")
     feature_tda_profile.add_argument("--seed", type=int, default=0)
+    _add_pool_engines(feature_tda_profile)
     _add_json(feature_tda_profile)
     feature_tda_profile.set_defaults(
         handler=lambda args: run_feature_tda_profile_packet(
@@ -954,6 +995,7 @@ def _build_parser() -> argparse.ArgumentParser:
             max_homology_dim=int(args.max_homology_dim),
             stratify_by=str(args.stratify_by),
             seed=int(args.seed),
+            pool_engines=parse_pool_engines(args.pool_engines),
         )
     )
 
@@ -968,6 +1010,7 @@ def _build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--right-label", default="right")
     _add_cohort_filter_args(compare, "left")
     _add_cohort_filter_args(compare, "right")
+    _add_pool_engines(compare)
     _add_json(compare)
     compare.set_defaults(
         handler=lambda args: compare_feature_cohorts_packet(
@@ -978,6 +1021,7 @@ def _build_parser() -> argparse.ArgumentParser:
             right_label=str(args.right_label),
             **_cohort_filter_kwargs(args, "left"),
             **_cohort_filter_kwargs(args, "right"),
+            pool_engines=parse_pool_engines(args.pool_engines),
         )
     )
 
@@ -1033,6 +1077,7 @@ def _build_parser() -> argparse.ArgumentParser:
     high_fiber_null.add_argument("--seed", type=int, default=20260527)
     high_fiber_null.add_argument("--min-region-count", type=int, default=128)
     high_fiber_null.add_argument("--output", type=Path)
+    _add_pool_engines(high_fiber_null)
     _add_json(high_fiber_null)
     high_fiber_null.set_defaults(
         handler=lambda args: build_high_fiber_null_validation(
@@ -1043,6 +1088,7 @@ def _build_parser() -> argparse.ArgumentParser:
             seed=int(args.seed),
             min_region_count=int(args.min_region_count),
             output_path=_resolve_optional_path(args.output),
+            pool_engines=parse_pool_engines(args.pool_engines),
         )
     )
 
@@ -1054,6 +1100,10 @@ def _build_parser() -> argparse.ArgumentParser:
     creatures.add_argument("--output", required=True, type=Path)
     creatures.add_argument("--horizon", required=True, type=int)
     creatures.add_argument("--workers", required=True, type=int)
+    creatures.add_argument(
+        "--engine-id",
+        help="engine of a legacy replay with neither receipt.json nor manifest engines",
+    )
     _add_json(creatures)
     creatures.set_defaults(
         handler=lambda args: assess_replay(
@@ -1061,6 +1111,7 @@ def _build_parser() -> argparse.ArgumentParser:
             output_path=args.output.resolve(),
             horizon=int(args.horizon),
             workers=int(args.workers),
+            legacy_engine_id=args.engine_id,
         )
     )
 
@@ -1103,11 +1154,29 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     ensemble.add_argument("--assessment", required=True, type=Path, action="append")
     ensemble.add_argument("--output", required=True, type=Path)
+    _add_legacy_assessment_engine(ensemble)
     _add_json(ensemble)
     ensemble.set_defaults(
         handler=lambda args: classify_ensemble(
             assessments=[p.resolve() for p in args.assessment],
             output_path=args.output.resolve(),
+            legacy_engine_id=args.engine_id,
+        )
+    )
+
+    sweep = subparsers.add_parser(
+        "sweep-creature-thresholds",
+        help="Re-classify torus assessments with each provisional threshold moved over a fixed grid",
+    )
+    sweep.add_argument("--assessment", required=True, type=Path, action="append")
+    sweep.add_argument("--output", required=True, type=Path)
+    _add_legacy_assessment_engine(sweep)
+    _add_json(sweep)
+    sweep.set_defaults(
+        handler=lambda args: sweep_thresholds(
+            assessments=[p.resolve() for p in args.assessment],
+            output_path=args.output.resolve(),
+            legacy_engine_id=args.engine_id,
         )
     )
 
@@ -1193,6 +1262,8 @@ def _build_parser() -> argparse.ArgumentParser:
     requal_compare.add_argument("--ensemble", required=True, type=Path, action="append")
     requal_compare.add_argument("--prior-ensemble", type=Path, action="append", default=[])
     requal_compare.add_argument("--output", required=True, type=Path)
+    _add_legacy_assessment_engine(requal_compare)
+    _add_pool_engines(requal_compare)
     _add_json(requal_compare)
     requal_compare.set_defaults(
         handler=lambda args: compare_verdicts(
@@ -1201,6 +1272,8 @@ def _build_parser() -> argparse.ArgumentParser:
             ensembles=[p.resolve() for p in args.ensemble],
             prior_ensembles=[p.resolve() for p in args.prior_ensemble],
             output_path=args.output.resolve(),
+            pool_engines=parse_pool_engines(args.pool_engines),
+            legacy_engine_id=args.engine_id,
         )
     )
 

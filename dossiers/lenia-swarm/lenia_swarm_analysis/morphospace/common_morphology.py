@@ -32,6 +32,7 @@ from .ingest_embryomaker import (
 from .ingest_embryomaker import (
     load_embryomaker_node_points,
 )
+from .provenance import LENIA_SOURCE_ID
 from .warehouse import (
     json_text,
     normalize_optional_timestamp,
@@ -42,7 +43,6 @@ from .warehouse import (
     upsert_morphospace_source,
 )
 
-LENIA_SOURCE_ID = "lenia_swarm"
 FEATURE_SPACE_ID = "common_morphology_v1"
 FEATURE_SPACE_LABEL = "Common point-cloud morphology"
 OBSERVATION_KIND = "common_point_cloud_morphology"

@@ -9,6 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from lenia_swarm_analysis._io import read_json
+from lenia_swarm_analysis.morphospace.provenance import RunProvenance, read_run_provenance
 
 RUNTIME_CAPABILITIES = ["archive", "topology", "warehouse_ingest"]
 LOCAL_PROJECTION_OWNER = "local"
@@ -173,7 +174,9 @@ def _manifest(
     }
 
 
-def _result_values(row: dict[str, Any], *, run_id: str) -> tuple[Any, ...]:
+def _result_values(
+    row: dict[str, Any], *, run_id: str, provenance: RunProvenance
+) -> tuple[Any, ...]:
     seed = int(row["seed"])
     init_seed = int(row.get("init_seed", seed))
     result_id = f"{run_id}|overall|{seed}"
@@ -192,6 +195,9 @@ def _result_values(row: dict[str, Any], *, run_id: str) -> tuple[Any, ...]:
         _json(row.get("params") or {}),
         _optional_json(row.get("sweep")),
         row.get("worker_id"),
+        provenance.engine_id,
+        provenance.source_commit,
+        provenance.receipt_sha256,
     )
 
 
@@ -226,7 +232,7 @@ def _projection_values(
             f"{run_dir}/results.jsonl seed {seed}: "
             "descriptor_bundle lacks genotype/terminal"
         )
-    descriptor_version = int(descriptor_bundle.get("descriptorVersion", 1))
+    descriptor_version = int(descriptor_bundle["descriptorVersion"])
     symmetry_policy = str(
         descriptor_bundle.get("symmetryPolicy") or "translation_kernel_permutation_v1"
     )
@@ -350,13 +356,27 @@ def _ensure_run(
     source_mode: str,
     source_algorithm: str,
     recorded_at: str,
+    provenance: RunProvenance,
 ) -> None:
+    existing = connection.execute(
+        "SELECT engine_id, receipt_sha256 FROM runs WHERE run_id = ?", (run_id,)
+    ).fetchone()
+    if existing is not None and tuple(existing) != (
+        provenance.engine_id,
+        provenance.receipt_sha256,
+    ):
+        raise ValueError(
+            f"run {run_id} is already in the compendium from engine {existing[0]} "
+            f"(receipt {existing[1]}); refusing to merge engine {provenance.engine_id} "
+            f"(receipt {provenance.receipt_sha256}). Promote it under a new run id."
+        )
     connection.execute(
         """
         INSERT INTO runs (
             run_id, run_name, host_id, output_root, run_dir, indexed_at,
-            config_hash, source_mode, source_algorithm
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            config_hash, source_mode, source_algorithm,
+            engine_id, source_commit, receipt_sha256
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(run_id) DO UPDATE SET
             run_name = excluded.run_name,
             host_id = COALESCE(excluded.host_id, runs.host_id),
@@ -377,6 +397,9 @@ def _ensure_run(
             config_hash,
             source_mode,
             source_algorithm,
+            provenance.engine_id,
+            provenance.source_commit,
+            provenance.receipt_sha256,
         ),
     )
 
@@ -393,8 +416,8 @@ def _flush(
         INSERT OR REPLACE INTO results (
             id, run_id, campaign_id, seed, init_seed, score, filters_passed,
             backend, implementation_json, score_weights_json, metrics_json,
-            params_json, sweep_json, worker_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            params_json, sweep_json, worker_id, engine_id, source_commit, receipt_sha256
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         results,
     )
@@ -507,7 +530,9 @@ def promote_results_jsonl(
     source_mode: str = "atlas-random",
     source_algorithm: str = "fl-2c20-motion-scorev2",
     batch_size: int = 2048,
+    legacy_engine_id: str | None = None,
 ) -> dict[str, Any]:
+    provenance = read_run_provenance(run_dir, legacy_engine_id=legacy_engine_id)
     results_path = run_dir / "results.jsonl"
     config_path = run_dir / "config.json"
     search_path = run_dir / "search.json"
@@ -555,6 +580,7 @@ def promote_results_jsonl(
             source_mode=source_mode,
             source_algorithm=source_algorithm,
             recorded_at=recorded_at,
+            provenance=provenance,
         )
         connection.commit()
 
@@ -569,7 +595,7 @@ def promote_results_jsonl(
             if result_id in seen_result_ids:
                 continue
             seen_result_ids.add(result_id)
-            result_values.append(_result_values(row, run_id=run_id))
+            result_values.append(_result_values(row, run_id=run_id, provenance=provenance))
             specimen, creature = _projection_values(
                 row,
                 run_id=run_id,

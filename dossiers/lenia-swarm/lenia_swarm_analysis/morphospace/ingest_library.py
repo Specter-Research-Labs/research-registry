@@ -11,6 +11,7 @@ from lenia_swarm_analysis.transformation_metrics import (
     transform_axes,
 )
 
+from .provenance import read_run_provenance
 from .warehouse import (
     ingest_jsonl_rows,
     register_artifact,
@@ -132,7 +133,9 @@ def ingest_library_index(
     index_path: Path,
     study_id: str | None = None,
     label: str | None = None,
+    legacy_engine_id: str | None = None,
 ) -> str:
+    provenance = read_run_provenance(index_path.parent.parent, legacy_engine_id=legacy_engine_id)
     rows = [
         json.loads(line)
         for line in index_path.read_text(encoding="utf-8").splitlines()
@@ -196,6 +199,14 @@ def ingest_library_index(
                 "runtime_family": context["runtime_family"],
                 "runtime_capabilities_json": context["runtime_capabilities"],
                 "specimen_manifest_json": context["manifest"],
+                "engine_id": provenance.engine_id,
+                "source_commit": provenance.source_commit,
+                "receipt_sha256": provenance.receipt_sha256,
+                "descriptor_version": (
+                    descriptor_bundle["descriptorVersion"]
+                    if isinstance(descriptor_bundle, dict)
+                    else None
+                ),
                 "provenance_json": {
                     **row,
                     "research_metadata": research_metadata,

@@ -291,6 +291,7 @@ def ingest_dryad_fish_body_shape(
                 "canonical_family": _species_label(sample_name),
                 "recorded_at": source_manifest["publication_date"],
                 "results_path": str(pc_scores_path),
+                "engine_id": None,
                 "provenance_json": {
                     "sourceId": SOURCE_ID,
                     "sampleName": sample_name,

@@ -6,6 +6,7 @@ from duckdb import DuckDBPyConnection
 
 from lenia_swarm_analysis.transformation_metrics import TERMINAL_AXIS_SPECS
 
+from .provenance import LENIA_SOURCE_ID
 from .warehouse import (
     register_context,
     replace_feature_axes,
@@ -13,7 +14,7 @@ from .warehouse import (
     upsert_morphospace_source,
 )
 
-SOURCE_ID = "lenia_swarm"
+SOURCE_ID = LENIA_SOURCE_ID
 FEATURE_SPACE_ID = "lenia_terminal_v1"
 FEATURE_SPACE_LABEL = "Lenia terminal descriptor axes"
 AXIS_IDS = tuple(spec["id"] for spec in TERMINAL_AXIS_SPECS)

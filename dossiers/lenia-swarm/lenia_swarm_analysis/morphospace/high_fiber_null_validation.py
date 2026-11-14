@@ -9,6 +9,7 @@ import numpy as np
 from duckdb import DuckDBPyConnection
 
 from lenia_swarm_analysis._io import read_json
+from lenia_swarm_analysis.morphospace.provenance import require_engine_pool
 
 TRACK1_FAMILY_ALGORITHMS: dict[str, str] = {
     "2c10_r17_20": "fl-2c10-r17-20-initshift-harvest",
@@ -86,12 +87,13 @@ def _pivot_sql(feature_space_id: str, axes: list[str], alias: str) -> str:
                 specimen_id,
                 run_id,
                 source_algorithm,
+                engine_id,
 {columns}
             FROM comparison_feature_values_vw
             WHERE feature_space_id = '{feature_space_id}'
               AND source_id = 'lenia_swarm'
               AND source_algorithm = ?
-            GROUP BY specimen_id, run_id, source_algorithm
+            GROUP BY specimen_id, run_id, source_algorithm, engine_id
         )
     """
 
@@ -102,7 +104,7 @@ def _load_family_joined(
     source_algorithm: str,
     common_axes: list[str],
     terminal_axes: list[str],
-) -> tuple[list[str], np.ndarray, np.ndarray]:
+) -> tuple[list[str], list[str | None], np.ndarray, np.ndarray]:
     common_cols = ", ".join(f"c.{axis}" for axis in common_axes)
     terminal_cols = ", ".join(f"t.{axis}" for axis in terminal_axes)
     rows = connection.execute(
@@ -110,9 +112,9 @@ def _load_family_joined(
         WITH
         {_pivot_sql('common_morphology_v1', common_axes, 'c')},
         {_pivot_sql('lenia_terminal_v1', terminal_axes, 't')}
-        SELECT c.specimen_id, {common_cols}, {terminal_cols}
+        SELECT c.specimen_id, c.engine_id, {common_cols}, {terminal_cols}
         FROM c
-        JOIN t USING (specimen_id, run_id, source_algorithm)
+        JOIN t USING (specimen_id, run_id, source_algorithm, engine_id)
         WHERE {" AND ".join(f"c.{axis} IS NOT NULL" for axis in common_axes)}
           AND {" AND ".join(f"t.{axis} IS NOT NULL" for axis in terminal_axes)}
         ORDER BY c.specimen_id
@@ -120,9 +122,10 @@ def _load_family_joined(
         [source_algorithm, source_algorithm],
     ).fetchall()
     specimen_ids = [str(row[0]) for row in rows]
-    common = np.asarray([row[1 : 1 + len(common_axes)] for row in rows], dtype=np.float64)
-    terminal = np.asarray([row[1 + len(common_axes) :] for row in rows], dtype=np.float64)
-    return specimen_ids, common, terminal
+    engine_ids = [None if row[1] is None else str(row[1]) for row in rows]
+    common = np.asarray([row[2 : 2 + len(common_axes)] for row in rows], dtype=np.float64)
+    terminal = np.asarray([row[2 + len(common_axes) :] for row in rows], dtype=np.float64)
+    return specimen_ids, engine_ids, common, terminal
 
 
 def _region_value(value: float) -> str:
@@ -338,6 +341,7 @@ def build_high_fiber_null_validation_packet(
     seed: int = 20260527,
     min_region_count: int = 128,
     family_algorithms: dict[str, str] | None = None,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     source_packet = read_json(source_packet_path)
     family_map = family_algorithms or TRACK1_FAMILY_ALGORITHMS
@@ -349,19 +353,24 @@ def build_high_fiber_null_validation_packet(
     regions = _target_regions(source_packet, target_region_limit)
     rng = np.random.default_rng(seed)
     family_data: dict[str, tuple[list[str], np.ndarray, np.ndarray, dict[str, np.ndarray]]] = {}
+    family_engines: list[str | None] = []
     for family, source_algorithm in family_map.items():
-        specimen_ids, common, terminal = _load_family_joined(
+        specimen_ids, engine_ids, common, terminal = _load_family_joined(
             connection,
             source_algorithm=source_algorithm,
             common_axes=common_axes,
             terminal_axes=terminal_axes,
         )
+        family_engines.extend(engine_ids)
         indexed_regions = _region_indices(
             common=common,
             common_axes=common_axes,
             region_axes=DEFAULT_COMMON_REGION_AXES,
         )
         family_data[family] = (specimen_ids, common, terminal, indexed_regions)
+    engines = require_engine_pool(
+        family_engines, pool_engines=pool_engines, what="high-fiber null families"
+    )
     region_rows = []
     for region in regions:
         family_rows: dict[str, Any] = {}
@@ -393,6 +402,7 @@ def build_high_fiber_null_validation_packet(
             "seed": seed,
             "minimumRegionCount": min_region_count,
             "commonRegionAxes": list(DEFAULT_COMMON_REGION_AXES),
+            "engines": engines,
             "null": (
                 "Terminal descriptors are randomly reassigned within the same family "
                 "while the target common-morphology bin and occupancy are held fixed."

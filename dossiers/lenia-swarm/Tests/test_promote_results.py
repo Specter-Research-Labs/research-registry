@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from pathlib import Path
 from typing import Any
+
+import pytest
 
 from lenia_swarm_analysis.morphospace.ingest_compendium import ingest_compendium
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
@@ -45,7 +48,10 @@ def _init_compendium(path: Path) -> None:
                 indexed_at TEXT NOT NULL,
                 config_hash TEXT,
                 source_mode TEXT,
-                source_algorithm TEXT
+                source_algorithm TEXT,
+                engine_id TEXT NOT NULL,
+                source_commit TEXT,
+                receipt_sha256 TEXT
             );
             CREATE TABLE results (
                 id TEXT PRIMARY KEY,
@@ -61,7 +67,10 @@ def _init_compendium(path: Path) -> None:
                 metrics_json TEXT NOT NULL,
                 params_json TEXT NOT NULL,
                 sweep_json TEXT,
-                worker_id TEXT
+                worker_id TEXT,
+                engine_id TEXT NOT NULL,
+                source_commit TEXT,
+                receipt_sha256 TEXT
             );
             CREATE TABLE specimens (
                 id TEXT PRIMARY KEY,
@@ -154,6 +163,14 @@ def _init_compendium(path: Path) -> None:
         )
     finally:
         connection.close()
+
+
+def _write_receipt(run_dir: Path, engine_id: str) -> str:
+    _write_json(
+        run_dir / "receipt.json",
+        {"receipt_version": 1, "engine_id": engine_id, "build": {"source_commit": "a" * 40}},
+    )
+    return hashlib.sha256((run_dir / "receipt.json").read_bytes()).hexdigest()
 
 
 def _result(seed: int) -> dict[str, object]:
@@ -253,6 +270,7 @@ def test_promote_results_jsonl_projects_results_into_canonical_compendium(
         },
     )
     _write_jsonl(run_dir / "results.jsonl", [_result(10), _result(10), _result(11)])
+    receipt_sha256 = _write_receipt(run_dir, "engine-a")
     compendium = tmp_path / "compendium.sqlite"
     _init_compendium(compendium)
 
@@ -288,8 +306,25 @@ def test_promote_results_jsonl_projects_results_into_canonical_compendium(
         metadata = json.loads(metadata_json)
         assert metadata["runProfile"] == "FL-2C20K-motion-128"
         assert metadata["kernelCount"] == 20
+        expected = ("engine-a", "a" * 40, receipt_sha256)
+        assert connection.execute(
+            "SELECT engine_id, source_commit, receipt_sha256 FROM runs WHERE run_id = 'test-run'"
+        ).fetchall() == [expected]
+        assert connection.execute(
+            "SELECT DISTINCT engine_id, source_commit, receipt_sha256 FROM results"
+        ).fetchall() == [expected]
     finally:
         connection.close()
+
+    _write_receipt(run_dir, "engine-b")
+    with pytest.raises(ValueError, match="already in the compendium from engine engine-a"):
+        promote_results_jsonl(
+            compendium_path=compendium,
+            run_dir=run_dir,
+            run_id="test-run",
+            batch_size=1,
+        )
+    _write_receipt(run_dir, "engine-a")
 
     warehouse = connect_database(tmp_path / "warehouse.duckdb")
     try:
@@ -300,6 +335,12 @@ def test_promote_results_jsonl_projects_results_into_canonical_compendium(
             ingest_raw_rows=False,
         )
         assert _one(warehouse, "SELECT COUNT(*) FROM specimens WHERE run_id = 'test-run'") == 2
+        assert warehouse.execute(
+            """
+            SELECT DISTINCT engine_id, receipt_sha256, descriptor_version
+            FROM specimens WHERE run_id = 'test-run'
+            """
+        ).fetchall() == [("engine-a", receipt_sha256, 1)]
         assert _one(warehouse, "SELECT run_id FROM studies WHERE study_id = ?", [study_id]) == "test-run"
     finally:
         warehouse.close()

@@ -425,6 +425,7 @@ def run_feature_tda_profile(
     max_homology_dim: int = 1,
     stratify_by: str = "rule_family_key",
     seed: int = 0,
+    pool_engines: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     if profile not in PROFILE_PRESETS:
         raise ValueError(f"unknown TDA profile: {profile}")
@@ -442,6 +443,7 @@ def run_feature_tda_profile(
         observation_kind=observation_kind,
         source_algorithm=source_algorithm,
         canonical_family=canonical_family,
+        pool_engines=pool_engines,
     )
     matrix = np.asarray(matrix_packet["matrix"], dtype=np.float64)
     observations = matrix_packet["observations"]

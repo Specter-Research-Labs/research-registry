@@ -367,6 +367,7 @@ def ingest_embryomaker_snapshots(
                 "geometry_family": "3d_node_point_cloud",
                 "canonical_family": record.family,
                 "results_path": source_ref,
+                "engine_id": None,
                 "provenance_json": {
                     "sourceId": SOURCE_ID,
                     "featureSpaceId": FEATURE_SPACE_ID,
