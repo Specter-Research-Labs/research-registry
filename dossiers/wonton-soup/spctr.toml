@@ -25,15 +25,11 @@ project = "wonton-soup"
 default_surface = "wonton-lake"
 
 [spctr.exec.check]
-description = "Targeted public CI verification lane"
-commands = [
-    ["uv", "run", "ruff", "check", "orchestrator/lean.py", "setup_lean.py", "prover/tests/test_leantree_tooling.py", "prover/tests/test_lean_setup.py"],
-    ["uv", "run", "ty", "check", "orchestrator/lean.py", "setup_lean.py"],
-    ["uv", "run", "--extra", "dev", "python", "-m", "pytest", "prover/tests/test_leantree_tooling.py", "prover/tests/test_lean_setup.py", "-q"],
-]
+description = "ruff, ty and the full pytest suite, Lean kernel tests included (needs LEAN_PROJECT_PATH)"
+command = ["bash", "scripts/verify.sh"]
 timeout_sec = 1800
 network = "off"
-requires = ["python", "uv"]
+requires = ["python", "uv", "lean"]
 
 [spctr.exec.smoke]
 description = "Representative local Lean smoke run"

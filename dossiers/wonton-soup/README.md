@@ -13,17 +13,7 @@ Centralized MCTS maps the single-controller landscape. Distributed MCTS tests wh
    `sertop`, `coq-lsp`).
 3. Environment setup: `docs/ops/setup.md`
 4. Corpus pipeline and reproducible artifact refs: `docs/ops/corpus.md`
-5. Run the standard verification check:
-
-```
-./scripts/verify.sh
-```
-
-If you want the ad hoc smoke test instead:
-
-```
-uv run python wonton.py lean run -m dev --sample 5 --seed 123
-```
+5. Checks and smoke runs: `docs/ops/verification.md`
 
 ## Lean Runtime Paths
 
@@ -85,5 +75,4 @@ spctr surface sync wonton-lake
 ```
 cd /path/to/specter-labs/research-registry
 cd dossiers/wonton-soup && nix develop --command true
-cd dossiers/wonton-soup && ./scripts/verify.sh
 ```

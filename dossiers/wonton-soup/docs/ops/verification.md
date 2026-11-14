@@ -10,11 +10,16 @@ inspection.
 
 ## Standard Check
 
-From `dossiers/wonton-soup/`:
+From `dossiers/wonton-soup/`, with `LEAN_PROJECT_PATH` pointing at a built Lean
+project (`setup_lean.py`):
 
 ```bash
 ./scripts/verify.sh
 ```
+
+It runs `ruff check`, `ty check` and the full pytest suite, and is the
+`spctr` check lane. The Lean kernel-check tests fail rather than skip when
+`LEAN_PROJECT_PATH` is unset.
 
 Fast local smoke:
 
@@ -26,7 +31,7 @@ uv run python wonton.py lean run -m dev --sample 5 --seed 123
 
 | Family | Representative commands | Primary tests |
 | --- | --- | --- |
-| Lean proving | `lean run`, `lean basin`, `lean suite` | `tests/test_cli_args.py`, `prover/tests/test_wonton_cli_wrappers.py` |
+| Lean proving | `lean run`, `lean basin`, `lean suite`, `lean distributed-sweep` | `prover/tests/test_lean_cli_wiring.py`, `prover/tests/test_wonton_cli_wrappers.py` |
 | External backends | `run`, `coq` | `prover/tests/test_wonton_cli_wrappers.py`, `prover/tests/test_wonton_validate_backend_args.py` |
 | Corpus | `corpus build-*`, `corpus validate`, `corpus list`, `corpus sweep-*` | `corpus/tests/test_build_1000_plus.py`, `corpus/tests/test_selection.py`, `corpus/tests/test_artifacts_list.py` |
 | Lake | `lake reconcile`, `lake export-parquet`, `lake score-k`, `lake job run` | `analysis/tests/test_lake_smoke.py`, `analysis/tests/test_export_parquet.py`, `analysis/tests/test_lake_job.py`, `analysis/tests/test_k_reference_score.py` |

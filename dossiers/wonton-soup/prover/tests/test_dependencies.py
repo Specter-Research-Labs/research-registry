@@ -15,7 +15,7 @@ from prover.goal_signature import GoalSignatureConfig
 from prover.history import ExplorationHistory, TacticOutcome
 from prover.intervention import FilteredTacticProvider, PegKind
 from prover.mcts import mcts_search
-from prover.tests import LEAN_PROJECT, needs_lean
+from prover.tests import lean_project
 
 
 def test_premise_name_strips_generated_suffixes():
@@ -140,13 +140,11 @@ IMPLICIT_SIMP = "theorem {name} (l : List ℕ) : (l ++ []).length = l.length := 
 async def _with_adapter(body):
     from prover.adapters.lean import LeanAdapter
 
-    assert LEAN_PROJECT is not None
-    adapter = await LeanAdapter.create(LEAN_PROJECT)
+    adapter = await LeanAdapter.create(lean_project())
     async with adapter:
         return await body(adapter)
 
 
-@needs_lean
 def test_check_proof_counts_lemma_simp_used_implicitly():
     async def body(adapter):
         return await check_proof(adapter.env, IMPLICIT_SIMP.format(name="dep_simp"), ["simp"])
@@ -156,7 +154,6 @@ def test_check_proof_counts_lemma_simp_used_implicitly():
     assert "List.append_nil" in check.premises()
 
 
-@needs_lean
 def test_check_proof_rejects_sorry():
     async def body(adapter):
         return await check_proof(adapter.env, IMPLICIT_SIMP.format(name="dep_sorry"), ["sorry"])
@@ -166,7 +163,6 @@ def test_check_proof_rejects_sorry():
     assert check.error == "proof uses sorry"
 
 
-@needs_lean
 def test_adapter_rejects_tactic_whose_term_uses_forbidden_premise():
     async def body(adapter):
         adapter.forbidden_constants = frozenset({"List.append_nil"})

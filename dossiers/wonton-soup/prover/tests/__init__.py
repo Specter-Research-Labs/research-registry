@@ -2,7 +2,9 @@ import os
 
 import pytest
 
-LEAN_PROJECT = os.environ.get("LEAN_PROJECT_PATH")
-needs_lean = pytest.mark.skipif(
-    LEAN_PROJECT is None, reason="set LEAN_PROJECT_PATH to a built Lean project"
-)
+
+def lean_project() -> str:
+    path = os.environ.get("LEAN_PROJECT_PATH")
+    if path is None:
+        pytest.fail("LEAN_PROJECT_PATH is unset; export it to a built Lean project (setup_lean.py)")
+    return path
