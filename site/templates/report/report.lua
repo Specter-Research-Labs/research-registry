@@ -1,6 +1,6 @@
 -- Report apparatus for `spctr doc build`. Runs after citeproc.
 -- Numbers sections and appendix entries, builds the contents column, turns
--- footnotes into margin notes and endnotes, expands term notes, collects asset
+-- footnotes into margin notes and endnotes, expands term and claim notes, collects asset
 -- links, refuses external links outside the reference list, and assembles the
 -- endmatter.
 
@@ -107,6 +107,43 @@ local function term_expander(meta)
     end
   end
   return filter, check_all_used
+end
+
+-- Builds the inline filter that renders each `[value]{claim=REF}` span, which
+-- spctr writes after checking the claim against its sources, as a pure-CSS
+-- note naming where the number came from. data-claim carries the reference
+-- qualified by document id so the review app can list which documents cite
+-- which claims from the archived page alone. Returns the filter and the claims
+-- in order of first citation for the endmatter.
+local function claim_expander(meta)
+  local file = assert(io.open(pandoc.utils.stringify(meta["rk-claims"]), "r"))
+  local claims = pandoc.json.decode(file:read("a"), false)
+  file:close()
+  local document_id = meta_string(meta, "document_id")
+  local cited, seen = {}, {}
+  local filter = {}
+  filter.Span = function(span)
+    local ref = span.attributes.claim
+    if ref == nil then return nil end
+    local claim = claims[ref]
+    if not seen[ref] then
+      seen[ref] = true
+      table.insert(cited, { ref = ref, claim = claim })
+    end
+    local rows = { '<span class="rk-claim-row"><span>Claim</span>' .. escape(ref) .. "</span>",
+      '<span class="rk-claim-row"><span>Run</span>' .. escape(claim.run) .. "</span>" }
+    if #claim.engine_ids > 0 then
+      table.insert(rows, '<span class="rk-claim-row"><span>Engine</span>' .. escape(table.concat(claim.engine_ids, ", ")) .. "</span>")
+    end
+    for _, source in ipairs(claim.sources) do
+      table.insert(rows, '<span class="rk-claim-row"><span>Source</span>' .. escape(source) .. "</span>")
+    end
+    table.insert(rows, '<span class="rk-claim-row"><span>Verified</span>' .. escape(claim.verified) .. "</span>")
+    local qualified = ref:find(":", 1, true) and ref or document_id .. ":" .. ref
+    return pandoc.RawInline("html", '<span class="rk-term rk-claim" tabindex="0" data-claim="' .. escape(qualified) .. '">' .. escape(claim.value) ..
+      '<span class="rk-term-note rk-claim-note" role="tooltip">' .. table.concat(rows) .. "</span></span>")
+  end
+  return filter, cited
 end
 
 local WIDGETS = { ["route-map"] = true, ["model-playback"] = true }
@@ -338,6 +375,9 @@ function Pandoc(doc)
           if span.attributes.term then
             error("report.md: terms are not allowed in headings: " .. pandoc.utils.stringify(block.content))
           end
+          if span.attributes.claim then
+            error("report.md: claims are not allowed in headings: " .. pandoc.utils.stringify(block.content))
+          end
         end,
       })
     end
@@ -373,6 +413,9 @@ function Pandoc(doc)
   body = body:walk(expand_terms)
   meta.abstract = pandoc.MetaBlocks(pandoc.Blocks(meta.abstract):walk(expand_terms))
   check_all_used()
+  local expand_claims, claims = claim_expander(meta)
+  body = body:walk(expand_claims)
+  meta.abstract = pandoc.MetaBlocks(pandoc.Blocks(meta.abstract):walk(expand_claims))
 
   local cited_urls = {}
   if refs_div then
@@ -537,7 +580,7 @@ function Pandoc(doc)
   local end_items = { '<li><a href="#cite-this">Cite this ' .. kind .. '</a></li>' }
   if has_refs then table.insert(end_items, '<li><a href="#references">References</a></li>') end
   if #notes > 0 then table.insert(end_items, '<li><a href="#notes">Notes</a></li>') end
-  if #assets > 0 then table.insert(end_items, '<li><a href="#data">Data and receipts</a></li>') end
+  if #assets > 0 or #claims > 0 then table.insert(end_items, '<li><a href="#data">Data and receipts</a></li>') end
 
   local toc_html = '<nav class="rk-toc" aria-label="Contents"><p class="rk-toc-head">Contents</p><ul>' ..
     table.concat(main_items) .. "</ul>"
@@ -587,11 +630,17 @@ function Pandoc(doc)
     end
     table.insert(parts, '<section id="notes"><h2>Notes</h2><ol class="rk-notes">' .. table.concat(items) .. "</ol></section>")
   end
-  if #assets > 0 then
+  if #assets > 0 or #claims > 0 then
     local items = {}
     for _, a in ipairs(assets) do
       table.insert(items, string.format('<li><a href="%s">%s</a> <span class="rk-path">%s</span></li>',
         escape(a.target), escape(a.text), escape(a.target:gsub("^assets/", ""))))
+    end
+    for _, c in ipairs(claims) do
+      local engines = #c.claim.engine_ids > 0 and " · " .. table.concat(c.claim.engine_ids, ", ") or ""
+      table.insert(items, string.format('<li><span>%s <span class="rk-claim-key">%s</span></span> <span class="rk-path">%s%s · %s · verified %s</span></li>',
+        escape(c.claim.value), escape(c.ref), escape(c.claim.run), escape(engines),
+        escape(table.concat(c.claim.sources, ", ")), escape(c.claim.verified)))
     end
     table.insert(parts, '<section id="data"><h2>Data and receipts</h2><ul class="rk-data">' .. table.concat(items) .. "</ul></section>")
   end

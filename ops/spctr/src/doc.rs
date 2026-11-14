@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::fs;
 use std::io::Write as _;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use crate::site::shell;
 use crate::{design_tokens, design_tokens_css};
@@ -200,7 +200,12 @@ fn render(
     site: Option<&SitePage>,
 ) -> Result<String> {
     let templates = repo_root.join(TEMPLATE_DIR);
-    let layout = read_layout(&report_source(dir)?)?;
+    let source = report_source(dir)?;
+    let layout = read_layout(&source)?;
+    let expanded =
+        crate::claims::expand(dir, &read(&source)?).with_context(|| format!("{source}"))?;
+    let mut claims = tempfile::Builder::new().suffix(".json").tempfile()?;
+    serde_json::to_writer(&mut claims, &expanded.claims)?;
     let mut header = tempfile::Builder::new().suffix(".html").tempfile()?;
     header.write_all(inline_style(repo_root, target, layout)?.as_bytes())?;
     let mut after_body = tempfile::Builder::new().suffix(".html").tempfile()?;
@@ -208,7 +213,6 @@ fn render(
     let mut command = Command::new("pandoc");
     command
         .args([
-            "report.md",
             "--from=markdown",
             "--to=html5",
             "--standalone",
@@ -228,7 +232,11 @@ fn render(
         ))
         .arg(format!("--lua-filter={}", templates.join("report.lua")))
         .arg(format!("--include-in-header={}", header.path().display()))
-        .current_dir(dir);
+        .arg(format!("--metadata=rk-claims:{}", claims.path().display()))
+        .current_dir(dir)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     if layout == Layout::Explorer {
         after_body.write_all(widget_script(repo_root)?.as_bytes())?;
         command.arg(format!(
@@ -261,9 +269,16 @@ fn render(
                 shell::footer(repo_root)?
             ));
     }
-    let output = command
-        .output()
+    let mut child = command
+        .spawn()
         .context("failed to run pandoc; install pandoc 3.7 or newer")?;
+    // Pandoc's own error explains a failed write better than the broken pipe does.
+    let written = child
+        .stdin
+        .take()
+        .expect("piped stdin")
+        .write_all(expanded.markdown.as_bytes());
+    let output = child.wait_with_output()?;
     if !output.status.success() {
         bail!(
             "pandoc failed for {}:\n{}",
@@ -271,7 +286,13 @@ fn render(
             String::from_utf8_lossy(&output.stderr).trim()
         );
     }
-    String::from_utf8(output.stdout).context("pandoc produced invalid UTF-8")
+    written.context("failed to send report.md to pandoc")?;
+    let html = String::from_utf8(output.stdout).context("pandoc produced invalid UTF-8")?;
+    if let Some(at) = html.find("{claim=") {
+        let context: String = html[at..].chars().take(80).collect();
+        bail!("{source}: a claim sits in raw HTML or code, where it cannot render; move it into markdown text: {context:?}");
+    }
+    Ok(html)
 }
 
 fn write_page(out: &Utf8Path, html: &str) -> Result<()> {
