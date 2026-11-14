@@ -2,6 +2,7 @@ import asyncio
 import gzip
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from leantree.repl_adapter.interaction import LeanProcessException
@@ -379,7 +380,7 @@ def test_lean_adapter_timeout_message_points_to_flake_and_warmup(
     env = _TimeoutEnv()
     adapter = LeanAdapter(project=_TimeoutProject(env))
 
-    async def _raise_timeout(awaitable: object, timeout: float) -> object:
+    async def _raise_timeout(awaitable: Any, timeout: float) -> object:
         if hasattr(awaitable, "close"):
             awaitable.close()
         del timeout
@@ -497,8 +498,8 @@ def _patch_reporting_stubs(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def _capture_saved_results(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
-    saved: dict[str, object] = {}
+def _capture_saved_results(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+    saved: dict[str, Any] = {}
     monkeypatch.setattr(
         lean_mod,
         "save_results",
@@ -515,7 +516,7 @@ def _capture_saved_results(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]
 
 
 def _run_corpus_for_test(project_path: Path, run_id: str, **overrides):
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "project_path": str(project_path),
         "budget_tiers": [10],
         "provider_name": "heuristic",
@@ -671,7 +672,7 @@ def test_run_corpus_writes_postprocess_metrics_for_completed_run(
     monkeypatch.setattr(lean_runner, "run_theorem", _fake_run_theorem)
     _patch_reporting_stubs(monkeypatch)
     postprocess_calls: list[Path] = []
-    callback_statuses: list[dict[str, object]] = []
+    callback_statuses: list[dict[str, Any]] = []
     monkeypatch.setattr(
         lean_reporting,
         "_write_postprocess_metrics",

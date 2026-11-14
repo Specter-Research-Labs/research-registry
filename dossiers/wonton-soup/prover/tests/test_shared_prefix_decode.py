@@ -16,8 +16,7 @@ def _tiny_llama():
         num_attention_heads=4,
         num_key_value_heads=4,
         max_position_embeddings=256,
-        rope_scaling={"rope_type": "linear", "factor": 4.0},
-        rope_theta=100000.0,
+        rope_parameters={"rope_type": "linear", "factor": 4.0, "rope_theta": 100000.0},
     )
     return transformers.LlamaForCausalLM(config).eval()
 
@@ -70,11 +69,11 @@ def _tiny_t5():
         num_decoder_layers=2,
         num_heads=4,
         feed_forward_proj="gated-gelu",
-        tie_word_embeddings=False,
-        decoder_start_token_id=0,
         eos_token_id=1,
         pad_token_id=0,
     )
+    config.scale_decoder_outputs = False
+    config.decoder_start_token_id = 0
     return transformers.T5ForConditionalGeneration(config).eval()
 
 
@@ -113,11 +112,11 @@ def test_t5_step_logits_match_full_forward(monkeypatch, tied):
         num_decoder_layers=2,
         num_heads=4,
         feed_forward_proj="gated-gelu",
-        tie_word_embeddings=tied,
-        decoder_start_token_id=0,
         eos_token_id=1,
         pad_token_id=0,
     )
+    config.scale_decoder_outputs = tied
+    config.decoder_start_token_id = 0
     model = transformers.T5ForConditionalGeneration(config).eval()
     ids = torch.randint(2, 50, (1, 25))
     seen = _record_logits(monkeypatch)

@@ -21,7 +21,7 @@ def _as_string_list(value: Any, *, field: str) -> list[str]:
     if isinstance(value, str):
         return [value]
     if isinstance(value, list) and all(isinstance(item, str) for item in value):
-        return list(value)
+        return [str(item) for item in value]
     raise ValueError(f"selection.{field} must be string or list[str]")
 
 
@@ -38,7 +38,7 @@ def _selection_require_capabilities(selection: Mapping[str, Any]) -> list[str]:
         return []
     if not isinstance(value, list) or not all(isinstance(v, str) and v for v in value):
         raise ValueError("selection.require_capabilities must be list[str]")
-    return list(value)
+    return [str(v) for v in value]
 
 
 def _selection_order_by(selection: Mapping[str, Any]) -> str:

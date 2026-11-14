@@ -53,6 +53,15 @@ include = [
 [tool.ty.rules]
 unresolved-import = "warn"
 
+# Test doubles stand in structurally for concrete classes with no Protocol
+# (LeanAdapter, LeanGoal, TacticProvider, checkpoints) and monkeypatch bound methods.
+[[tool.ty.overrides]]
+include = ["**/tests/**"]
+
+[tool.ty.overrides.rules]
+invalid-argument-type = "ignore"
+invalid-assignment = "ignore"
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

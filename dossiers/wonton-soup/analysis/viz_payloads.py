@@ -675,7 +675,7 @@ def build_dashboard_payload_v2(
         error = entry.get("error")
         if not isinstance(name, str) or not isinstance(error, str):
             continue
-        payload_entry = {
+        payload_entry: dict[str, Any] = {
             "name": name,
             "error": error,
         }

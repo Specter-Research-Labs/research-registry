@@ -137,8 +137,8 @@ def test_lake_index_extract_export_smoke(tmp_path: Path) -> None:
         assert rep.outcome_rows > 0
 
         # Ensure outcome tables are non-empty.
-        assert conn.execute("SELECT count(*) FROM goal_outcome_global_family").fetchone()[0] >= 2
-        assert conn.execute("SELECT count(*) FROM goal_outcome_sig_family").fetchone()[0] >= 2
+        assert conn.execute("SELECT count(*) FROM goal_outcome_global_family").fetchall()[0][0] >= 2
+        assert conn.execute("SELECT count(*) FROM goal_outcome_sig_family").fetchall()[0][0] >= 2
 
         out_dir = tmp_path / "export"
         report = export_parquet(conn, profile="full", out_dir=out_dir)

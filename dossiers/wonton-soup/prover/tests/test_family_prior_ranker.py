@@ -28,5 +28,5 @@ def test_family_prior_ranker_reorders_by_model_score(tmp_path: Path) -> None:
     ranker = family_prior_ranker(model, alpha=1.0)
 
     node = _Node(goal_features=[1.0, 0.0])
-    ranked = ranker([("simp", 0.1), ("exact h", 0.9)], iteration=0, node=node)
+    ranked = ranker([("simp", 0.1), ("exact h", 0.9)], 0, node)
     assert [t for t, _ in ranked] == ["simp", "exact h"]

@@ -4,7 +4,7 @@ import os
 import time
 from collections import deque
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import psutil
 from rich.console import Console
@@ -13,12 +13,11 @@ from rich.panel import Panel
 from rich.text import Text
 
 from prover import GoalCache
+from prover.mcts import ProgressCallback
 from prover.providers import TacticProvider
 
 if TYPE_CHECKING:
     from orchestrator.lean import RunStatusWriter
-
-ProgressCallback = Callable[[int, int, int, int, int, str | None, str | None], bool]
 
 
 class CorpusProgress:

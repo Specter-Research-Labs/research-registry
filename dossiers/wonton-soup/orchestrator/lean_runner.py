@@ -26,7 +26,7 @@ from prover import (
     mcts_search,
 )
 from prover.goal_signature import GoalSignatureConfig
-from prover.mcts import ExpansionPolicy, SearchPolicy
+from prover.mcts import ExpansionPolicy, ProgressCallback, SearchPolicy
 from prover.providers import TacticProvider
 
 if TYPE_CHECKING:
@@ -292,7 +292,7 @@ async def _run_search_budget(
     budget: int,
     tree: MCTSTree | None,
     distributed_settings: dict[str, Any] | None = None,
-    progress_callback: Callable[[dict[str, Any]], None] | None = None,
+    progress_callback: ProgressCallback | None = None,
     trace: MCTSTraceWriter | None = None,
     trace_context: dict[str, Any] | None = None,
     rng: random.Random | None = None,

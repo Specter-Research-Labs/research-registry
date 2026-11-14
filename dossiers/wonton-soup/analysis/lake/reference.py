@@ -50,7 +50,7 @@ def build_goal_outcomes_reference(
     if alpha <= 0:
         raise ValueError("alpha must be > 0")
 
-    payload = {
+    payload: dict[str, Any] = {
         "run_keys": sorted(run_keys),
         "alpha": float(alpha),
         "families": list(TACTIC_FAMILIES),

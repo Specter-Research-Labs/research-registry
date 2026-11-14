@@ -186,7 +186,7 @@ def iter_theorem_variant_prefixes(theorem_dir: Path) -> Iterable[str]:
         yield name.split("_mcts_trace", 1)[0]
 
 
-def ged_value(entry: object) -> float | None:
+def ged_value(entry: Any) -> float | None:
     if not isinstance(entry, dict):
         return None
     value = entry.get("value")

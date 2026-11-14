@@ -488,7 +488,7 @@ def compute_solution_path_soft_distance(
             f"(wild_len={wild_len} intervention_len={int_len})"
         )
 
-    if not notes:
+    if not notes and goal_sig_ted is not None:
         value = normalized_sequence_edit_distance(
             wild_solution_goal_sigs,
             intervention_solution_goal_sigs,
@@ -554,7 +554,7 @@ class PostprocessParams:
 _PENDING_NOTE = "not computed in-run; run `wonton.py postprocess` to fill this metric"
 
 
-def _is_pending_metric_entry(entry: object) -> bool:
+def _is_pending_metric_entry(entry: Any) -> bool:
     if not isinstance(entry, dict):
         return True
     notes = entry.get("validity_notes")

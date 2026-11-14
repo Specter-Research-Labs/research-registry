@@ -21,11 +21,11 @@ def _tiny_t5():
         num_decoder_layers=2,
         num_heads=4,
         feed_forward_proj="gated-gelu",
-        tie_word_embeddings=False,
-        decoder_start_token_id=0,
         eos_token_id=1,
         pad_token_id=0,
     )
+    config.scale_decoder_outputs = False
+    config.decoder_start_token_id = 0
     return transformers.T5ForConditionalGeneration(config).eval()
 
 

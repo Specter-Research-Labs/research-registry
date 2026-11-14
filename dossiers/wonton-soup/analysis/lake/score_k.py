@@ -196,7 +196,8 @@ def _insert_k_score(
     entry: dict[str, Any],
 ) -> None:
     valid = entry.get("valid") if isinstance(entry.get("valid"), bool) else None
-    primary = entry.get("primary") if isinstance(entry.get("primary"), dict) else {}
+    primary_raw = entry.get("primary")
+    primary = primary_raw if isinstance(primary_raw, dict) else {}
     null_model = primary.get("null_model") if isinstance(primary.get("null_model"), str) else None
     tau_agent = entry.get("tau_agent") if isinstance(entry.get("tau_agent"), int) else None
     tau_blind = primary.get("tau_blind")

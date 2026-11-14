@@ -7,7 +7,7 @@ prompt-derived keys and values stay at batch size one, and each step attends to 
 n samples into the query rows, with a separate small cache for generated tokens.
 """
 
-from typing import Any
+from typing import Any, cast
 
 
 def sample_shared_prefix(
@@ -34,7 +34,7 @@ def sample_shared_prefix(
     with torch.no_grad():
         cache = DynamicCache(config=config)
         model(input_ids=input_ids[:, :-1], past_key_values=cache, use_cache=True)
-        prefix = [(layer.keys, layer.values) for layer in cache.layers]
+        prefix = [(layer.keys, layer.values) for layer in cast(list[Any], cache.layers)]
         prefix_len = input_ids.shape[1] - 1
         suffix = [
             (

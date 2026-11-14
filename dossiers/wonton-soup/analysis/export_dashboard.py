@@ -279,13 +279,10 @@ def upsert_run(
         index_by_id[entry["id"]] = len(runs)
         runs.append(entry)
         return
-    merged = dict(runs[idx])
-    merged.update(entry)
+    merged = entry.copy()
     if preserve_label:
-        label = runs[idx].get("label")
-        if isinstance(label, str) and label:
-            merged["label"] = label
-    runs[idx] = RunEntry(merged)
+        merged["label"] = runs[idx]["label"]
+    runs[idx] = merged
 
 
 def resolve_run_dir(logs_dir: Path, run_id: str | None) -> Path:

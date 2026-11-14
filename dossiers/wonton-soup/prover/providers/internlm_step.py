@@ -71,8 +71,11 @@ class InternLMStepProverTacticProvider(TacticProvider):
         if self._loaded:
             return
         revision = pinned_revision(self._model_id)
-        self._tokenizer = AutoTokenizer.from_pretrained(
-            self._model_id, revision=revision, trust_remote_code=True
+        self._tokenizer = cast(
+            Any,
+            AutoTokenizer.from_pretrained(
+                self._model_id, revision=revision, trust_remote_code=True
+            ),
         )
         model = AutoModelForCausalLM.from_pretrained(
             self._model_id,

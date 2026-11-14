@@ -410,7 +410,7 @@ def build_intervention_metadata(
 
 
 def build_runtime_metadata(*, include_executable: bool, include_uv_python: bool) -> dict[str, Any]:
-    runtime = {
+    runtime: dict[str, Any] = {
         "python": sys.version.split(" ")[0],
         "platform": sys.platform,
         "pid": os.getpid(),

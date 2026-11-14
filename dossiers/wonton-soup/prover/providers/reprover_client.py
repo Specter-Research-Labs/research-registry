@@ -217,12 +217,13 @@ class ReProverModel:
             )
 
         batch_size = len(states)
+        decoded = self.tokenizer.batch_decode(outputs.sequences, skip_special_tokens=True)
         all_tactics = []
         for i in range(batch_size):
             tactics = []
             for j in range(num_beams):
                 idx = i * num_beams + j
-                tactic = self.tokenizer.decode(outputs.sequences[idx], skip_special_tokens=True)
+                tactic = decoded[idx]
                 has_scores = hasattr(outputs, "sequences_scores")
                 score = outputs.sequences_scores[idx].item() if has_scores else 0.0
                 prob = torch.sigmoid(torch.tensor(score)).item()

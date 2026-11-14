@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import click
 import pytest
@@ -626,7 +627,7 @@ def test_inspect_proof_ir_wrapper_passes_configs_and_writes_output(monkeypatch, 
     import analysis.inspect_proof_ir as inspect_mod
     import wonton
 
-    captured: dict[str, object] = {}
+    captured: dict[str, Any] = {}
 
     def fake_inspect_theorem_ir(run_dir, **kwargs):
         captured["run_dir"] = run_dir
