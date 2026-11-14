@@ -9,7 +9,8 @@ import pytest
 
 from lenia_swarm_analysis.observer import conditional, measure, transfer
 from lenia_swarm_analysis.observer.measure import EVAL_STREAM, Config, split, stream
-from lenia_swarm_analysis.observer.states import Quantizer, load_states, patches, sample_transitions
+from lenia_swarm_analysis.observer.states import load_states
+from lenia_swarm_analysis.observer.transitions import Quantizer, patches, sample_transitions
 
 SIDE = 24
 CHANNELS = 2
@@ -21,6 +22,7 @@ CONFIG = {
     "frame_order": "real",
     "stride": 1,
     "lag": 1,
+    "split": "frames",
     "eval_every": 4,
     "n_train": 64,
     "n_eval": 32,
@@ -117,16 +119,32 @@ def test_shuffled_frame_order_permutes_train_and_held_out_streams_identically(re
     again, _, _ = split(states, config)
     assert np.array_equal(values, again)
     assert not np.array_equal(values, states.values)
-    assert held_out.sum() == (FRAMES - 1) // config.eval_every
+    assert len(held_out) == (FRAMES - 1) // 4
     assert stream(states, config, EVAL_STREAM).target.shape == (config.n_eval,)
 
 
 def test_sources_follow_stride_and_leave_room_for_the_lag(replay: Path) -> None:
     states = load_states(replay / "campaigns" / "a")
     config = Config.from_dict({**CONFIG, "stride": 3, "lag": 2})
-    _, sources, held_out = split(states, config)
-    assert sources.tolist() == [0, 3, 6, 9]
-    assert sources[held_out].tolist() == [9]
+    _, train_sources, held_out = split(states, config)
+    assert train_sources.tolist() == [0, 3, 6]
+    assert held_out.tolist() == [9]
+
+
+def test_split_unit_is_explicit_and_validated(replay: Path) -> None:
+    states = load_states(replay / "campaigns" / "a")
+    config = Config.from_dict({**CONFIG, "split": "trajectories", "eval_every": None})
+    _, train_sources, held_out = split(states, config)
+    assert train_sources.tolist() == held_out.tolist() == list(range(FRAMES - 1))
+    without_split = {k: v for k, v in CONFIG.items() if k != "split"}
+    with pytest.raises(TypeError, match="split"):
+        Config.from_dict(without_split)
+    with pytest.raises(ValueError, match="eval_every must be null"):
+        Config.from_dict({**CONFIG, "split": "trajectories"})
+    with pytest.raises(ValueError, match="eval_every >= 2"):
+        Config.from_dict({**CONFIG, "eval_every": None})
+    with pytest.raises(ValueError, match="split must be"):
+        Config.from_dict({**CONFIG, "split": "campaigns"})
 
 
 def test_measure_transfer_conditional(replay: Path, tmp_path: Path) -> None:
@@ -157,3 +175,44 @@ def test_measure_transfer_conditional(replay: Path, tmp_path: Path) -> None:
 
     with pytest.raises(FileExistsError):
         transfer.main(["--measure", str(out), "--observer", "mlp_r2", "--device", "cpu"])
+
+    recorded = json.loads((out / "config.json").read_text())
+    assert (recorded["split"], recorded["eval_every"], recorded["held_out_replay"]) == ("frames", 4, None)
+
+
+def test_measure_holds_out_whole_trajectories(replay: Path, tmp_path: Path) -> None:
+    held_out_replay = tmp_path / "held-out"
+    for name, velocity in (("a", (2, 0)), ("b", (0, 2)), ("c", (2, 1))):
+        write_campaign(held_out_replay, name, blob_frames(velocity))
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({**CONFIG, "split": "trajectories", "eval_every": None}))
+    out = tmp_path / "measure"
+    with pytest.raises(SystemExit):
+        measure.main(["--replay", str(replay), "--config", str(config_path), "--out", str(out),
+                      "--device", "cpu"])
+    assert measure.main(["--replay", str(replay), "--held-out-replay", str(held_out_replay),
+                         "--config", str(config_path), "--out", str(out), "--device", "cpu"]) == 0
+
+    recorded = json.loads((out / "config.json").read_text())
+    assert recorded["split"] == "trajectories"
+    assert recorded["held_out_replay"] == str(held_out_replay.resolve())
+    rows = [json.loads(line) for line in (out / "creatures.jsonl").read_text().splitlines()]
+    for row in rows:
+        unseen = load_states(held_out_replay / "campaigns" / row["campaign"])
+        assert row["held_out"]["state_digest"] == hashlib.sha256(unseen.values.tobytes()).hexdigest()
+        assert row["held_out"]["state_digest"] != row["state_digest"]
+    expected = stream(load_states(held_out_replay / "campaigns" / "b"), measure.Config.from_dict(
+        {**CONFIG, "split": "trajectories", "eval_every": None}), EVAL_STREAM)
+    np.testing.assert_array_equal(np.load(out / "eval_t.npy")[1], expected.target.numpy())
+
+    assert transfer.main(["--measure", str(out), "--observer", "lin_r1", "--device", "cpu"]) == 0
+    assert np.load(out / "transfer_lin_r1.npz")["L"].shape == (3, 3)
+
+
+def test_measure_refuses_a_held_out_replay_identical_to_training(replay: Path, tmp_path: Path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({**CONFIG, "split": "trajectories", "eval_every": None}))
+    with pytest.raises(ValueError, match="identical to the training run"):
+        measure.main(["--replay", str(replay), "--held-out-replay", str(replay),
+                      "--config", str(config_path), "--out", str(tmp_path / "measure"),
+                      "--device", "cpu"])

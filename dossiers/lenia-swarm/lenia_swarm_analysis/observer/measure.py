@@ -6,11 +6,15 @@ from a patch of its neighbourhood at t. Observers differ in radius, capacity (li
 
 A transition runs from a source frame to the frame `lag` trace samples later; sources are every
 `stride`-th frame, so one dense replay serves several lags on the same developmental schedule.
-Sources are split by interleaving (every `eval_every`-th is held out), so training and held-out
-data cover the same developmental period. The held-out patches and trained learners are saved for
-`transfer` and `conditional`.
+The config's `split` names the held-out unit. Under "frames" the sources of one trajectory are
+interleaved (every `eval_every`-th is held out), so training and held-out data cover the same
+developmental period but neighbouring frames of one run sit on both sides. Under "trajectories" the
+learner trains on every source of the replay and is scored on every source of the same campaign in
+`--held-out-replay`, a second run of each creature that it never saw. The held-out patches and
+trained learners are saved for `transfer` and `conditional`.
 
-Usage: lenia-swarm-observer measure --replay <replay batch dir> --config <config.json> --out <dir>
+Usage: lenia-swarm-analysis observer measure --replay <replay batch dir> --config <config.json>
+       --out <dir> --device mps [--held-out-replay <replay batch dir>]
 """
 
 from __future__ import annotations
@@ -26,7 +30,8 @@ import numpy as np
 import torch
 
 from .prequential import epiplexity, init_params, prequential
-from .states import Quantizer, States, Transitions, load_states, patches, sample_transitions
+from .states import States, load_states
+from .transitions import Quantizer, Transitions, patches, sample_transitions
 
 EVAL_STREAM, TRAIN_STREAM, FRAME_ORDER = 0, 1, 2
 
@@ -64,7 +69,8 @@ class Config:
     frame_order: str
     stride: int
     lag: int
-    eval_every: int
+    split: str
+    eval_every: int | None
     n_train: int
     n_eval: int
     batch: int
@@ -80,6 +86,14 @@ class Config:
         config = cls(**fields)
         if config.frame_order not in ("real", "shuffled"):
             raise ValueError("frame_order must be 'real' or 'shuffled'")
+        if config.split == "frames":
+            if config.eval_every is None or config.eval_every < 2:
+                raise ValueError("split 'frames' needs eval_every >= 2")
+        elif config.split == "trajectories":
+            if config.eval_every is not None:
+                raise ValueError("split 'trajectories' holds out whole runs; eval_every must be null")
+        else:
+            raise ValueError("split must be 'frames' or 'trajectories'")
         return config
 
     @property
@@ -101,20 +115,26 @@ def rng(config: Config, campaign: str, purpose: int) -> np.random.Generator:
 
 
 def split(states: States, config: Config) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Returns (values in coding order, source frames, held-out mask over sources). A shuffled frame order keeps
-    each frame's texture and destroys its dynamics, the control for texture-only structure."""
+    """Returns (values in coding order, training source frames, held-out source frames). A shuffled
+    frame order keeps each frame's texture and destroys its dynamics, the control for texture-only
+    structure. Under split "trajectories" both are every source, because the held-out frames are
+    drawn from a different run of the creature."""
     values = states.values
     if config.frame_order == "shuffled":
         values = values[rng(config, states.campaign, FRAME_ORDER).permutation(len(values))]
     sources = np.arange(0, len(values) - config.lag, config.stride)
+    if config.split == "trajectories":
+        return values, sources, sources
+    assert config.eval_every is not None
     held_out = np.arange(len(sources)) % config.eval_every == config.eval_every - 1
-    return values, sources, held_out
+    return values, sources[~held_out], sources[held_out]
 
 
 def stream(states: States, config: Config, which: int) -> Transitions:
-    """The training (TRAIN_STREAM) or held-out (EVAL_STREAM) sample stream of one creature."""
-    values, sources, held_out = split(states, config)
-    t = sources[held_out if which == EVAL_STREAM else ~held_out]
+    """The training (TRAIN_STREAM) or held-out (EVAL_STREAM) sample stream of one creature. Under
+    split "trajectories" the EVAL_STREAM states must come from the held-out replay."""
+    values, train_sources, eval_sources = split(states, config)
+    t = eval_sources if which == EVAL_STREAM else train_sources
     n = config.n_eval if which == EVAL_STREAM else config.n_train
     return sample_transitions(values, t, lag=config.lag, n=n, quantizer=config.quantizer,
                               rng=rng(config, states.campaign, which))
@@ -157,9 +177,11 @@ def describe(states: States, config: Config) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="lenia-swarm-observer measure", description=__doc__,
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis observer measure",
+                                     description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--replay", type=Path, required=True)
+    parser.add_argument("--held-out-replay", type=Path)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", required=True, choices=["mps", "cuda", "cpu"])
@@ -167,9 +189,18 @@ def main(argv: list[str] | None = None) -> int:
 
     config = Config.from_dict(json.loads(args.config.read_text()))
     campaign_dirs = sorted(d for d in (args.replay / "campaigns").iterdir() if d.is_dir())
+    held_out_replay: Path | None = args.held_out_replay
+    if (config.split == "trajectories") != (held_out_replay is not None):
+        parser.error("--held-out-replay is required with split 'trajectories' and refused otherwise")
+    if held_out_replay is not None:
+        held_out_names = sorted(d.name for d in (held_out_replay / "campaigns").iterdir() if d.is_dir())
+        if held_out_names != [d.name for d in campaign_dirs]:
+            raise ValueError(f"{held_out_replay} must hold exactly the campaigns of {args.replay}")
     args.out.mkdir(parents=True, exist_ok=False)
     (args.out / "config.json").write_text(json.dumps(
-        {"replay": str(args.replay.resolve()), "device": args.device, **asdict(config)}, indent=1))
+        {"replay": str(args.replay.resolve()), "device": args.device,
+         "held_out_replay": None if held_out_replay is None else str(held_out_replay.resolve()),
+         **asdict(config)}, indent=1))
 
     side = 2 * config.radius + 1
     channels = load_states(campaign_dirs[0]).values.shape[-1]
@@ -186,10 +217,19 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValueError("all campaigns of one measurement must have the same channel count")
             names = [s.campaign for s in group]
             streams = [stream(s, config, TRAIN_STREAM) for s in group]
-            for i, s in enumerate(group):
-                held_out = stream(s, config, EVAL_STREAM)
-                eval_x[g0 + i], eval_t[g0 + i] = held_out_patches(held_out, config), held_out.target.numpy()
             rows = [describe(s, config) for s in group]
+            for i, (s, row) in enumerate(zip(group, rows, strict=True)):
+                if held_out_replay is None:
+                    held_out = stream(s, config, EVAL_STREAM)
+                else:
+                    unseen = load_states(held_out_replay / "campaigns" / s.campaign)
+                    if unseen.values.shape[-1] != channels:
+                        raise ValueError(f"{unseen.campaign}: held-out run has a different channel count")
+                    row["held_out"] = describe(unseen, config)
+                    if row["held_out"]["state_digest"] == row["state_digest"]:
+                        raise ValueError(f"{s.campaign}: held-out run is identical to the training run")
+                    held_out = stream(unseen, config, EVAL_STREAM)
+                eval_x[g0 + i], eval_t[g0 + i] = held_out_patches(held_out, config), held_out.target.numpy()
             for observer in config.observers:
                 p = init_params(learner_seeds(config, names), observer.input_size(channels),
                                 config.quantizer.bins, observer.hidden, args.device)
