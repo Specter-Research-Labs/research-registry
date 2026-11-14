@@ -28,15 +28,6 @@ dev = [
 
 [project.scripts]
 lenia-swarm-analysis = "lenia_swarm_analysis._cli:main"
-lenia-swarm-morphospace = "lenia_swarm_analysis.morphospace_cli:main"
-lenia-swarm-waddington = "lenia_swarm_analysis.waddington._cli:main"
-lenia-swarm-observer = "lenia_swarm_analysis.observer._cli:main"
-lenia-swarm-chakazul-presets = "lenia_swarm_analysis.chakazul_presets:main"
-lenia-swarm-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.trajectory_inverse:main"
-lenia-swarm-refine-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.trajectory_inverse:refinement_main"
-lenia-swarm-render-trajectory-inverse = "lenia_swarm_analysis.anatomical_compiler.render_trajectory_inverse:main"
-lenia-swarm-behavior-spread = "lenia_swarm_analysis.anatomical_compiler.behavior_spread:main"
-lenia-swarm-fiber-locality = "lenia_swarm_analysis.anatomical_compiler.fiber_locality:main"
 
 [build-system]
 requires = ["hatchling>=1.27.0"]

@@ -124,9 +124,8 @@ public func refreshWarehouseFromCompendium(
     var arguments = [
         "uv",
         "run",
-        "python",
-        "-m",
-        "lenia_swarm_analysis.morphospace_cli",
+        "lenia-swarm-analysis",
+        "morphospace",
         "refresh-compendium",
         "--warehouse",
         warehousePath,

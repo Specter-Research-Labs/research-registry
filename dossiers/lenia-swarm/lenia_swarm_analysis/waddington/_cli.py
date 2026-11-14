@@ -12,11 +12,10 @@ Stages (the replay-with-capture between build-inputs and ingest is a LeniaCLI st
 from __future__ import annotations
 
 import argparse
-import sys
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="lenia-swarm-waddington", description=__doc__)
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis waddington", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("build-inputs", help="sample seeded export indices per config")
     sub.add_parser("ingest", help="ingest replay-with-capture runs into the study warehouse")
@@ -113,7 +112,3 @@ def main(argv: list[str] | None = None) -> int:
         from .bifurcation import build
         build()
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

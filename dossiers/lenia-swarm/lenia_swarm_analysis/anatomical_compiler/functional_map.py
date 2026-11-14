@@ -116,7 +116,8 @@ def _scatter(complexity: np.ndarray, drift: np.ndarray, is_coherent: np.ndarray,
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis anatomical-compiler functional-map",
+                                     description=__doc__)
     parser.add_argument(
         "--base", type=Path, default=DOSSIER_ROOT / "configs/base/paper_random_3c_15k_128.json"
     )
@@ -195,7 +196,3 @@ def main(argv: list[str] | None = None) -> int:
           f"{report['highComplexityLowDriftCount']}/{n}")
     print(f"wrote {out_dir}/complexity_recovery.png")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -74,7 +74,8 @@ def _scatter(scores: np.ndarray, color_by: np.ndarray, out_png: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="lenia-swarm-analysis anatomical-compiler functional-morphospace",
+                                     description=__doc__)
     parser.add_argument("--harvest", type=Path, default=_HARVEST)
     parser.add_argument(
         "--output", type=Path, default=DOSSIER_ROOT / "outputs/anatomical-compiler/functional-morphospace"
@@ -106,7 +107,3 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {pc}: {top}")
     print(f"wrote {out_dir}/functional_morphospace.png")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

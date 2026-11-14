@@ -471,7 +471,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="lenia-swarm-behavior-spread",
+        prog="lenia-swarm-analysis anatomical-compiler behavior-spread",
         description="Behavior spread among shape-mates, with paired-seed and residual-shape controls",
     )
     parser.add_argument("run_dir", type=Path, help="behavior-spread run with plan.json, results/ and rollouts/")
@@ -479,7 +479,3 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     write_json(args.output, analyze_run(args.run_dir))
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

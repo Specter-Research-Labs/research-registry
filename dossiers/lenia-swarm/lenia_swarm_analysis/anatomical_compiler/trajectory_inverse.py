@@ -275,59 +275,55 @@ def parse_steps(value: str) -> list[int]:
     return steps
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source-config", required=True, type=Path)
-    parser.add_argument("--frames-dir", required=True, type=Path)
-    parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--steps", type=parse_steps, default=parse_steps("100,200,300"))
-    parser.add_argument("--generations", type=int, default=30)
-    parser.add_argument("--population", type=int, default=24)
-    parser.add_argument("--seed", type=int, default=41)
-    parser.add_argument("--sigma", type=float, default=1.4)
-    parser.add_argument("--learning-rate", type=float, default=0.10)
-    args = parser.parse_args()
-    paths = prepare_experiment(
-        source_config=args.source_config,
-        frames_dir=args.frames_dir,
-        output_dir=args.output,
-        observed_steps=args.steps,
-        generations=args.generations,
-        population=args.population,
-        seed=args.seed,
-        sigma=args.sigma,
-        learning_rate=args.learning_rate,
-    )
-    print(json.dumps({key: str(value) for key, value in paths.items()}, indent=2))
-
-
-def refinement_main() -> None:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Prepare a narrow inverse-search stage from a broad-search winner."
+        prog="lenia-swarm-analysis anatomical-compiler trajectory-inverse", description=__doc__
     )
-    parser.add_argument("--source-config", required=True, type=Path)
-    parser.add_argument("--coarse-best", required=True, type=Path)
-    parser.add_argument("--coarse-es", required=True, type=Path)
-    parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--generations", type=int, default=12)
-    parser.add_argument("--population", type=int)
-    parser.add_argument("--seed", type=int, default=43)
-    parser.add_argument("--sigma", type=float, default=0.15)
-    parser.add_argument("--learning-rate", type=float, default=0.05)
-    args = parser.parse_args()
-    paths = prepare_refinement_experiment(
-        source_config=args.source_config,
-        coarse_best=args.coarse_best,
-        coarse_es=args.coarse_es,
-        output_dir=args.output,
-        generations=args.generations,
-        population=args.population,
-        seed=args.seed,
-        sigma=args.sigma,
-        learning_rate=args.learning_rate,
-    )
+    stages = parser.add_subparsers(dest="stage", required=True)
+    prepare = stages.add_parser("prepare", help="Paired still and trajectory searches")
+    prepare.add_argument("--source-config", required=True, type=Path)
+    prepare.add_argument("--frames-dir", required=True, type=Path)
+    prepare.add_argument("--output", required=True, type=Path)
+    prepare.add_argument("--steps", type=parse_steps, default=parse_steps("100,200,300"))
+    prepare.add_argument("--generations", type=int, default=30)
+    prepare.add_argument("--population", type=int, default=24)
+    prepare.add_argument("--seed", type=int, default=41)
+    prepare.add_argument("--sigma", type=float, default=1.4)
+    prepare.add_argument("--learning-rate", type=float, default=0.10)
+    refine = stages.add_parser("refine", help="Narrow search from a broad-search winner")
+    refine.add_argument("--source-config", required=True, type=Path)
+    refine.add_argument("--coarse-best", required=True, type=Path)
+    refine.add_argument("--coarse-es", required=True, type=Path)
+    refine.add_argument("--output", required=True, type=Path)
+    refine.add_argument("--generations", type=int, default=12)
+    refine.add_argument("--population", type=int)
+    refine.add_argument("--seed", type=int, default=43)
+    refine.add_argument("--sigma", type=float, default=0.15)
+    refine.add_argument("--learning-rate", type=float, default=0.05)
+    args = parser.parse_args(argv)
+    if args.stage == "refine":
+        paths = prepare_refinement_experiment(
+            source_config=args.source_config,
+            coarse_best=args.coarse_best,
+            coarse_es=args.coarse_es,
+            output_dir=args.output,
+            generations=args.generations,
+            population=args.population,
+            seed=args.seed,
+            sigma=args.sigma,
+            learning_rate=args.learning_rate,
+        )
+    else:
+        paths = prepare_experiment(
+            source_config=args.source_config,
+            frames_dir=args.frames_dir,
+            output_dir=args.output,
+            observed_steps=args.steps,
+            generations=args.generations,
+            population=args.population,
+            seed=args.seed,
+            sigma=args.sigma,
+            learning_rate=args.learning_rate,
+        )
     print(json.dumps({key: str(value) for key, value in paths.items()}, indent=2))
-
-
-if __name__ == "__main__":
-    main()
+    return 0

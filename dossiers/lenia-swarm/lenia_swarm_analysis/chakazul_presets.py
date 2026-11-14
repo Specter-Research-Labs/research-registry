@@ -593,7 +593,3 @@ def main(argv: list[str] | None = None) -> int:
         )
     print(f"wrote {len(presets)} presets to {args.output_dir}")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

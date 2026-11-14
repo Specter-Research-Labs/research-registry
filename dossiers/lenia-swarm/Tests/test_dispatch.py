@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from lenia_swarm_analysis import _cli, _dispatch
-from lenia_swarm_analysis._commands import GROUPS_BY_NAME
+from lenia_swarm_analysis._commands import OBSERVER
 from lenia_swarm_analysis._dispatch import Subcommand
 
 
@@ -76,7 +76,7 @@ def test_group_cli_uses_shared_registry_and_forwards_args(monkeypatch) -> None:
     assert (
         _dispatch.dispatch_command_group(
             ["measure", "--states", "runs/a"],
-            GROUPS_BY_NAME["observer"],
+            OBSERVER,
         )
         == 0
     )

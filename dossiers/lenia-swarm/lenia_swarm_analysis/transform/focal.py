@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import argparse
-import json
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import mean
@@ -649,55 +647,3 @@ def build_transformation_focal_packet(
             "byCanonicalFamily": by_canonical_family,
         },
     }
-
-
-def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Build a focal robustness packet from Flow atlas intervention-battery outputs."
-    )
-    parser.add_argument(
-        "--focal-spec",
-        required=True,
-        help="Path to flow-transformation-atlas-focal-spec.json",
-    )
-    parser.add_argument(
-        "--campaign-root",
-        required=True,
-        help="Path to the focal campaign output root containing per-phase metrics.jsonl files",
-    )
-    parser.add_argument(
-        "--allow-incomplete",
-        action="store_true",
-        help="Skip unfinished focal phases instead of failing",
-    )
-    parser.add_argument("--output", help="Output path")
-    return parser
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_arg_parser()
-    args = parser.parse_args(argv)
-    focal_spec_path = Path(args.focal_spec).expanduser().resolve()
-    campaign_root = Path(args.campaign_root).expanduser().resolve()
-    packet = build_transformation_focal_packet(
-        focal_spec_path=focal_spec_path,
-        campaign_root=campaign_root,
-        allow_incomplete=bool(args.allow_incomplete),
-    )
-    output_path = (
-        Path(args.output).expanduser().resolve()
-        if args.output
-        else focal_spec_path.parent / "transformation-focal-packet.json"
-    )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(
-        "Transformation focal packet:"
-        f" specimens={packet['summary']['selectedSpecimenCount']}"
-        f" output={output_path}"
-    )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

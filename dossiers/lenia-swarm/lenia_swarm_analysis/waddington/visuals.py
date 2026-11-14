@@ -5,7 +5,7 @@ atlas    : place real terminal fingerprints at their morphospace location, so th
 biascheck: split each config's specimens into two independent halves and compare basin structure
            and flux, quantifying how much the result depends on the particular 8k we sampled.
 
-Run with: uv run --with matplotlib --with scipy python -m lenia_swarm_analysis.waddington._cli <viz>
+Run with: uv run lenia-swarm-analysis waddington <viz>
 """
 
 from __future__ import annotations

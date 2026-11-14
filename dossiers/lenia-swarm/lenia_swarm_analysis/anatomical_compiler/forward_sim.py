@@ -16,7 +16,6 @@ writes to the shared compendium.
 
 from __future__ import annotations
 
-import argparse
 import json
 import subprocess
 import tempfile
@@ -230,46 +229,3 @@ def _merged_env(extra: dict[str, str]) -> dict[str, str]:
     environment = dict(os.environ)
     environment.update(extra)
     return environment
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Generate a fresh (genotype, phenotype) dataset by sampling the "
-        "forward map of one fully-specified regime."
-    )
-    parser.add_argument(
-        "--base", type=Path, default=DOSSIER_ROOT / "configs/base/paper_base_3k_1c_128.json"
-    )
-    parser.add_argument(
-        "--search", type=Path, default=DOSSIER_ROOT / "configs/search/search_crossmap_motion.json"
-    )
-    parser.add_argument("--count", type=int, default=5000)
-    parser.add_argument("--steps", type=int, default=1200)
-    parser.add_argument("--seed-start", type=int, default=1)
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=DOSSIER_ROOT / "outputs/anatomical-compiler/forward_dataset_3k_1c_128.jsonl",
-    )
-    args = parser.parse_args(argv)
-
-    simulator = ForwardSimulator(
-        args.base,
-        args.search,
-        dossier_root=DOSSIER_ROOT,
-        steps=args.steps,
-        timeout_seconds=3600.0,
-    )
-    rows = simulator.generate_dataset(args.count, seed_start=args.seed_start)
-    output_path = args.output.resolve()
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as handle:
-        for row in rows:
-            handle.write(json.dumps(row) + "\n")
-    stable = sum(1 for row in rows if row["phenotype"]["is_stable"])
-    print(f"Wrote {len(rows)} rows ({stable} stable) to {output_path}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

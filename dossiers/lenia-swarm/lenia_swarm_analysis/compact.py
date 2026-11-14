@@ -984,7 +984,3 @@ def main(argv: list[str] | None = None) -> int:
     for error in sorted(errors, key=lambda item: item["path"]):
         print(f"error: {error['path']}: {error['error']}", file=sys.stderr)
     return 1 if errors else 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
