@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import math
 from statistics import mean, median
-from typing import Any
+from typing import Any, Literal, NamedTuple
 
 import numpy as np
+from scipy import ndimage
 
 from .trace_codec import fingerprint_u8
+
+# invariant: bodies are 8-connected and holes 4-connected, the dual pair under which a
+# diagonal gap neither splits a body nor opens a hole.
+BODY_CONNECTIVITY = np.ones((3, 3), dtype=bool)
 
 TERMINAL_AXIS_SPECS: tuple[dict[str, str], ...] = (
     {
@@ -280,87 +285,49 @@ def quantiles(values: list[float]) -> dict[str, float]:
     }
 
 
-def robust_center_scale(values: list[float]) -> tuple[float, float]:
+class RobustScale(NamedTuple):
+    center: float
+    scale: float
+    estimator: Literal["mad", "std", "constant"]
+
+
+def robust_center_scale(values: list[float]) -> RobustScale:
+    """Median centre with a MAD scale.
+
+    A population with more than half its values equal (for example cavity counts) has MAD 0,
+    so its scale is the population standard deviation; a constant population has unit scale,
+    so z is the raw offset from that constant. The estimator is returned so callers record it.
+    """
     center = float(median(values))
-    deviations = [abs(value - center) for value in values]
-    mad = float(median(deviations)) * 1.4826
+    mad = float(median([abs(value - center) for value in values])) * 1.4826
     if mad > 0:
-        return center, mad
-    if len(values) <= 1:
-        return center, 1.0
+        return RobustScale(center, mad, "mad")
     mean_value = float(mean(values))
-    variance = float(sum((value - mean_value) ** 2 for value in values) / len(values))
-    scale = math.sqrt(variance)
-    return center, scale if scale > 0 else 1.0
+    std = math.sqrt(sum((value - mean_value) ** 2 for value in values) / len(values))
+    if std > 0:
+        return RobustScale(center, std, "std")
+    return RobustScale(center, 1.0, "constant")
 
 
 def zscore(value: float, *, center: float, scale: float) -> float:
-    return (value - center) / max(scale, 1.0e-9)
+    return (value - center) / scale
 
 
-def _component_cells(mask: np.ndarray) -> list[list[tuple[int, int]]]:
-    height, width = mask.shape
-    occupied_visited = np.zeros((height, width), dtype=bool)
-    neighbors = ((1, 0), (-1, 0), (0, 1), (0, -1))
-    components: list[list[tuple[int, int]]] = []
-    for y in range(height):
-        for x in range(width):
-            if occupied_visited[y, x] or not bool(mask[y, x]):
-                continue
-            frontier = [(y, x)]
-            occupied_visited[y, x] = True
-            component: list[tuple[int, int]] = []
-            while frontier:
-                cy, cx = frontier.pop()
-                component.append((cy, cx))
-                for dy, dx in neighbors:
-                    ny = cy + dy
-                    nx = cx + dx
-                    if (
-                        0 <= ny < height
-                        and 0 <= nx < width
-                        and bool(mask[ny, nx])
-                        and not occupied_visited[ny, nx]
-                    ):
-                        occupied_visited[ny, nx] = True
-                        frontier.append((ny, nx))
-            components.append(component)
-    return components
+def label_bodies(mask: np.ndarray) -> tuple[np.ndarray, int]:
+    labels, count = ndimage.label(mask, structure=BODY_CONNECTIVITY)
+    return labels, int(count)
 
 
 def _hole_count(mask: np.ndarray, *, min_size: int) -> int:
-    height, width = mask.shape
-    background_visited = np.zeros((height, width), dtype=bool)
-    neighbors = ((1, 0), (-1, 0), (0, 1), (0, -1))
-    hole_count = 0
-    background = ~mask
-    for y in range(height):
-        for x in range(width):
-            if background_visited[y, x] or not bool(background[y, x]):
-                continue
-            frontier = [(y, x)]
-            background_visited[y, x] = True
-            touches_border = y == 0 or x == 0 or y == height - 1 or x == width - 1
-            size = 0
-            while frontier:
-                cy, cx = frontier.pop()
-                size += 1
-                for dy, dx in neighbors:
-                    ny = cy + dy
-                    nx = cx + dx
-                    if (
-                        0 <= ny < height
-                        and 0 <= nx < width
-                        and bool(background[ny, nx])
-                        and not background_visited[ny, nx]
-                    ):
-                        background_visited[ny, nx] = True
-                        if ny == 0 or nx == 0 or ny == height - 1 or nx == width - 1:
-                            touches_border = True
-                        frontier.append((ny, nx))
-            if not touches_border and size >= min_size:
-                hole_count += 1
-    return hole_count
+    labels, count = ndimage.label(~mask)
+    border = np.unique(
+        np.concatenate((labels[0, :], labels[-1, :], labels[:, 0], labels[:, -1]))
+    )
+    sizes = np.bincount(labels.ravel(), minlength=count + 1)
+    interior = np.ones(count + 1, dtype=bool)
+    interior[0] = False
+    interior[border] = False
+    return int(np.count_nonzero(interior & (sizes >= min_size)))
 
 
 def _shift_image(image: np.ndarray, *, shift_x: int, shift_y: int) -> np.ndarray:
@@ -441,34 +408,22 @@ def _aligned_image(
     return aligned
 
 
-def fingerprint_metrics(fingerprint: np.ndarray) -> dict[str, float]:
+def fingerprint_metrics(fingerprint: np.ndarray, *, specimen_id: str) -> dict[str, float]:
     mask = fingerprint > 0
-    if not np.any(mask):
-        return {
-            "elongation": 1.0,
-            "boundaryComplexity": 0.0,
-            "componentCount": 0.0,
-            "cavityCount": 0.0,
-            "bilateralSymmetry": 0.0,
-            "radialSymmetry": 0.0,
-            "rotationalSymmetry": 0.0,
-            "leftRightAsymmetry": 0.0,
-            "centerOffset": 0.0,
-            "axialPolarity": 0.0,
-        }
     raw_area = int(np.count_nonzero(mask))
+    if raw_area == 0:
+        raise SystemExit(f"{specimen_id}: empty fingerprint has no body to measure")
     min_component_size = max(2, int(round(raw_area * 0.02)))
-    filtered_mask = np.zeros_like(mask, dtype=bool)
-    retained_components = 0
-    for component in _component_cells(mask):
-        if len(component) < min_component_size:
-            continue
-        retained_components += 1
-        for y, x in component:
-            filtered_mask[y, x] = True
-    if not np.any(filtered_mask):
-        filtered_mask = mask
-        retained_components = len(_component_cells(mask))
+    labels, _ = label_bodies(mask)
+    retained = np.bincount(labels.ravel()) >= min_component_size
+    retained[0] = False
+    retained_components = int(np.count_nonzero(retained))
+    if retained_components == 0:
+        raise SystemExit(
+            f"{specimen_id}: no fingerprint component reaches {min_component_size} cells; "
+            "the body is dust"
+        )
+    filtered_mask = retained[labels]
 
     ys, xs = np.nonzero(filtered_mask)
     weights = fingerprint[ys, xs].astype(np.float64)
@@ -500,22 +455,29 @@ def fingerprint_metrics(fingerprint: np.ndarray) -> dict[str, float]:
     area = float(np.count_nonzero(filtered_mask))
     boundary_complexity = perimeter / math.sqrt(area)
     cavity_count = _hole_count(filtered_mask, min_size=min_component_size)
-    weighted = np.zeros_like(fingerprint, dtype=np.float64)
-    weighted[ys, xs] = weights
     image_center_x = (fingerprint.shape[1] - 1) / 2.0
     image_center_y = (fingerprint.shape[0] - 1) / 2.0
+    # A margin of one fingerprint width on every side keeps recentring and principal-axis
+    # alignment from clipping the body and keeps every radial ring whole, so the symmetry scores
+    # do not depend on how much empty arena surrounds the body. It keeps the canvas parity, so
+    # the half-cell rotation centre of an even fingerprint is unchanged.
+    margin = max(fingerprint.shape)
+    canvas = np.zeros(
+        (fingerprint.shape[0] + 2 * margin, fingerprint.shape[1] + 2 * margin), dtype=np.float64
+    )
+    canvas[ys + margin, xs + margin] = weights
     recentered = _shift_image(
-        weighted,
+        canvas,
         shift_x=int(round(image_center_x - x_center)),
         shift_y=int(round(image_center_y - y_center)),
     )
     aligned = _aligned_image(
-        weighted,
-        xs=xs,
-        ys=ys,
+        canvas,
+        xs=xs + margin,
+        ys=ys + margin,
         weights=weights,
-        x_center=x_center,
-        y_center=y_center,
+        x_center=x_center + margin,
+        y_center=y_center + margin,
         major_vector=major_vector,
         minor_vector=minor_vector,
     )
@@ -587,7 +549,8 @@ def extract_terminal_raw_axes_from_descriptors(
         specimen_id=specimen_id,
     )
     metrics = fingerprint_metrics(
-        fingerprint_u8(terminal, specimen_id=specimen_id).astype(np.float32)
+        fingerprint_u8(terminal, specimen_id=specimen_id).astype(np.float32),
+        specimen_id=specimen_id,
     )
     return {
         "spread": gyration,

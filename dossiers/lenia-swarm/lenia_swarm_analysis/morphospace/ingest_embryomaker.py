@@ -186,14 +186,15 @@ def load_embryomaker_node_points(path: Path) -> list[tuple[float, float, float]]
     return [(float(node.x), float(node.y), float(node.z)) for node in snapshot.nodes]
 
 
-def _axis_stats(records: list[EmbryoMakerSnapshotRecord]) -> dict[str, dict[str, float]]:
-    stats: dict[str, dict[str, float]] = {}
+def _axis_stats(records: list[EmbryoMakerSnapshotRecord]) -> dict[str, dict[str, Any]]:
+    stats: dict[str, dict[str, Any]] = {}
     for axis_id in AXIS_IDS:
         values = [record.values[axis_id] for record in records]
-        center, scale = robust_center_scale(values)
+        robust = robust_center_scale(values)
         stats[axis_id] = {
-            "center": center,
-            "scale": scale,
+            "center": robust.center,
+            "scale": robust.scale,
+            "estimator": robust.estimator,
             "min": min(values),
             "max": max(values),
         }
@@ -331,6 +332,7 @@ def ingest_embryomaker_snapshots(
                 "metadata_json": {
                     "robustCenter": stats[spec["id"]]["center"],
                     "robustScale": stats[spec["id"]]["scale"],
+                    "robustScaleEstimator": stats[spec["id"]]["estimator"],
                     "rawMin": stats[spec["id"]]["min"],
                     "rawMax": stats[spec["id"]]["max"],
                 },

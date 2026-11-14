@@ -87,12 +87,13 @@ def _axis_statistics(
     for axis_id in axis_ids:
         transformed = [float(row["transformedAxes"][axis_id]) for row in rows]
         raw = [float(row["rawAxes"][axis_id]) for row in rows]
-        center, scale = robust_center_scale(transformed)
+        robust = robust_center_scale(transformed)
         stats[axis_id] = {
             "rawQuantiles": quantiles(raw),
             "transformedQuantiles": quantiles(transformed),
-            "center": center,
-            "scale": scale,
+            "center": robust.center,
+            "scale": robust.scale,
+            "scaleEstimator": robust.estimator,
         }
     return stats
 
