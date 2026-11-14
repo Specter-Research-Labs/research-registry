@@ -684,11 +684,8 @@ public final class FlowLeniaInteractiveSimulator {
                 "The requested Metal backend does not support this runtime contract."
             )
         }
-        if runtimeConfig.backend == .cpu {
-            precondition(
-                Self.supportsResidentCPU(runtimeConfig),
-                "Backend cpu needs fixed parameters (parameter_embedding.enabled=false), a mode other than qd24_additive_v1, and torus/periodic or wall/zero_pad boundaries."
-            )
+        if runtimeConfig.backend == .cpu, let violation = Self.residentCPUViolation(runtimeConfig) {
+            preconditionFailure(violation)
         }
         self.effectiveBackend = runtimeConfig.backend
         self.baseWallPotential = environmentPotential
@@ -785,13 +782,19 @@ public final class FlowLeniaInteractiveSimulator {
         return supportedMixes.contains(runtimeConfig.parameterEmbedding.mix)
     }
 
-    static func supportsResidentCPU(_ runtimeConfig: LeniaRuntimeConfig) -> Bool {
+    /// Why the cpu backend cannot run this runtime, or nil when it can.
+    public static func residentCPUViolation(_ runtimeConfig: LeniaRuntimeConfig) -> String? {
         let validBoundaryPair =
             (runtimeConfig.border == "torus" && runtimeConfig.implementation.gradientBoundary == "periodic")
             || (runtimeConfig.border == "wall" && runtimeConfig.implementation.gradientBoundary == "zero_pad")
-        return runtimeConfig.implementation.mode != "qd24_additive_v1"
-            && !runtimeConfig.parameterEmbedding.enabled
-            && validBoundaryPair
+        guard runtimeConfig.implementation.mode != "qd24_additive_v1",
+              !runtimeConfig.parameterEmbedding.enabled,
+              validBoundaryPair else {
+            return "Backend cpu needs fixed parameters (parameter_embedding.enabled=false), a mode other than qd24_additive_v1, and torus/periodic or wall/zero_pad boundaries."
+        }
+        return FlowLeniaCPUStateRunner.gridViolation(border: runtimeConfig.border, sx: runtimeConfig.sx,
+                                                     sy: runtimeConfig.sy, dd: runtimeConfig.dd,
+                                                     sigma: runtimeConfig.sigma, n: runtimeConfig.n)
     }
 
     public func makeInitialState(seedOverride: Int? = nil) -> FlowLeniaInteractiveState {
@@ -817,40 +820,36 @@ public final class FlowLeniaInteractiveSimulator {
         if let params { eval(params) }
         if let food { eval(food) }
 
-        let initialState = FlowLeniaInteractiveState(
+        return makeResident(FlowLeniaInteractiveState(
             step: 0,
             mass: mass,
             params: params,
             food: food
-        )
+        ))
+    }
+
+    /// Uploads `state` to the resident runner so that resident-only attachments, such as ancestry, can bind to it.
+    public func makeResident(_ state: FlowLeniaInteractiveState) -> FlowLeniaInteractiveState {
         guard residentRunner != nil else {
-            return initialState
+            return state
         }
-        synchronizeResidentRunner(with: initialState)
+        synchronizeResidentRunner(with: state)
         return residentState(
-            step: initialState.step,
-            mass: initialState.mass,
-            params: initialState.params,
-            food: initialState.food
+            step: state.step,
+            mass: state.mass,
+            params: state.params,
+            food: state.food
         )
     }
 
     func capacityPilotLastFlow() -> [Float] {
-        #if canImport(Metal)
-        guard let metalRunner else { preconditionFailure("Transport tracing requires resident Metal") }
-        return metalRunner.materializeLastFlow()
-        #else
-        preconditionFailure("Transport tracing requires resident Metal")
-        #endif
+        guard let residentRunner else { preconditionFailure("Flow tracing requires a resident metal-full or cpu runner") }
+        return residentRunner.materializeLastFlow()
     }
 
     func capacityPilotLastPotential() -> [Float] {
-        #if canImport(Metal)
-        guard let metalRunner else { preconditionFailure("Potential tracing requires resident Metal") }
-        return metalRunner.materializeLastPotential()
-        #else
-        preconditionFailure("Potential tracing requires resident Metal")
-        #endif
+        guard let residentRunner else { preconditionFailure("Potential tracing requires a resident metal-full or cpu runner") }
+        return residentRunner.materializeLastPotential()
     }
 
     func phantomField() -> [Float] {

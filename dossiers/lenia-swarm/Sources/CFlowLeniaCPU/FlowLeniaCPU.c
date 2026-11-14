@@ -254,6 +254,7 @@ struct FLCPUEngine {
     float *mass[2];
     float *params;
     float *lastU;
+    float *lastFlow;
     int current;
 
     float *spectra;
@@ -539,7 +540,7 @@ static inline const float *halo_row(const FLCPUEngine *e, const float *base, int
     return y < 0 || y >= sy ? e->zeroRow : base + (size_t)y * e->uStride;
 }
 
-static void stage_flow(FLCPUEngine *e, Group *g, int y, const float *mass) {
+static void stage_flow(FLCPUEngine *e, Group *g, int y, const float *mass, float *flowOut) {
     const FLCPUConfig *c = &e->config;
     int sx = c->sx, sy = c->sy, C = c->channelCount, dd = c->dd;
     int us = e->uStride, ts = e->tStride;
@@ -582,6 +583,10 @@ static void stage_flow(FLCPUEngine *e, Group *g, int y, const float *mass) {
             if (c->clipFlow) {
                 flowY = vclamp(flowY, negMaxAdv, maxAdv);
                 flowX = vclamp(flowX, negMaxAdv, maxAdv);
+            }
+            if (flowOut) {
+                vstore(flowOut + (size_t)(2 * ch) * e->plane + y * sx + xb, flowX);
+                vstore(flowOut + (size_t)(2 * ch + 1) * e->plane + y * sx + xb, flowY);
             }
             v16 clippedX = vclamp(flowX * dt, negMaxAdv, maxAdv);
             v16 clippedY = vclamp(flowY * dt, negMaxAdv, maxAdv);
@@ -731,8 +736,9 @@ static void step_body(FLCPUEngine *e, Worker *w, int body, int count) {
                 }
             }
         }
+        float *flowOut = s == count - 1 ? e->lastFlow + (size_t)body * 2 * bodyStride : NULL;
         for (int y = rank; y < c->sy; y += size) {
-            stage_flow(e, g, y, mass);
+            stage_flow(e, g, y, mass, flowOut);
         }
         barrier_wait(&g->barrier, &w->sense);
         for (int y = rank; y < c->sy; y += size) {
@@ -839,6 +845,7 @@ FLCPUEngine *flcpu_create(const FLCPUConfig *config) {
     e->mass[1] = alloc_floats((size_t)B * C * e->plane);
     e->params = alloc_floats((size_t)B * K * e->plane);
     e->lastU = alloc_floats((size_t)B * C * e->plane);
+    e->lastFlow = alloc_floats((size_t)B * 2 * C * e->plane);
     e->spectra = alloc_floats((size_t)c->kernelBatchCount * K * sx * e->paddedY);
     e->c0 = calloc((size_t)K, sizeof(int32_t));
     e->m = alloc_floats((size_t)B * K);
@@ -942,6 +949,7 @@ void flcpu_destroy(FLCPUEngine *e) {
     free(e->mass[1]);
     free(e->params);
     free(e->lastU);
+    free(e->lastFlow);
     free(e->spectra);
     free(e->c0);
     free(e->m);
@@ -1045,6 +1053,10 @@ void flcpu_get_params(const FLCPUEngine *e, float *params) {
 
 void flcpu_get_last_potential(const FLCPUEngine *e, float *potential) {
     from_planar(e, e->lastU, potential, e->config.channelCount);
+}
+
+void flcpu_get_last_flow(const FLCPUEngine *e, float *flow) {
+    from_planar(e, e->lastFlow, flow, 2 * e->config.channelCount);
 }
 
 void flcpu_mass_map(const FLCPUEngine *e, const float *channelWeights, float *out) {

@@ -97,6 +97,10 @@ protocol FlowLeniaFieldRunner: AnyObject {
     func materializeParams() -> MLXArray
     func materializeState() -> (mass: MLXArray, params: MLXArray)
     func summarizeFoodMass() -> [Float]?
+    /// The last step's growth potential, wall potential included: [batch][sx][sy][channel].
+    func materializeLastPotential() -> [Float]
+    /// The last step's flow after the optional clip and before dt: [batch][sx][sy][channel][x, y].
+    func materializeLastFlow() -> [Float]
 }
 
 func makeFlowLeniaFieldRunner(

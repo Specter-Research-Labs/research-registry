@@ -74,6 +74,9 @@ void flcpu_get_mass(const FLCPUEngine *engine, float *mass);
 void flcpu_get_params(const FLCPUEngine *engine, float *params);
 /// The growth potential U of the last step, potential field included: [batch][sx][sy][channel].
 void flcpu_get_last_potential(const FLCPUEngine *engine, float *potential);
+/// The flow of the last step after the optional flow clip and before dt, as Metal stores it:
+/// [batch][sx][sy][channel][x, y].
+void flcpu_get_last_flow(const FLCPUEngine *engine, float *flow);
 /// out: [batch][sx][sy].
 void flcpu_mass_map(const FLCPUEngine *engine, const float *channelWeights, float *out);
 void flcpu_summarize(

@@ -14,6 +14,37 @@ final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
     private let engine: OpaquePointer
     private(set) var massObservationSynchronizationCount = 0
 
+    /// The grid contract of the cpu engine; nil when the grid satisfies it.
+    static func gridViolation(border: String, sx: Int, sy: Int, dd: Int, sigma: Float, n: Int) -> String? {
+        switch border {
+        case "torus":
+            guard FlowLeniaFieldLayout.usesLocalTorusDistance(
+                sx: sx,
+                sy: sy,
+                dd: dd,
+                maxAdvection: Float(dd) - sigma,
+                useTorus: true
+            ) else {
+                return "Backend cpu needs a torus whose half side exceeds dd + max advection, got \(sx) x \(sy) with dd \(dd)."
+            }
+        case "wall":
+            // Metal's wall kernel also gathers wrapped sources; they add exactly zero only when
+            // no source can reach the far side, which this bound guarantees.
+            guard min(sx, sy) >= 2 * dd + 1 else {
+                return "Backend cpu needs wall grid sides of at least 2 dd + 1, got \(sx) x \(sy) with dd \(dd)."
+            }
+        default:
+            return "Backend cpu supports torus and wall borders, got \(border)."
+        }
+        guard (0...4).contains(n) else {
+            return "Backend cpu supports alpha exponents n in 0...4, got \(n)."
+        }
+        for side in [sx, sy] where side < 16 || side & (side - 1) != 0 {
+            return "Backend cpu needs power-of-two grid sides of at least 16, got \(sx) x \(sy)."
+        }
+        return nil
+    }
+
     init(
         config: BatchedConfig,
         kernels: CompiledKernels,
@@ -21,39 +52,12 @@ final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
         wallPotential: MLXArray?,
         matterWeights: [Float]?
     ) {
-        let torus: Bool
-        switch config.border {
-        case "torus":
-            torus = true
-        case "wall":
-            torus = false
-        default:
-            preconditionFailure("Backend cpu supports torus and wall borders, got \(config.border).")
+        if let violation = Self.gridViolation(border: config.border, sx: config.sx, sy: config.sy,
+                                              dd: config.dd, sigma: config.sigma, n: config.n) {
+            preconditionFailure(violation)
         }
+        let torus = config.border == "torus"
         let maxAdvection = Float(config.dd) - config.sigma
-        if torus {
-            guard FlowLeniaFieldLayout.usesLocalTorusDistance(
-                sx: config.sx,
-                sy: config.sy,
-                dd: config.dd,
-                maxAdvection: maxAdvection,
-                useTorus: true
-            ) else {
-                preconditionFailure("Backend cpu needs a torus whose half side exceeds dd + max advection, got \(config.sx) x \(config.sy) with dd \(config.dd).")
-            }
-        } else {
-            // Metal's wall kernel also gathers wrapped sources; they add exactly zero only when
-            // no source can reach the far side, which this bound guarantees.
-            guard min(config.sx, config.sy) >= 2 * config.dd + 1 else {
-                preconditionFailure("Backend cpu needs wall grid sides of at least 2 dd + 1, got \(config.sx) x \(config.sy) with dd \(config.dd).")
-            }
-        }
-        guard (0...4).contains(config.n) else {
-            preconditionFailure("Backend cpu supports alpha exponents n in 0...4, got \(config.n).")
-        }
-        for side in [config.sx, config.sy] where side < 16 || side & (side - 1) != 0 {
-            preconditionFailure("Backend cpu needs power-of-two grid sides of at least 16, got \(config.sx) x \(config.sy).")
-        }
         let kernelCount = FlowLeniaFieldLayout.parameterCount(for: kernels)
         let kernelBatchCount = FlowLeniaFieldLayout.kernelBatchCount(for: kernels)
         self.config = config
@@ -301,6 +305,12 @@ final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
     func materializeLastPotential() -> [Float] {
         var values = [Float](repeating: 0, count: batchCount * config.sx * config.sy * channelCount)
         flcpu_get_last_potential(engine, &values)
+        return values
+    }
+
+    func materializeLastFlow() -> [Float] {
+        var values = [Float](repeating: 0, count: batchCount * config.sx * config.sy * channelCount * 2)
+        flcpu_get_last_flow(engine, &values)
         return values
     }
 
