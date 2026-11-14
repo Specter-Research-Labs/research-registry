@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
+from lenia_swarm_analysis import DOSSIER_ROOT
 from lenia_swarm_analysis.anatomical_compiler.functional_morphospace import _HARVEST, _pca
 
 _SHAPE_METRICS = (

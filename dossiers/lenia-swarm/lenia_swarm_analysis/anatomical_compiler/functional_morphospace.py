@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-from lenia_swarm_analysis.anatomical_compiler import DOSSIER_ROOT
+from lenia_swarm_analysis import DOSSIER_ROOT
 
 _HARVEST = DOSSIER_ROOT / ("artifacts/flow-universe-runs/track1-20260520/"
                           "track1b-2c10-r7-10-initshift-8192-s4090112/results.jsonl")

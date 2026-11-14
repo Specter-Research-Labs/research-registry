@@ -16,8 +16,9 @@ import json
 import duckdb
 import numpy as np
 
+from .. import DOSSIER_ROOT
 from ._common import pca2, silhouette, zscore
-from .study import DOSSIER_ROOT, FIGURES_DIR, STUDY_ROOT
+from .study import FIGURES_DIR, STUDY_ROOT
 
 COMPENDIUM = DOSSIER_ROOT / "artifacts" / "compendium.sqlite"
 METRICS = (

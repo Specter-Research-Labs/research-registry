@@ -18,6 +18,7 @@ from pathlib import Path
 
 import numpy as np
 
+from .. import DOSSIER_ROOT, LENIA_CLI
 from ..morphospace.ingest_replay import ingest_replay_batch
 from ..morphospace.warehouse import connect_database
 from ..transformation_metrics import (
@@ -26,10 +27,9 @@ from ..transformation_metrics import (
     transform_axes,
 )
 from ._common import iter_family_traces, pca2, silhouette
-from .study import DOSSIER_ROOT, FIGURES_DIR, STUDY_ROOT, WAREHOUSE_DB
+from .study import FIGURES_DIR, STUDY_ROOT, WAREHOUSE_DB
 
 CONFIG_ROOT = DOSSIER_ROOT / "artifacts" / "configs"
-CLI = DOSSIER_ROOT / ".build" / "release" / "LeniaCLI"
 FAM_ROOT = STUDY_ROOT / "families_replay"
 LOCAL_DIR = FAM_ROOT / "local"
 MERGED_INDEX = FAM_ROOT / "families_index.jsonl"
@@ -124,7 +124,7 @@ def run_locals() -> None:
             continue
         out.mkdir(parents=True, exist_ok=True)
         r = subprocess.run(
-            [str(CLI), "discover", "local", "--config", str(cfg), "--search", str(SEARCH_CONFIG),
+            [str(LENIA_CLI), "discover", "local", "--config", str(cfg), "--search", str(SEARCH_CONFIG),
              "--backend", "mlx", "--no-promotion", "--output", str(out)],
             capture_output=True, text=True,
         )
@@ -161,7 +161,7 @@ def replay() -> None:
         for p in sorted(REPLAY_DIR.rglob("*"), reverse=True):
             p.unlink() if p.is_file() else p.rmdir()
     r = subprocess.run(
-        [str(CLI), "publish", "replay", "--input", str(MERGED_INDEX), "--output", str(REPLAY_DIR),
+        [str(LENIA_CLI), "publish", "replay", "--input", str(MERGED_INDEX), "--output", str(REPLAY_DIR),
          "--no-promotion", "--development-trace", "--trace-interval", str(RECORD_INTERVAL),
          "--development-field-resolution", str(FIELD_RESOLUTION), "--development-raw-steps", "all"],
         text=True,

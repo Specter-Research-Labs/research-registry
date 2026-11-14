@@ -8,6 +8,7 @@ from typing import Any, cast
 
 from duckdb import DuckDBPyConnection
 
+from lenia_swarm_analysis import compact
 from lenia_swarm_analysis.transformation_metrics import (
     extract_terminal_raw_axes_from_descriptors,
     transform_axes,
@@ -134,26 +135,6 @@ def _taxonomy_family(row: dict[str, Any]) -> str | None:
     return None
 
 
-def _canonical_export_kind(
-    row: dict[str, Any],
-    *,
-    research_metadata: dict[str, Any] | None = None,
-) -> str | None:
-    bundle_kind = row.get("bundle_kind")
-    if isinstance(bundle_kind, str) and bundle_kind:
-        return bundle_kind
-    if isinstance(research_metadata, dict):
-        value = research_metadata.get("canonical_export_kind")
-        if isinstance(value, str) and value:
-            return value
-        nested = research_metadata.get("source_research_metadata")
-        if isinstance(nested, dict):
-            nested_value = nested.get("canonical_export_kind")
-            if isinstance(nested_value, str) and nested_value:
-                return nested_value
-    return None
-
-
 def _runtime_family(
     row: dict[str, Any],
     *,
@@ -162,18 +143,7 @@ def _runtime_family(
     explicit = row.get("runtime_family")
     if isinstance(explicit, str) and explicit:
         return explicit
-    bundle_kind = _canonical_export_kind(row, research_metadata=research_metadata)
-    if bundle_kind == "qd24_paper_replay_bundle_v1":
-        return "qd24_paper"
-    if bundle_kind == "sensorimotor24_paper_replay_bundle_v1":
-        return "sensorimotor24_paper"
-    source_mode = row.get("source_mode")
-    if isinstance(source_mode, str):
-        if source_mode == "qd-2024":
-            return "qd24_paper"
-        if source_mode == "sensorimotor-2024":
-            return "sensorimotor24_paper"
-    return "flow_lenia"
+    return compact.runtime_family(row["source_mode"], row["bundle_kind"], research_metadata)
 
 
 def _runtime_capabilities(
