@@ -8,13 +8,13 @@ from typing import Any
 
 import duckdb
 
+from analysis.k_metric import BLIND_CANDIDATE, compute_k
 from analysis.logs import (
     extract_solution_steps,
     read_json,
     read_json_gz,
 )
-from prover.k import k_log10_ratio
-from prover.providers.base import TACTIC_FAMILIES, normalize_tactic, tactic_family
+from prover.providers.base import TACTIC_FAMILIES
 
 
 def _load_reference(path: Path) -> dict[str, Any]:
@@ -29,35 +29,27 @@ def _load_reference(path: Path) -> dict[str, Any]:
     return data
 
 
-def _p_success(reference: dict[str, Any], sig: str, fam_idx: int) -> float | None:
-    alpha = reference.get("alpha")
-    if not isinstance(alpha, (int, float)) or float(alpha) <= 0:
-        return None
-    alpha = float(alpha)
-    global_entry = reference.get("global", {})
-    by_sig = reference.get("by_sig", {})
-    if not isinstance(global_entry, dict) or not isinstance(by_sig, dict):
-        return None
+def _family_counts(entry: dict[str, Any], fam_idx: int) -> tuple[int, int]:
+    attempts = entry["attempts"]
+    successes = entry["successes"]
+    if len(attempts) != len(TACTIC_FAMILIES) or len(successes) != len(TACTIC_FAMILIES):
+        raise ValueError(
+            f"reference counts cover {len(attempts)} families, expected {len(TACTIC_FAMILIES)}"
+        )
+    return attempts[fam_idx], successes[fam_idx]
 
-    def _get_counts(entry: dict[str, Any]) -> tuple[int, int] | None:
-        a = entry.get("attempts")
-        s = entry.get("successes")
-        if not isinstance(a, list) or not isinstance(s, list):
-            return None
-        if fam_idx < 0 or fam_idx >= len(a) or fam_idx >= len(s):
-            return None
-        att = a[fam_idx]
-        suc = s[fam_idx]
-        if not isinstance(att, int) or not isinstance(suc, int):
-            return None
-        return att, suc
 
-    entry = by_sig.get(sig)
-    counts = _get_counts(entry) if isinstance(entry, dict) else None
+def _p_success(reference: dict[str, Any], sig: str, fam: str) -> float:
+    """Smoothed p(success | sig, family) from the reference; the reference-wide
+    family rate when the reference never tried the family on this signature."""
+    alpha = float(reference["alpha"])
+    if alpha <= 0:
+        raise ValueError(f"reference alpha must be positive, got {alpha}")
+    fam_idx = TACTIC_FAMILIES.index(fam)
+    entry = reference["by_sig"].get(sig)
+    counts = _family_counts(entry, fam_idx) if entry is not None else None
     if counts is None or counts[0] <= 0:
-        counts = _get_counts(global_entry) if isinstance(global_entry, dict) else None
-    if counts is None:
-        return None
+        counts = _family_counts(reference["global"], fam_idx)
     attempts, successes = counts
     return (successes + alpha) / (attempts + 2 * alpha)
 
@@ -66,118 +58,23 @@ def compute_k_reference_from_variant(
     *,
     theorem_dir: Path,
     variant: str,
-    goal_cache: dict[str, Any] | None,
+    mvar_to_sig: dict[str, str] | None,
     reference: dict[str, Any],
 ) -> dict[str, Any]:
-    mvar_to_sig = None
-    if isinstance(goal_cache, dict):
-        mts = goal_cache.get("mvar_to_sig")
-        mvar_to_sig = mts if isinstance(mts, dict) else None
-
     ext = extract_solution_steps(
         theorem_dir=theorem_dir,
         variant=variant,
         mvar_to_sig=mvar_to_sig,
     )
-    if not ext.valid:
-        return {
-            "schema_version": 1,
-            "valid": False,
-            "validity_notes": ext.validity_notes,
-        }
-
-    notes = list(ext.validity_notes)
-    assert ext.tau_agent is not None
-    tau_agent = ext.tau_agent
-    step_specs = ext.step_specs
-    expected_steps = ext.expected_steps
-    dropped_steps = ext.dropped_steps
-    candidates_by_iter = ext.candidates_by_iter
-
-    def _mean(values: list[float]) -> float | None:
-        return (sum(values) / len(values)) if values else None
-
-    def compute_totals(*, metric: str) -> tuple[float | None, list[str]]:
-        tau_blind = 0.0
-        local_notes: list[str] = []
-        for spec in step_specs:
-            it = spec["iteration"]
-            sig = spec["goal_sig"]
-            used_fam = spec["tactic_family"]
-            candidates = candidates_by_iter.get(it)
-            if not candidates:
-                local_notes.append(f"missing_candidates: iteration={it}")
-                return None, local_notes
-            fams = [tactic_family(normalize_tactic(c)) for c in candidates]
-            if not fams:
-                local_notes.append(f"empty_candidates: iteration={it}")
-                return None, local_notes
-
-            probs = []
-            for fam in fams:
-                p = _p_success(reference, sig, TACTIC_FAMILIES.index(fam))
-                if p is None:
-                    continue
-                probs.append(p)
-            p_step = _mean(probs)
-            if metric == "used_operator":
-                used_count = sum(1 for fam in fams if fam == used_fam)
-                if used_count <= 0:
-                    local_notes.append(f"used_family_missing_from_candidates: iteration={it}")
-                    return None, local_notes
-                p_used = _p_success(reference, sig, TACTIC_FAMILIES.index(used_fam))
-                if p_used is None:
-                    local_notes.append(f"missing_used_family_prob: iteration={it}")
-                    return None, local_notes
-                p_step = (used_count / len(fams)) * p_used
-
-            if p_step is None or p_step <= 0:
-                local_notes.append(f"invalid_step_probability: iteration={it} p={p_step!r}")
-                return None, local_notes
-            tau_blind += 1.0 / p_step
-        return tau_blind, local_notes
-
-    variants: dict[str, dict[str, dict[str, Any]]] = {"any_success": {}, "used_operator": {}}
-    for metric in ("any_success", "used_operator"):
-        tau_blind, local_notes = compute_totals(metric=metric)
-        if tau_blind is None:
-            variants[metric]["blind_uniform_candidate"] = {
-                "tau_blind": None,
-                "K": None,
-                "valid": False,
-                "validity_notes": local_notes,
-            }
-            continue
-        k_value = k_log10_ratio(tau_blind=tau_blind, tau_agent=tau_agent)
-        variants[metric]["blind_uniform_candidate"] = {
-            "tau_blind": round(float(tau_blind), 6),
-            "K": round(float(k_value), 6) if k_value is not None else None,
-            "valid": k_value is not None,
-            "validity_notes": local_notes,
-        }
-
-    primary = variants["any_success"]["blind_uniform_candidate"]
-    complete = expected_steps == len(step_specs)
-    return {
-        "schema_version": 1,
-        "valid": bool(primary.get("valid")) and complete,
-        "validity_notes": notes,
-        "reference_kind": "goal_outcomes",
-        "w_unit": "tactic_attempt",
-        "tau_agent": int(tau_agent),
-        "primary": {
-            "metric": "any_success",
-            "null_model": "blind_uniform_candidate",
-            "tau_blind": primary.get("tau_blind"),
-            "K": primary.get("K"),
-        },
-        "variants": variants,
-        "steps": {
-            "count": len(step_specs),
-            "expected": expected_steps,
-            "dropped": dropped_steps,
-        },
-    }
+    entry = compute_k(
+        ext,
+        p_success=lambda sig, fam: _p_success(reference, sig, fam),
+        null_models=(BLIND_CANDIDATE,),
+        observed_families=None,
+    )
+    if ext.valid:
+        entry["reference_kind"] = "goal_outcomes"
+    return entry
 
 
 @dataclass(frozen=True)
@@ -216,16 +113,15 @@ def score_k_for_run(
         raise ValueError(f"Unknown reference id: {ref_id}")
     reference = _load_reference(Path(ref_row[0]))
 
-    goal_cache = None
-    try:
-        gz = run_dir / "goal_cache.json.gz"
-        plain = run_dir / "goal_cache.json"
-        if gz.exists():
-            goal_cache = read_json_gz(gz)
-        elif plain.exists():
-            goal_cache = read_json(plain)
-    except Exception:
-        goal_cache = None
+    # A goal cache only adds signatures for steps whose trace lacks them, so runs
+    # without one are still scored from their traces.
+    gz = run_dir / "goal_cache.json.gz"
+    plain = run_dir / "goal_cache.json"
+    mvar_to_sig: dict[str, str] | None = None
+    if gz.exists():
+        mvar_to_sig = read_json_gz(gz)["mvar_to_sig"]
+    elif plain.exists():
+        mvar_to_sig = read_json(plain)["mvar_to_sig"]
 
     scored = 0
     skipped = 0
@@ -262,7 +158,7 @@ def score_k_for_run(
         k = compute_k_reference_from_variant(
             theorem_dir=theorem_dir,
             variant="wild_type",
-            goal_cache=goal_cache,
+            mvar_to_sig=mvar_to_sig,
             reference=reference,
         )
         _insert_k_score(conn, run_key, name, "wild_type", ref_id, k)
@@ -281,7 +177,7 @@ def score_k_for_run(
             k = compute_k_reference_from_variant(
                 theorem_dir=theorem_dir,
                 variant=vname,
-                goal_cache=goal_cache,
+                mvar_to_sig=mvar_to_sig,
                 reference=reference,
             )
             _insert_k_score(conn, run_key, name, vname, ref_id, k)

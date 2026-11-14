@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 import networkx as nx
 
+from analysis.k_metric import BLIND_CANDIDATE, BLIND_FAMILY, compute_k
 from analysis.logs import (
     ProviderRun,
     extract_solution_steps,
@@ -21,9 +22,8 @@ from analysis.logs import (
 from analysis.root_goal_similarity import compute_root_goal_similarity
 from prover.goal_cache import GoalCache
 from prover.goal_distance import GoalSigTedDistance, normalized_sequence_edit_distance
-from prover.k import k_log10_ratio
 from prover.proof import ProofGraph
-from prover.providers.base import TACTIC_FAMILIES, normalize_tactic, tactic_family
+from prover.providers.base import TACTIC_FAMILIES, tactic_family
 
 # These are intentionally conservative defaults. They keep postprocess deterministic and
 # bounded even when proof graphs are large.
@@ -170,12 +170,12 @@ def _p_success_sig_family(
     *,
     family_priors: dict[str, float],
 ) -> float:
-    """Return p(success | goal_sig=sig, tactic_family=fam) with empirical fallback."""
+    """Laplace-smoothed p(success | goal_sig, family); the run-level family prior
+    when this run never tried the family on the signature."""
 
-    prior = family_priors.get(fam, 0.5)
     entry = cache.entries.get(sig)
     if entry is None:
-        return float(prior)
+        return family_priors[fam]
     idx = TACTIC_FAMILIES.index(fam)
     attempts = 0
     successes = 0
@@ -184,7 +184,7 @@ def _p_success_sig_family(
         attempts += len(outcomes)
         successes += int(sum(1 for x in outcomes if x))
     if attempts <= 0:
-        return float(prior)
+        return family_priors[fam]
     return (successes + 1) / (attempts + 2)
 
 
@@ -210,7 +210,7 @@ def compute_k_search_efficiency_from_logs(
     goal_cache: GoalCache | None,
     family_priors: dict[str, float] | None = None,
 ) -> dict[str, Any]:
-    """Compute K-style search-efficiency metrics for a solved Lean variant."""
+    """K search efficiency for a solved Lean variant, scored against the run's own goal cache."""
 
     if goal_cache is None:
         return {
@@ -218,160 +218,26 @@ def compute_k_search_efficiency_from_logs(
             "valid": False,
             "validity_notes": ["missing goal_cache.json.gz"],
         }
-
+    cache = goal_cache
+    priors = _compute_family_priors(cache) if family_priors is None else family_priors
     ext = extract_solution_steps(
         theorem_dir=theorem_dir,
         variant=variant,
-        mvar_to_sig=goal_cache.mvar_to_sig,
+        mvar_to_sig=cache.mvar_to_sig,
     )
-    if not ext.valid:
-        return {
-            "schema_version": 1,
-            "valid": False,
-            "validity_notes": ext.validity_notes,
-        }
-
-    notes = list(ext.validity_notes)
-    assert ext.tau_agent is not None
-    tau_agent = ext.tau_agent
-    step_specs = ext.step_specs
-    expected_steps = ext.expected_steps
-    dropped_steps = ext.dropped_steps
-    candidates_by_iter = ext.candidates_by_iter
-
-    if family_priors is None:
-        family_priors = _compute_family_priors(goal_cache)
-
-    def _mean(values: list[float]) -> float | None:
-        if not values:
-            return None
-        return sum(values) / len(values)
-
-    def compute_totals(*, mode: str, metric: str) -> tuple[float | None, list[str]]:
-        tau_blind = 0.0
-        local_notes: list[str] = []
-        for spec in step_specs:
-            it = spec["iteration"]
-            sig = spec["goal_sig"]
-            used_fam = spec["tactic_family"]
-            candidates = candidates_by_iter.get(it)
-            fams: list[str] = []
-            if candidates:
-                fams = [tactic_family(normalize_tactic(c)) for c in candidates]
-                if not fams:
-                    local_notes.append(f"empty_candidates: iteration={it}")
-                    return None, local_notes
-            elif mode == "blind_uniform_family":
-                fams = _observed_families_for_sig(goal_cache, sig)
-                if not fams:
-                    local_notes.append(
-                        f"missing_candidates_and_no_observed_fams: iteration={it}"
-                    )
-                    return None, local_notes
-                local_notes.append(f"fallback_operator_alphabet: observed_families iteration={it}")
-            else:
-                local_notes.append(f"missing_candidates: iteration={it}")
-                return None, local_notes
-
-            if mode == "blind_uniform_candidate":
-                p_step = _mean(
-                    [
-                        _p_success_sig_family(goal_cache, sig, fam, family_priors=family_priors)
-                        for fam in fams
-                    ]
-                )
-                if metric == "used_operator":
-                    used_count = sum(1 for fam in fams if fam == used_fam)
-                    if used_count <= 0:
-                        local_notes.append(f"used_family_missing_from_candidates: iteration={it}")
-                        return None, local_notes
-                    p_used = _p_success_sig_family(
-                        goal_cache, sig, used_fam, family_priors=family_priors
-                    )
-                    p_step = (used_count / len(fams)) * p_used
-            elif mode == "blind_uniform_family":
-                uniq = sorted(set(fams))
-                p_step = _mean(
-                    [
-                        _p_success_sig_family(goal_cache, sig, fam, family_priors=family_priors)
-                        for fam in uniq
-                    ]
-                )
-                if metric == "used_operator":
-                    if used_fam not in uniq:
-                        local_notes.append(f"used_family_missing_from_families: iteration={it}")
-                        return None, local_notes
-                    p_used = _p_success_sig_family(
-                        goal_cache, sig, used_fam, family_priors=family_priors
-                    )
-                    p_step = (1 / len(uniq)) * p_used
-            else:
-                raise ValueError(f"Unknown null model: {mode}")
-
-            if p_step is None or p_step <= 0.0:
-                local_notes.append(f"invalid_step_probability: iteration={it} p={p_step!r}")
-                return None, local_notes
-            tau_blind += 1.0 / p_step
-        return tau_blind, local_notes
-
-    variants: dict[str, dict[str, dict[str, Any]]] = {
-        "any_success": {},
-        "used_operator": {},
-    }
-    for metric in ("any_success", "used_operator"):
-        for mode in ("blind_uniform_candidate", "blind_uniform_family"):
-            tau_blind, local_notes = compute_totals(mode=mode, metric=metric)
-            if tau_blind is None:
-                variants[metric][mode] = {
-                    "tau_blind": None,
-                    "K": None,
-                    "valid": False,
-                    "validity_notes": local_notes,
-                }
-                continue
-            k_value = k_log10_ratio(tau_blind=tau_blind, tau_agent=tau_agent)
-            variants[metric][mode] = {
-                "tau_blind": round(float(tau_blind), 6),
-                "K": round(float(k_value), 6) if k_value is not None else None,
-                "valid": k_value is not None,
-                "validity_notes": local_notes,
-            }
-
-    primary = variants["any_success"]["blind_uniform_candidate"]
-    primary_null = "blind_uniform_candidate"
-    if not primary.get("valid"):
-        primary = variants["any_success"]["blind_uniform_family"]
-        primary_null = "blind_uniform_family"
-        notes.append("primary_fallback: used blind_uniform_family due to trace/candidate issues")
-
-    trace_path = theorem_dir / f"{variant}_mcts_trace.jsonl"
-    history_path = theorem_dir / f"{variant}_history.json"
-    tree_path = theorem_dir / f"{variant}_mcts_tree.json"
-    # Mark invalid if we couldn't map every solution step to an iteration/candidate set. This keeps
-    # the metric comparable across runs and prevents partial-path scoring against full tau_agent.
-    complete = (expected_steps == len(step_specs))
-    return {
-        "schema_version": 1,
-        "valid": bool(primary.get("valid")) and complete,
-        "validity_notes": notes,
-        "w_unit": "tactic_attempt",
-        "tau_agent": int(tau_agent),
-        "primary": {
-            "metric": "any_success",
-            "null_model": primary_null,
-            "tau_blind": primary.get("tau_blind"),
-            "K": primary.get("K"),
-        },
-        "variants": variants,
-        "steps": {
-            "count": len(step_specs),
-            "expected": expected_steps,
-            "dropped": dropped_steps,
-            "trace_path": trace_path.name,
-            "history_path": history_path.name,
-            "tree_path": tree_path.name,
-        },
-    }
+    entry = compute_k(
+        ext,
+        p_success=lambda sig, fam: _p_success_sig_family(cache, sig, fam, family_priors=priors),
+        null_models=(BLIND_CANDIDATE, BLIND_FAMILY),
+        observed_families=lambda sig: _observed_families_for_sig(cache, sig),
+    )
+    if ext.valid:
+        entry["steps"].update(
+            trace_path=f"{variant}_mcts_trace.jsonl",
+            history_path=f"{variant}_history.json",
+            tree_path=f"{variant}_mcts_tree.json",
+        )
+    return entry
 
 
 def _k_summary(entry: dict[str, Any]) -> dict[str, Any]:

@@ -99,7 +99,7 @@ def test_k_reference_records_bad_json_lines_in_trace(tmp_path) -> None:
     result = compute_k_reference_from_variant(
         theorem_dir=theorem_dir,
         variant="wild_type",
-        goal_cache=goal_cache,
+        mvar_to_sig=goal_cache["mvar_to_sig"],
         reference=reference,
     )
     assert result["valid"] is True
