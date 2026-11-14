@@ -248,7 +248,7 @@ def build() -> None:
         }
         print(f"{config.label}: flux_fraction={flux_fraction:.3f}, basins={len(basins)}")
 
-    np.savez_compressed(RESULT_PATH, **saved)
+    np.savez_compressed(RESULT_PATH, allow_pickle=False, **saved)
     SUMMARY_PATH.write_text(json.dumps(summary, indent=2))
     print(f"wrote {RESULT_PATH} and {SUMMARY_PATH}")
 

@@ -30,7 +30,7 @@ def ingest_all() -> dict[str, str]:
             development_traces_path=run,
             label=f"waddington-{config.label}",
         )
-        count = conn.execute(
+        (count,) = conn.execute(
             """
             SELECT COUNT(DISTINCT ds.specimen_id)
             FROM development_samples ds
@@ -38,7 +38,7 @@ def ingest_all() -> dict[str, str]:
             WHERE ss.study_id = ?
             """,
             [study_id],
-        ).fetchone()[0]
+        ).fetchall()[0]
         mapping[config.config_hash] = study_id
         print(f"{config.label}: study {study_id}, {count} specimens with traces")
     conn.close()

@@ -134,7 +134,7 @@ def build() -> None:
         _, labels = kmeans2(fz, N_PROGRAMS, seed=0, minit="++", missing="warn")
         u_disp = np.ma.masked_invalid(d[f"u_endpoint_{h}"])
         pax.imshow(u_disp.T, origin="lower", extent=extent, aspect="auto", cmap="bone_r", alpha=0.5)
-        colors = plt.cm.tab10(np.linspace(0, 1, N_PROGRAMS))
+        colors = matplotlib.colormaps["tab10"](np.linspace(0, 1, N_PROGRAMS))
         clusters = []
         for k in range(N_PROGRAMS):
             members = np.where(labels == k)[0]

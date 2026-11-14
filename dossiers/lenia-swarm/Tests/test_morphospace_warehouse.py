@@ -1796,15 +1796,15 @@ def test_morphospace_import_dryad_fish_populates_comparison_layer(
         assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_spaces") == 1
         assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_axes") == 2
         assert _scalar_int(connection, "SELECT COUNT(*) FROM feature_values") == 4
-        axis_metadata = json.loads(
-            connection.execute(
-                """
-                SELECT metadata_json
-                FROM feature_axes
-                WHERE feature_space_id = 'fish_gpa_pc_v1' AND axis_id = 'pc_01'
-                """
-            ).fetchone()[0]
-        )
+        axis_row = connection.execute(
+            """
+            SELECT metadata_json
+            FROM feature_axes
+            WHERE feature_space_id = 'fish_gpa_pc_v1' AND axis_id = 'pc_01'
+            """
+        ).fetchone()
+        assert axis_row is not None
+        axis_metadata = json.loads(axis_row[0])
         assert axis_metadata["explainedVariance"] == 2.0 / 3.0
         normalized_rows = connection.execute(
             """

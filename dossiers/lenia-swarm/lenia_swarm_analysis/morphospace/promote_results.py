@@ -212,7 +212,9 @@ def _projection_values(
     result_id = f"{run_id}|overall|{seed}"
     specimen_id = f"result:{result_id}"
     creature_id = _deterministic_uuid(f"{run_id}|overall|{seed}|{init_seed}")
-    metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
+    metrics = row.get("metrics")
+    if not isinstance(metrics, dict):
+        metrics = {}
     descriptor_bundle = row.get("descriptor_bundle")
     if not isinstance(descriptor_bundle, dict):
         raise ValueError(f"{run_dir}/results.jsonl seed {seed}: missing descriptor_bundle")

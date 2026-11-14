@@ -121,7 +121,7 @@ def sweep() -> None:
         for f in fields:
             save[f"{f}__{amp}"] = data[amp][f]
     STUDY_ROOT.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(RESULT, **save)
+    np.savez_compressed(RESULT, allow_pickle=False, **save)
     print(f"wrote {RESULT}")
 
 
@@ -171,7 +171,7 @@ def render() -> None:
     show(ax[1, 1], np.ma.masked_invalid(speed), "speed (movers)", cmap="inferno")
     im = ax[1, 2].imshow(bistable, origin="lower", extent=ext, aspect="auto", cmap="Reds",
                          vmin=0, vmax=1)
-    ax[1, 2].contour(np.linspace(*ext[:2], len(ms)), np.linspace(*ext[2:], len(ss)),
+    ax[1, 2].contour(np.linspace(ext[0], ext[1], len(ms)), np.linspace(ext[2], ext[3], len(ss)),
                      reg_full, levels=[0.5, 1.5], colors="cyan", linewidths=1.0)
     ax[1, 2].set_title("bistable wedge: full seed lives, half seed dies\n(cyan = full-seed regime "
                        "boundaries; a narrowing wedge = cusp)", fontsize=11)

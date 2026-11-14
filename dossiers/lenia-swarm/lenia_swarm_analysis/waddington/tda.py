@@ -269,7 +269,7 @@ def build() -> None:
     ) if n_species >= 2 else {}
 
     uniq = sorted(set(fams.tolist()))
-    colors = plt.cm.tab20(np.linspace(0, 1, len(uniq)))
+    colors = matplotlib.colormaps["tab20"](np.linspace(0, 1, len(uniq)))
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(20, 9))
     order = ["harmonics", "ph", "zernike", "combined", "combined_all"]
     xpos = np.arange(len(order))

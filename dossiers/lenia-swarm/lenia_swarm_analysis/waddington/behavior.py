@@ -85,7 +85,7 @@ def build() -> None:
     sc = pca2(shape_z)[0]
 
     uniq = sorted(set(fams.tolist()))
-    colors = plt.cm.tab20(np.linspace(0, 1, len(uniq)))
+    colors = matplotlib.colormaps["tab20"](np.linspace(0, 1, len(uniq)))
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(20, 9))
     for fam, col in zip(uniq, colors, strict=True):
         m = fams == fam
