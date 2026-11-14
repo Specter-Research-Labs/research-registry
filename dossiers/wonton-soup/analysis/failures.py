@@ -110,7 +110,7 @@ def detect_hallucination(tactics: list[str]) -> bool:
 
     base_tactics = [extract_tactic_base(t) for t in tactics]
     counter = Counter(base_tactics)
-    most_common_base, count = counter.most_common(1)[0]
+    _, count = counter.most_common(1)[0]
     if count >= len(tactics) * HALLUCINATION_REPEAT_RATIO:
         return True
 

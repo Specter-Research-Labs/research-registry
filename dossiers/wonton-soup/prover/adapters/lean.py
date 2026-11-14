@@ -675,6 +675,3 @@ class LeanAdapter:
             if goal.mvar_id == raw_id:
                 return goal
         return None
-
-    async def check_def_eq_async(self, expr1_dag: dict, expr2_dag: dict) -> bool:
-        return await self.env.check_def_eq_async(expr1_dag, expr2_dag)

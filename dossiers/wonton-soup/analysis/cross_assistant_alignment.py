@@ -875,7 +875,7 @@ def rank_theorem_candidates(
     if source_sigs is None:
         return []
     out: list[TheoremPairDistance] = []
-    for target_theorem, target_sigs in target_groups.items():
+    for target_sigs in target_groups.values():
         out.append(
             aggregate_theorem_distance(
                 source_sigs,
