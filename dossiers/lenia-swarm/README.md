@@ -44,7 +44,23 @@ analysis package and `swift package resolve` for the Swift package graph.
 
 ## Building
 
-Use `xcodebuild` for app and CLI builds that need bundled Metal resources:
+Build the research CLI with
+
+```bash
+make build        # release LeniaCLI, then ops/write-buildinfo.sh
+make build-debug  # debug LeniaCLI, stamped the same way
+```
+
+`ops/write-buildinfo.sh` writes `LeniaCLI.buildinfo.json` next to the binary, plus
+`LeniaCLI.source.patch` when `Package.swift`, `Package.resolved` or `Sources/` differ from the
+recorded commit. Commands that write research records (`discover`, `orchestrate`, `publish
+replay` and the other record producers) refuse to start unless the build info matches the
+binary, and write a `receipt.json` naming the build, the `engine_id`, the host, the resolved
+config, the seeds and the input hashes into the run directory. `docs/contracts/LocalCLI.md`
+describes the receipt.
+
+Use `xcodebuild` for app and CLI builds that need bundled Metal resources, and stamp an
+`xcodebuild` LeniaCLI with `ops/write-buildinfo.sh <binary>` before it runs research:
 
 ```bash
 # Build CLI (discover/orchestrate/index/analyze/intervene/publish plus benchmark)
@@ -145,7 +161,10 @@ Useful individual targets:
 - `lenia-swarm-analysis`: the one Python CLI. Its groups are `morphospace`
   (warehouse, compendium and morphospace analysis), `waddington`, `observer`,
   `anatomical-compiler`, `chakazul-presets`, `compact` and
-  `coherent-body-pilot`; `--help` on any group lists its commands.
+  `coherent-body-pilot`; `--help` on any group lists its commands. Warehouse
+  ingest reads each run's `receipt.json`, and a legacy run without one needs
+  `--engine-id`. Analyses that pool Lenia specimens refuse records from
+  different engines unless `--pool-engines a,b` names every engine.
 
 ### Tenstorrent Runs
 
@@ -153,7 +172,15 @@ Useful individual targets:
 with the float32 SFPU engine, as one-ulp ensembles with one member per seed, and
 writes the same campaign layout as
 `LeniaCLI publish replay`, so `assess-creatures` and `classify-creatures` read
-the result. Bundles from random-patch searches go through `tt materialize-init`
+the result. Each TT `replay-manifest.json` names its engine, `tt-sfpu-fp32`;
+a Metal replay is named by its `receipt.json`. `classify-creatures` combines
+assessments of one engine judged with one set of thresholds, carries both into
+its output, and refuses a body assessed twice at one arena size. A replay with
+`--seeds` holding more than one seed writes one campaign per member under the
+same body, so its assessment is refused rather than reduced to whichever member
+came last. `sweep-creature-thresholds` re-classifies stored torus assessments
+with each provisional threshold moved over a fixed grid and reports which
+bodies keep their verdict. Bundles from random-patch searches go through `tt materialize-init`
 first, and `lenia-swarm-analysis morphospace write-arena-inputs --index INDEX.jsonl
 --scale 1 --scale 2` writes the torus arenas an index is classified at. It
 runs on the TT host directly or over SSH with `--host`; remote runs require

@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -31,18 +32,22 @@ def base_config(native: int, seed_value: float) -> dict:
     }
 
 
-def export(root: Path, name: str, body: str, base: dict) -> dict:
+def export(root: Path, name: str, body: str, base: dict, campaign: str | None = "c1") -> dict:
     d = root / name
     d.mkdir(parents=True)
     (d / "base.json").write_text(json.dumps(base))
     (d / "search.json").write_text(json.dumps({"steps": 900}))
     (d / "meta.json").write_text("{}")
-    return {
+    row = {
         "creatureId": body,
+        "runId": "run-1",
         "exportDir": str(d),
         "baseConfigPath": str(d / "base.json"),
         "searchConfigPath": str(d / "search.json"),
     }
+    if campaign is not None:
+        row["campaignId"] = campaign
+    return row
 
 
 def write_jsonl(path: Path, rows: list[dict]) -> Path:
@@ -188,7 +193,17 @@ def test_arena_inputs_refuse_uniform_noise_beside_the_state_patch(tmp_path):
         rq.write_arena_inputs(index_path=index, scales=[1], steps=650, output_root=tmp_path / "in")
 
 
-def assessment(path: Path, arena: int, passes: dict[str, bool]) -> Path:
+def definition(engine: str = "engine-a", min_captured: float = 0.95) -> dict:
+    return {
+        "engine": engine,
+        "thresholds": {"min_captured": min_captured},
+        "core_level": 0.1,
+    }
+
+
+def assessment(
+    path: Path, arena: int, passes: dict[str, bool], *, engine: str = "engine-a"
+) -> Path:
     bodies = [
         {
             "body": body,
@@ -205,7 +220,13 @@ def assessment(path: Path, arena: int, passes: dict[str, bool]) -> Path:
         }
         for body, ok in passes.items()
     ]
-    path.write_text(json.dumps({"bodies": bodies}))
+    path.write_text(json.dumps({**definition(engine), "bodies": bodies}))
+    return path
+
+
+def ensemble(path: Path, verdicts: dict[str, str], **kwargs) -> Path:
+    bodies = {body: {"verdict": v} for body, v in verdicts.items()}
+    path.write_text(json.dumps({**definition(**kwargs), "bodies": bodies}))
     return path
 
 
@@ -214,30 +235,109 @@ def test_compare_verdicts_reports_prior_transitions(tmp_path, sources):
     rq.collect_members(sources=sources, qualified=True, output_path=members)
     small = assessment(tmp_path / "a128.json", 128, {"AAAA0001": True, "CCCC0003": False})
     large = assessment(tmp_path / "a256.json", 256, {"AAAA0001": True, "CCCC0003": True})
-    ensemble = tmp_path / "ensemble.json"
-    ensemble.write_text(
-        json.dumps(
-            {"bodies": {"AAAA0001": {"verdict": "creature"}, "CCCC0003": {"verdict": "unstable"}}}
-        )
-    )
-    prior = tmp_path / "prior.json"
-    prior.write_text(json.dumps({"bodies": {"CCCC0003": {"verdict": "not_creature"}}}))
+    current = ensemble(tmp_path / "ensemble.json", {"AAAA0001": "creature", "CCCC0003": "unstable"})
+    prior = ensemble(tmp_path / "prior.json", {"CCCC0003": "not_creature"})
     out = tmp_path / "compare.json"
     summary = rq.compare_verdicts(
         members_path=members,
         assessments=[small, large],
-        ensembles=[ensemble],
+        ensembles=[current],
         prior_ensembles=[prior],
         output_path=out,
     )
-    assert summary["verdicts"] == {"004": {"unstable": 1}, "135": {"creature": 1}}
-    assert summary["prior_transitions"] == {"not_creature->unstable": 1}
+    one = {"bodies": 1, "rules": 1, "lineages": 1}
+    assert summary["engines"] == ["engine-a"]
+    assert summary["verdicts"] == {"engine-a": {"004": {"unstable": one}, "135": {"creature": one}}}
+    assert summary["prior_transitions"] == {"engine-a": {"not_creature->unstable": 1}}
     assert summary["verdicts_by_failed_gates"] == {
-        "004/none": {"unstable": 1},
-        "135/none": {"creature": 1},
+        "engine-a": {"004/none": {"unstable": one}, "135/none": {"creature": one}}
     }
-    row = next(r for r in json.loads(out.read_text())["members"] if r["body"] == "CCCC0003")
+    written = json.loads(out.read_text())
+    row = next(r for r in written["members"] if r["body"] == "CCCC0003")
     assert row["arenas"]["128"]["failed"] == ["long_lived"]
+    assert row["engine"] == "engine-a"
+    assert set(written["rules"]["engine-a"]) == {row["params_sha256"] for row in written["members"]}
+
+
+def test_compare_verdicts_counts_rules_and_lineages_behind_bodies(tmp_path):
+    inputs = tmp_path / "inputs"
+    rows = [
+        export(inputs, "0000-a", "AAAA0001", base_config(128, 0.1), campaign="c1"),
+        export(inputs, "0001-b", "BBBB0002", base_config(128, 0.1), campaign="c1"),
+        export(inputs, "0002-c", "CCCC0003", base_config(128, 0.2), campaign=None),
+    ]
+    members = tmp_path / "members.json"
+    members.write_text(
+        json.dumps(
+            {
+                "members": [
+                    {
+                        "cohort": "135",
+                        "body": row["creatureId"],
+                        "input": row,
+                        "native_arena": 128,
+                        "original": {"gates": {}},
+                        "params_sha256": rule,
+                    }
+                    for row, rule in zip(rows, ("rule-1", "rule-1", "rule-2"), strict=True)
+                ]
+            }
+        )
+    )
+    bodies = {r["creatureId"]: True for r in rows}
+    small = assessment(tmp_path / "a128.json", 128, bodies)
+    current = ensemble(tmp_path / "e.json", {b: "creature" for b in bodies})
+    summary = rq.compare_verdicts(
+        members_path=members,
+        assessments=[small],
+        ensembles=[current],
+        prior_ensembles=[],
+        output_path=tmp_path / "compare.json",
+    )
+    assert summary["verdicts"] == {
+        "engine-a": {"135": {"creature": {"bodies": 3, "rules": 2, "lineages": 2}}}
+    }
+
+
+def test_compare_verdicts_joins_on_engine_and_refuses_mixed_definitions(tmp_path, sources):
+    members = tmp_path / "members.json"
+    rq.collect_members(sources=sources, qualified=True, output_path=members)
+    bodies = {"AAAA0001": True, "CCCC0003": True}
+    verdicts = {"AAAA0001": "creature", "CCCC0003": "creature"}
+    assessments = [
+        assessment(tmp_path / "a.json", 128, bodies),
+        assessment(tmp_path / "b.json", 128, bodies, engine="engine-b"),
+    ]
+    compare = partial(
+        rq.compare_verdicts,
+        prior_ensembles=[],
+        members_path=members,
+        output_path=tmp_path / "compare.json",
+    )
+    ensembles = [
+        ensemble(tmp_path / "ea.json", verdicts),
+        ensemble(tmp_path / "eb.json", {**verdicts, "CCCC0003": "unstable"}, engine="engine-b"),
+    ]
+    with pytest.raises(ValueError, match="mixes engines engine-a, engine-b"):
+        compare(assessments=assessments, ensembles=ensembles)
+    summary = compare(
+        assessments=assessments,
+        ensembles=ensembles,
+        pool_engines=frozenset({"engine-a", "engine-b"}),
+    )
+    one = {"bodies": 1, "rules": 1, "lineages": 1}
+    assert summary["verdicts"] == {
+        "engine-a": {"004": {"creature": one}, "135": {"creature": one}},
+        "engine-b": {"004": {"unstable": one}, "135": {"creature": one}},
+    }
+
+    stricter = ensemble(tmp_path / "strict.json", verdicts, min_captured=0.99)
+    with pytest.raises(ValueError, match="other thresholds"):
+        compare(assessments=assessments[:1], ensembles=[stricter])
+    legacy = tmp_path / "legacy.json"
+    legacy.write_text(json.dumps({"bodies": {"AAAA0001": {"verdict": "creature"}}}))
+    with pytest.raises(ValueError, match="has no engine, thresholds, core_level"):
+        compare(assessments=assessments, ensembles=[legacy])
 
 
 def replay_campaign(root: Path, campaign: str, body: str, arena: int) -> Path:
