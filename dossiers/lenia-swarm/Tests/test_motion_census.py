@@ -59,6 +59,12 @@ def test_unwrap_crosses_the_seam_and_refuses_ambiguous_jumps():
         mc.unwrap(np.array([[0.0, 0.0], [0.0, 20.0]]), 64)
 
 
+def test_concentration_separates_one_body_from_mass_spread_round_the_torus():
+    assert mc.concentration(trace_row(0, blob(64, 1.0, 62.5))) > 0.9
+    spread = blob(64, 16, 16) + blob(64, 16, 48) + blob(64, 48, 16) + blob(64, 48, 48)
+    assert mc.concentration(trace_row(0, spread)) < 0.05
+
+
 def test_metrics_separate_a_glider_from_a_jittering_body():
     steps = np.arange(20000, 40001, 400)
     t = (steps - steps[0]) / 400
@@ -131,13 +137,14 @@ def test_census_joins_verdicts_and_keeps_one_panel_body_per_lineage(tmp_path):
         export(tmp_path / "in", "B", "run-1", 0.2),
         export(tmp_path / "in", "C", "run-2", 0.3),
         export(tmp_path / "in", "D", "run-3", 0.4),
+        export(tmp_path / "in", "E", "run-4", 0.5),
     ]
     index = tmp_path / "index.jsonl"
     index.write_text("".join(json.dumps(r) + "\n" for r in rows))
-    speeds = {"A": 1.0, "B": 0.8, "C": 0.0, "D": 0.9}
+    speeds = {"A": 1.0, "B": 0.8, "C": 0.0, "D": 0.9, "E": 20.0}
     roots = [replay(tmp_path / "r32", speeds, 32), replay(tmp_path / "r64", speeds, 64)]
     sweep = tmp_path / "sweep.json"
-    stable = {"A": True, "B": True, "C": True, "D": False}
+    stable = {"A": True, "B": True, "C": True, "D": False, "E": True}
     sweep.write_text(
         json.dumps(
             {
@@ -161,12 +168,15 @@ def test_census_joins_verdicts_and_keeps_one_panel_body_per_lineage(tmp_path):
     )
     data = json.loads(out.read_text())
     per_body = {b["body"]: b for b in data["per_body"]}
-    assert [per_body[b]["motion_class"] for b in "ABCD"] == [
+    assert [per_body[b]["motion_class"] for b in "ABCDE"] == [
         "translating",
         "translating",
         "stationary",
         "translating",
+        "untracked",
     ]
+    assert per_body["E"]["arenas"]["32"]["metrics"] is None
+    assert per_body["E"]["motion_stable"]
     assert summary["panel_candidates"] == ["A"]
     assert data["sweep_stable_creatures"]["translating"] == {
         "bodies": 2,
@@ -175,7 +185,12 @@ def test_census_joins_verdicts_and_keeps_one_panel_body_per_lineage(tmp_path):
         "lineages_hill1": pytest.approx(1.0),
     }
     assert data["prior_vs_native_all"]["stationary"] == {"translating": 1}
-    assert data["prior_vs_native_all"]["none_recorded"] == {"stationary": 1, "translating": 2}
+    assert data["sweep_stable_creatures"]["untracked"]["bodies"] == 1
+    assert data["prior_vs_native_all"]["none_recorded"] == {
+        "stationary": 1,
+        "translating": 2,
+        "untracked": 1,
+    }
 
 
 def test_census_refuses_sweeps_of_another_engine(tmp_path):

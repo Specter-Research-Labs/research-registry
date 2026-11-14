@@ -26,7 +26,7 @@ from .requalification import _body_spec, _lineage
 WINDOW = (20000, 40000)
 SEGMENT_STEPS = 2000
 SEGMENT_MIN = 0.5
-CLASSES = ("translating", "stationary", "other_motion")
+CLASSES = ("translating", "stationary", "other_motion", "untracked")
 
 
 @dataclass(frozen=True)
@@ -56,10 +56,23 @@ def _swift_round(value: np.float32) -> int:
     return int(math.copysign(math.floor(abs(float(value)) + 0.5), float(value)))
 
 
+def _resultant(weights: np.ndarray) -> complex:
+    return complex((weights * np.exp(2j * np.pi * np.arange(weights.size) / weights.size)).sum())
+
+
 def _circular_mean(weights: np.ndarray) -> float:
     n = weights.size
-    resultant = (weights * np.exp(2j * np.pi * np.arange(n) / n)).sum()
-    return float(np.angle(resultant) % (2 * np.pi) * n / (2 * np.pi))
+    return float(np.angle(_resultant(weights)) % (2 * np.pi) * n / (2 * np.pi))
+
+
+def concentration(row: dict[str, Any]) -> float:
+    """Smaller per-axis mean resultant length of the mass: 1 for a point, near 0 for mass spread round the torus.
+
+    Recorded, not thresholded: a low value says the mass centre is not the position of one body.
+    """
+    field = trace_field(row).astype(np.float64)
+    total = field.sum()
+    return min(abs(_resultant(field.sum(axis=1))), abs(_resultant(field.sum(axis=0)))) / total
 
 
 def torus_centre(row: dict[str, Any]) -> tuple[float, float]:
@@ -79,10 +92,19 @@ def torus_centre(row: dict[str, Any]) -> tuple[float, float]:
     return y, x
 
 
+def _minimum_image_steps(track: np.ndarray, arena: int) -> np.ndarray:
+    return (np.diff(track, axis=0) + arena / 2) % arena - arena / 2
+
+
+def largest_jump(track: np.ndarray, arena: int) -> float:
+    steps = _minimum_image_steps(track, arena)
+    return float(np.abs(steps).max()) if len(steps) else 0.0
+
+
 def unwrap(track: np.ndarray, arena: int) -> np.ndarray:
     """Unwrap a torus track by the minimum image; refuse frames too far apart to be unambiguous."""
-    steps = (np.diff(track, axis=0) + arena / 2) % arena - arena / 2
-    jump = float(np.abs(steps).max()) if len(steps) else 0.0
+    steps = _minimum_image_steps(track, arena)
+    jump = largest_jump(track, arena)
     if jump > arena / 4:
         raise ValueError(
             f"the centre moved {jump:.1f} cells between frames on arena {arena}; "
@@ -119,7 +141,9 @@ def motion_metrics(steps: np.ndarray, track: np.ndarray) -> dict[str, Any]:
     }
 
 
-def motion_class(metrics: dict[str, Any], thresholds: MotionThresholds) -> str:
+def motion_class(metrics: dict[str, Any] | None, thresholds: MotionThresholds) -> str:
+    if metrics is None:
+        return "untracked"
     if (
         metrics["D"] >= thresholds.translate_displacement
         and metrics["H"] is not None
@@ -148,15 +172,21 @@ def campaign_motion(campaign: Path) -> dict[str, Any]:
     if config["reintegration"]["border"] != "torus":
         raise ValueError(f"{campaign}: motion classes are defined on the torus only")
     arena = rows[0]["width"]
-    track = unwrap(np.array([torus_centre(r) for r in rows]), arena)
-    return {
+    raw = np.array([torus_centre(r) for r in rows])
+    record = {
         "body": json.loads((campaign / "replay-manifest.json").read_text())["sourceCreatureId"],
         "campaign": campaign.name,
         "arena": arena,
         "steps": steps.tolist(),
-        "track": track.round(4).tolist(),
-        "metrics": motion_metrics(steps, track),
+        "min_concentration": min(concentration(r) for r in rows),
+        "largest_jump": largest_jump(raw, arena),
     }
+    # A jump past arena/4 means the track has no unambiguous unwrapping, so the body gets the
+    # explicit class `untracked` with its torus track and no metrics instead of stopping the census.
+    if record["largest_jump"] > arena / 4:
+        return {**record, "track": raw.round(4).tolist(), "metrics": None}
+    track = unwrap(raw, arena)
+    return {**record, "track": track.round(4).tolist(), "metrics": motion_metrics(steps, track)}
 
 
 def _sweep_settings() -> list[tuple[str, float, MotionThresholds]]:
@@ -274,7 +304,17 @@ def motion_census(
                 "motion_stable": not flips,
                 "motion_flips": flips,
                 "arenas": {
-                    str(a): {k: r[k] for k in ("campaign", "metrics", "steps", "track")}
+                    str(a): {
+                        k: r[k]
+                        for k in (
+                            "campaign",
+                            "metrics",
+                            "min_concentration",
+                            "largest_jump",
+                            "steps",
+                            "track",
+                        )
+                    }
                     for a, r in sorted(arenas.items())
                 },
             }
