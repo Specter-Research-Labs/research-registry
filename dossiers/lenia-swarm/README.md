@@ -96,8 +96,13 @@ swift build -c release --product LeniaCLI \
 
 The C engine is compiled with `-march=native` on Linux, so the binary only runs on CPUs with the
 build host's instruction set. Rebuild it on each machine. Results are deterministic across thread
-counts on one machine; across machines the engine itself agrees bit for bit, but MLX builds
-the kernels and initial states, so records can differ at the ulp level and then diverge chaotically.
+counts on one machine. The engine is written to agree bit for bit across machines: fp32, no
+contraction, and its own `exp`. `swift test --filter FlowLeniaCPUGoldenTests` checks this by
+stepping inputs computed from exact formulas rather than MLX on torus and wall grids and comparing the field hashes
+against pinned values. Those hashes have been confirmed on macOS arm64 only so far; a Linux run that
+matches them is still needed before the claim covers Linux. In normal runs MLX builds the kernels
+and initial states, so two machines can still start from inputs that differ in the last ulp and
+then diverge chaotically.
 
 ## Verification
 

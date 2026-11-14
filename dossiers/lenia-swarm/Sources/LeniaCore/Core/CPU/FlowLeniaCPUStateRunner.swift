@@ -2,9 +2,9 @@ import CFlowLeniaCPU
 import Foundation
 import MLX
 
-/// Steps the metal-full equations on CPU threads in fp32. It covers the torus search and
-/// replay runtime: fixed kernel-gain parameter fields, per-body kernels, matter weights, an
-/// environment potential, and parameter and zero-state patches.
+/// Steps the metal-full equations on CPU threads in fp32. It covers the search, replay and
+/// interactive runtime on a torus or inside walls: fixed kernel-gain parameter fields, per-body
+/// kernels, matter weights, an environment potential, and parameter and zero-state patches.
 final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
     let config: BatchedConfig
     let batchCount: Int
@@ -21,18 +21,32 @@ final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
         wallPotential: MLXArray?,
         matterWeights: [Float]?
     ) {
-        guard config.border == "torus" else {
-            preconditionFailure("Backend cpu supports torus borders only, got \(config.border).")
+        let torus: Bool
+        switch config.border {
+        case "torus":
+            torus = true
+        case "wall":
+            torus = false
+        default:
+            preconditionFailure("Backend cpu supports torus and wall borders, got \(config.border).")
         }
         let maxAdvection = Float(config.dd) - config.sigma
-        guard FlowLeniaFieldLayout.usesLocalTorusDistance(
-            sx: config.sx,
-            sy: config.sy,
-            dd: config.dd,
-            maxAdvection: maxAdvection,
-            useTorus: true
-        ) else {
-            preconditionFailure("Backend cpu needs a torus whose half side exceeds dd + max advection, got \(config.sx) x \(config.sy) with dd \(config.dd).")
+        if torus {
+            guard FlowLeniaFieldLayout.usesLocalTorusDistance(
+                sx: config.sx,
+                sy: config.sy,
+                dd: config.dd,
+                maxAdvection: maxAdvection,
+                useTorus: true
+            ) else {
+                preconditionFailure("Backend cpu needs a torus whose half side exceeds dd + max advection, got \(config.sx) x \(config.sy) with dd \(config.dd).")
+            }
+        } else {
+            // Metal's wall kernel also gathers wrapped sources; they add exactly zero only when
+            // no source can reach the far side, which this bound guarantees.
+            guard min(config.sx, config.sy) >= 2 * config.dd + 1 else {
+                preconditionFailure("Backend cpu needs wall grid sides of at least 2 dd + 1, got \(config.sx) x \(config.sy) with dd \(config.dd).")
+            }
         }
         guard (0...4).contains(config.n) else {
             preconditionFailure("Backend cpu supports alpha exponents n in 0...4, got \(config.n).")
@@ -75,6 +89,7 @@ final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
                             n: Int32(config.n),
                             alphaPerChannel: config.implementation.alphaMode == "per_channel" ? 1 : 0,
                             clipFlow: config.implementation.flowClip == "always" ? 1 : 0,
+                            torus: torus ? 1 : 0,
                             threadCount: flcpu_available_threads(),
                             dt: config.dt,
                             sigma: sigma,
@@ -97,16 +112,7 @@ final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
         }
         updateKernels(kernels)
         setMatterWeights(matterWeights)
-        if let wallPotential {
-            let values = FlowLeniaFieldLayout.expandedScalarField(
-                from: wallPotential,
-                batchCount: batchCount,
-                sx: config.sx,
-                sy: config.sy,
-                label: "wallPotential"
-            )
-            flcpu_set_potential(engine, values)
-        }
+        setWallPotential(wallPotential)
     }
 
     deinit {
@@ -156,6 +162,21 @@ final class FlowLeniaCPUStateRunner: FlowLeniaFieldRunner {
             preconditionFailure("Backend cpu matter weights must match the configured channel count.")
         }
         flcpu_set_matter_weights(engine, resolved)
+    }
+
+    func setWallPotential(_ wallPotential: MLXArray?) {
+        guard let wallPotential else {
+            flcpu_set_potential(engine, nil)
+            return
+        }
+        let values = FlowLeniaFieldLayout.expandedScalarField(
+            from: wallPotential,
+            batchCount: batchCount,
+            sx: config.sx,
+            sy: config.sy,
+            label: "wallPotential"
+        )
+        flcpu_set_potential(engine, values)
     }
 
     func reset(

@@ -263,6 +263,7 @@ struct FLCPUEngine {
     float *outputWeights;
     float *matterWeights;
     float *potential;
+    float *zeroRow;
 
     int groupCount;
     int groupSize;
@@ -491,10 +492,10 @@ static void stage_growth(FLCPUEngine *e, Group *g, Worker *w, int item, int body
         }
         float *mp = g->matter + (size_t)y * us;
         vstore(mp + 1 + xb, total);
-        if (xb == 0) {
+        if (c->torus && xb == 0) {
             mp[1 + sx] = total[0];
         }
-        if (xb == sx - LANES) {
+        if (c->torus && xb == sx - LANES) {
             mp[0] = total[LANES - 1];
         }
         for (int ch = 0; ch < C; ++ch) {
@@ -504,10 +505,10 @@ static void stage_growth(FLCPUEngine *e, Group *g, Worker *w, int item, int body
                 value = value + vload(potential + y * sx + xb);
                 vstore(up + 1 + xb, value);
             }
-            if (xb == 0) {
+            if (c->torus && xb == 0) {
                 up[1 + sx] = value[0];
             }
-            if (xb == sx - LANES) {
+            if (c->torus && xb == sx - LANES) {
                 up[0] = value[LANES - 1];
             }
         }
@@ -529,17 +530,31 @@ static inline v16 alpha_power(v16 base, int n) {
     }
 }
 
+/// Row y of a field with a one-cell halo: wrapped on a torus, the zero row outside walls.
+static inline const float *halo_row(const FLCPUEngine *e, const float *base, int y) {
+    int sy = e->config.sy;
+    if (e->config.torus) {
+        return base + (size_t)wrap(y, sy) * e->uStride;
+    }
+    return y < 0 || y >= sy ? e->zeroRow : base + (size_t)y * e->uStride;
+}
+
 static void stage_flow(FLCPUEngine *e, Group *g, int y, const float *mass) {
     const FLCPUConfig *c = &e->config;
     int sx = c->sx, sy = c->sy, C = c->channelCount, dd = c->dd;
     int us = e->uStride, ts = e->tStride;
     const float *mRow[3];
     for (int o = 0; o < 3; ++o) {
-        mRow[o] = g->matter + (size_t)wrap(y + o - 1, sy) * us;
+        mRow[o] = halo_row(e, g->matter, y + o - 1);
     }
     v16 two = vsplat(2.0f), one = vsplat(1.0f), zero = vsplat(0.0f);
     v16 maxAdv = vsplat(c->maxAdvection), negMaxAdv = vsplat(-c->maxAdvection);
     v16 dt = vsplat(c->dt), thetaA = vsplat(c->thetaA);
+    v16 lane = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    // The Metal wall clamp keeps each landing point sigma inside the grid, in source-local
+    // coordinates and with the same roundings: (sigma - 0.5) - src and (side - 1 - src) + (0.5 - sigma).
+    v16 lowY = vsplat(c->sigma - 0.5f) - vsplat((float)y);
+    v16 highY = vsplat((float)(sy - 1 - y)) + vsplat(0.5f - c->sigma);
     float *cellRow = g->cellMax + (size_t)y * ts + dd;
     for (int xb = 0; xb < sx; xb += LANES) {
         v16 g00 = vload(mRow[0] + xb), g10 = vload(mRow[0] + xb + 1), g20 = vload(mRow[0] + xb + 2);
@@ -550,9 +565,9 @@ static void stage_flow(FLCPUEngine *e, Group *g, int y, const float *mass) {
         v16 cellMax = vsplat(-1.0f);
         for (int ch = 0; ch < C; ++ch) {
             const float *uBase = g->u + (size_t)ch * sy * us;
-            const float *u0 = uBase + (size_t)wrap(y - 1, sy) * us + xb;
+            const float *u0 = halo_row(e, uBase, y - 1) + xb;
             const float *u1 = uBase + (size_t)y * us + xb;
-            const float *u2 = uBase + (size_t)wrap(y + 1, sy) * us + xb;
+            const float *u2 = halo_row(e, uBase, y + 1) + xb;
             v16 u00 = vload(u0), u10 = vload(u0 + 1), u20 = vload(u0 + 2);
             v16 u01 = vload(u1), u21 = vload(u1 + 2);
             v16 u02 = vload(u2), u12 = vload(u2 + 1), u22 = vload(u2 + 2);
@@ -570,6 +585,13 @@ static void stage_flow(FLCPUEngine *e, Group *g, int y, const float *mass) {
             }
             v16 clippedX = vclamp(flowX * dt, negMaxAdv, maxAdv);
             v16 clippedY = vclamp(flowY * dt, negMaxAdv, maxAdv);
+            if (!c->torus) {
+                v16 sourceX = vsplat((float)xb) + lane;
+                v16 lowX = vsplat(c->sigma - 0.5f) - sourceX;
+                v16 highX = (vsplat((float)(sx - 1 - xb)) - lane) + vsplat(0.5f - c->sigma);
+                clippedX = vmin(vmax(clippedX, lowX), highX);
+                clippedY = vmin(vmax(clippedY, lowY), highY);
+            }
             // An empty source sits far away with zero mass so it contributes exactly zero, as Metal stages it.
             vi16 occupied = m > zero;
             v16 far = vsplat(1.0e4f);
@@ -594,9 +616,18 @@ static void stage_flow(FLCPUEngine *e, Group *g, int y, const float *mass) {
         }
         for (int f = 0; f < fields; ++f) {
             float *row = rows[f];
+            if (c->torus) {
+                for (int i = 1; i <= dd; ++i) {
+                    row[-i] = row[sx - i];
+                    row[sx - 1 + i] = row[i - 1];
+                }
+                continue;
+            }
+            // Outside walls the halo holds empty sources, as staged for empty cells.
+            float empty = ch == C ? -1.0f : (f == 2 ? 0.0f : 1.0e4f);
             for (int i = 1; i <= dd; ++i) {
-                row[-i] = row[sx - i];
-                row[sx - 1 + i] = row[i - 1];
+                row[-i] = empty;
+                row[sx - 1 + i] = empty;
             }
         }
     }
@@ -619,6 +650,9 @@ static void stage_reintegrate(FLCPUEngine *e, Group *g, int y, float *next) {
         int xb = b * LANES;
         float maxShift = -1.0f;
         for (int dy = -dd; dy <= dd; ++dy) {
+            if (!c->torus && (y + dy < 0 || y + dy >= sy)) {
+                continue;
+            }
             float v = g->blockMax[(size_t)wrap(y + dy, sy) * e->xBlocks + b];
             maxShift = v > maxShift ? v : maxShift;
         }
@@ -631,6 +665,13 @@ static void stage_reintegrate(FLCPUEngine *e, Group *g, int y, float *next) {
         // The same reach as the Metal tiled kernel; every omitted term is an exact +0.
         int reach = (int)floorf(maxShift + 0.5f + c->sigma) + 1;
         reach = reach < dd ? reach : dd;
+        // Metal's wall kernel wraps source rows too, but with min(sx, sy) >= 2 dd + 1 a wrapped
+        // source lands at least sigma + 1 from the target and adds an exact +0, so walls skip them.
+        int dyLow = -reach, dyHigh = reach;
+        if (!c->torus) {
+            dyLow = dyLow > y - sy + 1 ? dyLow : y - sy + 1;
+            dyHigh = dyHigh < y ? dyHigh : y;
+        }
         for (int ch = 0; ch < C; ++ch) {
             v16 total = zero;
             const float *baseX = g->shX + (size_t)ch * sy * ts + dd + xb;
@@ -638,7 +679,7 @@ static void stage_reintegrate(FLCPUEngine *e, Group *g, int y, float *next) {
             const float *baseM = g->stM + (size_t)ch * sy * ts + dd + xb;
             for (int dx = -reach; dx <= reach; ++dx) {
                 v16 fdx = vsplat((float)dx);
-                for (int dy = -reach; dy <= reach; ++dy) {
+                for (int dy = dyLow; dy <= dyHigh; ++dy) {
                     size_t offset = (size_t)wrap(y - dy, sy) * ts - dx;
                     v16 dY = vabs(vsplat((float)dy) - vload(baseY + offset));
                     v16 dX = vabs(fdx - vload(baseX + offset));
@@ -790,6 +831,7 @@ FLCPUEngine *flcpu_create(const FLCPUConfig *config) {
     e->xBlocks = sx / LANES;
     e->uStride = round_up16(sx + 2);
     e->tStride = round_up16(sx + 2 * c->dd);
+    e->zeroRow = alloc_floats((size_t)e->uStride);
     init_plan(&e->planX, sx, config->twiddleX, config->radicesX, config->radixCountX);
     init_plan(&e->planY, sy, config->twiddleY, config->radicesY, config->radixCountY);
 
@@ -907,6 +949,7 @@ void flcpu_destroy(FLCPUEngine *e) {
     free(e->outputWeights);
     free(e->matterWeights);
     free(e->potential);
+    free(e->zeroRow);
     free(e);
 }
 
