@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import inspect
 import json
 import os
 import shlex
 from contextlib import contextmanager
+from dataclasses import dataclass, fields
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -854,49 +854,34 @@ def _run_coq(args) -> Path:
     return _run_external_corpus(args, log_dir=log_dir, run_batch=_run_batch)
 
 
-_EXTERNAL_COMMAND_RUN_DEFAULTS: dict[str, Any] = {
-    "agent": False,
-    "limit": None,
-    "theorem": None,
-    "offset": None,
-    "sample": None,
-    "seed": None,
-    "log_dir": None,
-    "source": None,
-    "theorem_file": None,
-    "serapi_binary": None,
-    "serapi_args": None,
-    "doc_name": None,
-    "coq_mode": None,
-    "modules": None,
-    "limit_per_module": None,
-    "limit_total": None,
-    "stdlib_root": None,
-    "coqc_binary": None,
-}
-
-
+@dataclass
 class ExternalInvocation:
-    def __init__(self, *, backend: Backend, **kwargs: Any) -> None:
-        self.backend = backend
-        for name, default in _EXTERNAL_COMMAND_RUN_DEFAULTS.items():
-            setattr(self, name, kwargs.get(name, default))
+    backend: Backend
+    agent: bool = False
+    limit: int | None = None
+    theorem: list[str] | None = None
+    offset: int | None = None
+    sample: int | None = None
+    seed: int | None = None
+    log_dir: str | None = None
+    source: str | None = None
+    theorem_file: str | None = None
+    serapi_binary: str | None = None
+    serapi_args: list[str] | None = None
+    doc_name: str | None = None
+    coq_mode: CoqMode | None = None
+    modules: list[str] | None = None
+    limit_per_module: int | None = None
+    limit_total: int | None = None
+    stdlib_root: str | None = None
+    coqc_binary: str | None = None
 
-    @classmethod
-    def from_values(cls, *, backend: Backend, values: dict[str, Any]) -> "ExternalInvocation":
-        return cls(
-            backend=backend,
-            **{
-                name: _coerce_typer_option(values.get(name), default)
-                for name, default in _EXTERNAL_COMMAND_RUN_DEFAULTS.items()
-            },
-        )
 
-
-def _external_alias_kwargs(backend: Backend, values: dict[str, Any]) -> dict[str, Any]:
-    return {"backend": backend} | {
-        name: _coerce_typer_option(values.get(name), default)
-        for name, default in _EXTERNAL_COMMAND_RUN_DEFAULTS.items()
+def _external_option_values(values: dict[str, Any]) -> dict[str, Any]:
+    return {
+        field.name: _coerce_typer_option(values.get(field.name), field.default)
+        for field in fields(ExternalInvocation)
+        if field.name != "backend"
     }
 
 
@@ -937,7 +922,9 @@ def run(
     stdlib_root: str | None = typer.Option(None, "--stdlib-root"),
     coqc_binary: str | None = typer.Option(None, "--coqc-binary"),
 ) -> None:
-    _run_external_invocation(ExternalInvocation.from_values(backend=backend, values=locals()))
+    _run_external_invocation(
+        ExternalInvocation(backend=backend, **_external_option_values(locals()))
+    )
 
 
 @app.command()
@@ -1175,7 +1162,7 @@ def coq(
     log_dir: str | None = typer.Option(None, "--log-dir"),
     agent: bool = typer.Option(False, "--agent"),
 ) -> None:
-    run(**_external_alias_kwargs(Backend.coq, locals()))
+    run(backend=Backend.coq, **_external_option_values(locals()))
 
 
 _LEAN_COMMAND_OPTION_NAMES = (
@@ -1202,24 +1189,8 @@ class LeanInvocation:
         return cls(**{name: kwargs[name] for name in _LEAN_COMMAND_PARAM_NAMES})
 
 
-def _build_lean_command_signature() -> inspect.Signature:
-    return inspect.Signature(
-        [
-            inspect.Parameter(
-                name,
-                inspect.Parameter.KEYWORD_ONLY,
-                default=True if name == "no_sync" else _lean_options.option_default(name),
-            )
-            for name in _LEAN_COMMAND_PARAM_NAMES
-        ]
-    )
-
-
 def _run_lean_command(**kwargs: Any) -> None:
     _run_lean_backend(LeanInvocation.from_kwargs(kwargs))
-
-
-_run_lean_command.__signature__ = _build_lean_command_signature()
 
 
 def _collect_lean_command_kwargs(
