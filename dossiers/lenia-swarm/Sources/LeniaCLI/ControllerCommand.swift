@@ -76,6 +76,21 @@ struct ControllerCommand: AsyncParsableCommand {
         let (eventStream, eventContinuation) = AsyncStream<ControllerEvent>.makeStream()
 
         let runContext = RunContext(runId: resolvedRunId, controllerId: nodeId)
+        let baseConfigURL = URL(fileURLWithPath: config)
+        let searchConfigURL = URL(fileURLWithPath: search)
+        let baseConfigData = try Data(contentsOf: baseConfigURL)
+        let baseConfig = try JSONDecoder().decode(LeniaBaseConfig.self, from: baseConfigData)
+        let receipt = try beginRunReceipt(
+            directory: outputURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            backend: try clusterBackend(forRequest: baseConfig.backend),
+            config: ResolvedRunConfig(parts: [
+                ("base", baseConfigData),
+                ("search", try Data(contentsOf: searchConfigURL)),
+            ]),
+            seeds: [],
+            inputs: [baseConfigURL, searchConfigURL]
+        )
 
         let controller = try SwarmController(
             system: system,
@@ -84,6 +99,7 @@ struct ControllerCommand: AsyncParsableCommand {
             outputDir: resolvedOutput,
             seedsPerJob: seedsPerJob,
             runContext: runContext,
+            buildInfo: receipt.receipt.build,
             logger: logger,
             eventContinuation: eventContinuation
         )
@@ -91,6 +107,7 @@ struct ControllerCommand: AsyncParsableCommand {
         try await controller.start()
 
         var didAutoExit = false
+        var failure: String?
 
         for await event in eventStream {
             switch event {
@@ -98,11 +115,15 @@ struct ControllerCommand: AsyncParsableCommand {
                 logger.info("Progress: \(completed)/\(total) jobs | \(seeds)/\(totalSeeds) seeds | \(String(format: "%.1f", rate)) seeds/s")
             case .finished(let elapsed):
                 logger.info("All jobs completed in \(String(format: "%.1f", elapsed))s")
+                try receipt.finish()
                 if autoExit {
                     logger.info("Auto-exit enabled; shutting down")
                     didAutoExit = true
                     eventContinuation.finish()
                 }
+            case .failed(let message):
+                failure = message
+                eventContinuation.finish()
             case .workerListUpdated(let workers):
                 logger.info("Workers: \(workers.count) connected")
             case .creatureDiscovered(let creature):
@@ -111,13 +132,16 @@ struct ControllerCommand: AsyncParsableCommand {
                 logger.info("Campaigns updated: \(campaigns.count)")
             }
 
-            if didAutoExit {
+            if didAutoExit || failure != nil {
                 break
             }
         }
 
-        if didAutoExit {
+        if didAutoExit || failure != nil {
             try system.shutdown()
+        }
+        if let failure {
+            throw ValidationError("Controller run failed: \(failure)")
         }
 
         logger.info("Controller shutting down")

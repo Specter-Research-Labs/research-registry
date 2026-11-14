@@ -25,7 +25,8 @@ final class CompendiumIndexingTests: XCTestCase {
         let plan = try resolveCompendiumIngestPlan(
             outputRoots: [],
             runDirs: [runA.path, runB.path],
-            dbPath: root.appendingPathComponent("compendium.sqlite").path
+            dbPath: root.appendingPathComponent("compendium.sqlite").path,
+            legacyEngineID: nil
         )
 
         XCTAssertEqual(plan.runInputs.map(\.runId), ["run-a", "run-b"])
@@ -44,6 +45,7 @@ final class CompendiumIndexingTests: XCTestCase {
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         try fm.copyItem(at: sourceDirectory, to: configDirectory)
         try fm.createDirectory(at: runDir, withIntermediateDirectories: true)
+        try writeFixtureReceipt(in: runDir)
 
         try rewriteJSONFile(at: configDirectory.appendingPathComponent("vanilla-base.json")) { json in
             json["grid"] = ["sx": 32, "sy": 32]
@@ -185,6 +187,62 @@ final class CompendiumIndexingTests: XCTestCase {
 
         XCTAssertEqual(morph.pathTortuosity ?? -1, 5, accuracy: 1e-6)
         XCTAssertEqual(morph.activitySpeciesMax, 3)
+    }
+
+    func testIndexRecordsRunProvenanceAndRefusesUnidentifiedRuns() throws {
+        let root = try makeTempDirectory(prefix: "lenia-index-provenance")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let dbPath = root.appendingPathComponent("compendium.sqlite").path
+
+        let receiptRun = root.appendingPathComponent("run-receipt", isDirectory: true)
+        try makeRunLayout(at: receiptRun)
+        let receipt = try RunReceiptSession.load(directory: receiptRun)
+        var command = try IndexCommand.parseAsRoot(["--run-dir", receiptRun.path, "--db", dbPath, "--rebuild"])
+        try command.run()
+        XCTAssertEqual(
+            try runProvenanceRow(dbPath: dbPath, runID: "run-receipt"),
+            [receipt.receipt.engineID, receipt.receipt.build.sourceCommit, receipt.receiptSha256]
+        )
+
+        let legacyRun = root.appendingPathComponent("run-legacy", isDirectory: true)
+        try makeRunLayout(at: legacyRun)
+        try FileManager.default.removeItem(at: legacyRun.appendingPathComponent(RunReceipt.fileName))
+        command = try IndexCommand.parseAsRoot(["--run-dir", legacyRun.path, "--db", dbPath])
+        XCTAssertThrowsError(try command.run()) { error in
+            XCTAssertTrue(String(describing: error).contains("Pass --engine-id"), String(describing: error))
+        }
+        command = try IndexCommand.parseAsRoot(["--run-dir", legacyRun.path, "--db", dbPath, "--engine-id", "legacy-engine"])
+        try command.run()
+        XCTAssertEqual(try runProvenanceRow(dbPath: dbPath, runID: "run-legacy"), ["legacy-engine", nil, nil])
+
+        command = try IndexCommand.parseAsRoot(["--run-dir", receiptRun.path, "--db", dbPath, "--engine-id", "legacy-engine"])
+        XCTAssertThrowsError(try command.run()) { error in
+            XCTAssertTrue(String(describing: error).contains(receipt.receipt.engineID), String(describing: error))
+        }
+
+        try FileManager.default.removeItem(at: receiptRun.appendingPathComponent(RunReceipt.fileName))
+        if let patch = receipt.receipt.sourcePatch {
+            try FileManager.default.removeItem(at: receiptRun.appendingPathComponent(patch))
+        }
+        try writeFixtureReceipt(in: receiptRun, backend: .cpu)
+        command = try IndexCommand.parseAsRoot(["--run-dir", receiptRun.path, "--db", dbPath])
+        XCTAssertThrowsError(try command.run()) { error in
+            XCTAssertTrue(String(describing: error).contains("run-receipt"), String(describing: error))
+        }
+        XCTAssertEqual(
+            try runProvenanceRow(dbPath: dbPath, runID: "run-receipt"),
+            [receipt.receipt.engineID, receipt.receipt.build.sourceCommit, receipt.receiptSha256]
+        )
+    }
+
+    private func runProvenanceRow(dbPath: String, runID: String) throws -> [String?] {
+        let db = try SQLiteDB(path: dbPath)
+        let statement = try db.prepare("SELECT engine_id, source_commit, receipt_sha256 FROM runs WHERE run_id = '\(runID)'")
+        defer { sqlite3_finalize(statement) }
+        XCTAssertEqual(sqlite3_step(statement), SQLITE_ROW)
+        return (0..<3).map { column in
+            sqlite3_column_text(statement, Int32(column)).map { String(cString: $0) }
+        }
     }
 
     func testIndexKeepsCampaignsAndExportsScopedPerRun() throws {
@@ -621,9 +679,9 @@ final class CompendiumIndexingTests: XCTestCase {
         let campaignID = "0001-qd-me-cell-23-79b16b7f"
         try db.exec("""
             INSERT INTO runs (
-                run_id, run_name, host_id, output_root, run_dir, indexed_at, config_hash, source_mode, source_algorithm
+                run_id, run_name, host_id, output_root, run_dir, indexed_at, config_hash, source_mode, source_algorithm, engine_id
             ) VALUES (
-                '\(runID)', '\(runID)', NULL, NULL, 'runs/\(runID)', '2026-03-12T00:00:00Z', 'cfg-dup', 'replay', 'paper-replay'
+                '\(runID)', '\(runID)', NULL, NULL, 'runs/\(runID)', '2026-03-12T00:00:00Z', 'cfg-dup', 'replay', 'paper-replay', 'fixture-engine'
             )
         """)
 
@@ -817,6 +875,7 @@ final class CompendiumIndexingTests: XCTestCase {
         let runDir = root.appendingPathComponent("test-qd-me", isDirectory: true)
         try makeTinyLeniaBreederConfigDirectory(at: configDirectory)
         try fm.createDirectory(at: runDir, withIntermediateDirectories: true)
+        try writeFixtureReceipt(in: runDir)
 
         let bundle = try loadLeniaBreeder2024ConfigBundle(configDirectory: configDirectory)
         let runner = LeniaBreeder2024Runner(
@@ -887,6 +946,7 @@ final class CompendiumIndexingTests: XCTestCase {
         let runDir = root.appendingPathComponent("test-qd-me-distributed", isDirectory: true)
         try makeTinyLeniaBreederConfigDirectory(at: configDirectory, distributed: true)
         try fm.createDirectory(at: runDir, withIntermediateDirectories: true)
+        try writeFixtureReceipt(in: runDir)
 
         let bundle = try loadLeniaBreeder2024ConfigBundle(configDirectory: configDirectory)
         let runner = LeniaBreeder2024Runner(
@@ -905,7 +965,7 @@ final class CompendiumIndexingTests: XCTestCase {
             logger: Logger(label: "CompendiumIndexingTests.QDDistributed.Controller"),
             runContext: RunContext(runId: "test-qd-me-distributed", controllerId: "test-controller")
         )
-        let worker = LeniaWorker(actorSystem: system, workerId: "worker-test")
+        let worker = LeniaWorker(actorSystem: system, workerId: "worker-test", buildInfo: testBuildInfo())
 
         do {
             async let startTask: Void = controller.start(minCount: 1)
@@ -1076,6 +1136,7 @@ final class CompendiumIndexingTests: XCTestCase {
         let runDir = root.appendingPathComponent("test-sensorimotor-2024", isDirectory: true)
         try makeTinySensorimotorConfigDirectory(at: configDirectory)
         try fm.createDirectory(at: runDir, withIntermediateDirectories: true)
+        try writeFixtureReceipt(in: runDir)
 
         let bundle = try loadSensorimotorLenia2024ConfigBundle(configDirectory: configDirectory)
         let runner = SensorimotorLenia2024Runner(

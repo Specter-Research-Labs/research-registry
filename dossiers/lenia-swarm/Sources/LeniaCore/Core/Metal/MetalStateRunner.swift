@@ -1415,7 +1415,7 @@ private func encodeChannelFieldOverwrite(
         return Array(repeating: 1.0, count: channelCount)
     }
 
-    private static func wallMaskKernelSource(
+    static func wallMaskKernelSource(
         parameterCount: Int,
         channelCount: Int,
         batchCount: Int,

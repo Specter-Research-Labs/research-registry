@@ -136,7 +136,17 @@ struct ObstacleResponseCommand: AsyncParsableCommand {
             runtimeConfigs: [firstRuntime]
         )
 
-        try FileManager.default.createDirectory(at: runDirectory, withIntermediateDirectories: true)
+        let receipt = try beginRunReceipt(
+            directory: runDirectory,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            backend: resolvedBackend,
+            config: ResolvedRunConfig(parts: [
+                ("base", sourceConfigData),
+                ("protocol", try JSONEncoder().encode(protocolConfig)),
+            ]),
+            seeds: rows.map { $0.initSeed ?? initSeed },
+            inputs: [URL(fileURLWithPath: configPath), URL(fileURLWithPath: corpusPath)]
+        )
         try writeResearchJSON(
             protocolConfig,
             to: runDirectory.appendingPathComponent("protocol.json"),
@@ -178,6 +188,8 @@ struct ObstacleResponseCommand: AsyncParsableCommand {
             try resultsHandle.synchronize()
             logger.info("Evaluated \(index + 1)/\(rows.count): \(specimenId)")
         }
+        try resultsHandle.close()
+        try receipt.finish()
         logger.info(
             "Done (\(rows.count) specimens, \(String(format: "%.2f", Date().timeIntervalSince(startedAt)))s) -> \(resultsURL.path)"
         )

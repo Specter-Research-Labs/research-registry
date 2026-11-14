@@ -30,7 +30,7 @@ public enum FlowLeniaComputeBackend: String, CaseIterable, Identifiable, Sendabl
 
     public init(configValue: String) throws {
         switch configValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-        case "mlx", "mlx-swift":
+        case "mlx":
             self = .mlx
         case "metal-full":
             self = .metalFull

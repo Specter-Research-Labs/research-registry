@@ -64,8 +64,17 @@ struct Atlas26Command: AsyncParsableCommand {
         logger.info("Samples per polygon: \(bundle.sweep.samplesPerPolygon)")
         logger.info("============================================================")
 
+        let receipt = try beginPaperRunReceipt(
+            outputDirectory: outputDirectoryURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            configFiles: try configDirectoryFiles(in: configDirectoryURL),
+            extraInputs: [],
+            backend: .mlx,
+            seeds: []
+        )
         let runner = Atlas2026Runner(configs: bundle, logger: logger)
         let summary = try runner.run(outputDirectory: outputDirectoryURL)
+        try receipt.finish()
 
         logger.info("Atlas 2026 complete")
         logger.info("Systems: \(summary.systems)")

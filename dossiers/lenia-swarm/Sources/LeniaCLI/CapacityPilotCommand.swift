@@ -99,14 +99,16 @@ struct CapacityPilotCommand: ParsableCommand {
         }
         let root = URL(fileURLWithPath: output)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let receiptInputs = [config, corpus].map { URL(fileURLWithPath: $0) }
+            + [writeField, phantom, ancestrySeed].compactMap { $0.map { URL(fileURLWithPath: $0) } }
         for row in rows {
             guard let id = row.specimenId else { throw ValidationError("missing specimen ID") }
+            guard let initSeed = row.initSeed else { throw ValidationError("corpus row \(id) has no init_seed; every pilot row must name the seed it replays") }
             let directory = root.appendingPathComponent(id)
             guard !FileManager.default.fileExists(atPath: directory.path) else {
                 throw ValidationError("output specimen already exists: \(id)")
             }
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            var overrides = row.params.explicitOverrides(seed: row.initSeed ?? 0)
+            var overrides = row.params.explicitOverrides(seed: initSeed)
             if let initial = row.initialCondition {
                 overrides["init"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(initial))
             }
@@ -120,8 +122,17 @@ struct CapacityPilotCommand: ParsableCommand {
                   (observationStudy && runtime.backend == .mlx) || FlowLeniaInteractiveSimulator.supportsResidentMetal(runtime) else {
                 throw ValidationError("pilot requires a supported clean runtime; channel-write studies require at least two channels and Metal wall boundaries")
             }
-            try JSONSerialization.data(withJSONObject: ["source": JSONSerialization.jsonObject(with: source),
-                "overrides": overrides], options: [.sortedKeys]).write(to: directory.appendingPathComponent("runtime-inputs.json"))
+            let runtimeInputs = try JSONSerialization.data(withJSONObject: ["source": JSONSerialization.jsonObject(with: source),
+                "overrides": overrides], options: [.sortedKeys])
+            let receipt = try beginRunReceipt(
+                directory: directory,
+                executableURL: try LeniaBuildInfo.runningExecutableURL(),
+                backend: runtime.backend,
+                config: ResolvedRunConfig(parts: [("runtime_inputs", runtimeInputs)]),
+                seeds: [initSeed],
+                inputs: receiptInputs
+            )
+            try runtimeInputs.write(to: directory.appendingPathComponent("runtime-inputs.json"))
             if ["write-response", "write-release", "state-response", "state-continuation", "state-flow", "transport"].contains(study) && runtime.implementation.mode != "flowlenia_2022_paper_equations" {
                 throw ValidationError("write-response requires explicit Flow Lenia paper-equations mode")
             }
@@ -200,6 +211,7 @@ struct CapacityPilotCommand: ParsableCommand {
             case "followup": try harness.runFollowup(checkpointSteps: checkpointSteps, horizon: horizon, output: directory, emit: emit)
             default: try harness.run(checkpointSteps: checkpointSteps, horizon: horizon, output: directory, emit: emit)
             }
+            try receipt.finish()
         }
     }
 

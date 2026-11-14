@@ -134,7 +134,8 @@ struct CampaignCommand: AsyncParsableCommand {
         let pool = CampaignWorkerPool(
             system: system,
             logger: logger,
-            runContext: RunContext(runId: resolvedRunId, controllerId: "\(ProcessInfo.processInfo.hostName):\(bindPort)")
+            runContext: RunContext(runId: resolvedRunId, controllerId: "\(ProcessInfo.processInfo.hostName):\(bindPort)"),
+            buildInfo: try runningBuildInfo()
         )
         logger.info("Campaign controller listening on \(bindHost):\(bindPort); waiting for \(requiredWorkers) worker(s)")
         do {
@@ -191,6 +192,7 @@ struct CampaignCommand: AsyncParsableCommand {
                     runID: resolvedRunId,
                     backendRequest: backend,
                     executionMode: executionMode,
+                    executableURL: try LeniaBuildInfo.runningExecutableURL(),
                     logger: logger
                 )
                 phaseResults.append(result)
@@ -276,6 +278,7 @@ struct CampaignExecutionRequest {
     let exportBest: Int?
     let promotion: ArchivePromotionConfig
     let executionMode: CampaignExecutionMode
+    let executableURL: URL
 }
 
 private struct CampaignResolvedConfigFile: Codable {
@@ -315,6 +318,22 @@ func executeCampaignPhase(
     metricsTransform: ((inout [LeniaCampaignMetricRecord]) -> Void)? = nil,
     postCompendiumIngest: ((LeniaCampaignJobExecution, String) throws -> Void)? = nil
 ) async throws -> LeniaCampaignJobExecution {
+    let phaseBackends = Set(try jobs.map(campaignJobBackend))
+    guard phaseBackends.count == 1, let phaseBackend = phaseBackends.first else {
+        throw ValidationError(
+            "Campaign phase \(request.runID) resolves to backends \(phaseBackends.map(\.rawValue).sorted()); one phase records one engine, so give every job the same backend."
+        )
+    }
+    let jobsEncoder = JSONEncoder()
+    jobsEncoder.outputFormatting = [.sortedKeys]
+    let receipt = try beginRunReceipt(
+        directory: request.outputURL,
+        executableURL: request.executableURL,
+        backend: phaseBackend,
+        config: ResolvedRunConfig(parts: [("campaign_jobs", try jobsEncoder.encode(jobs))]),
+        seeds: [],
+        inputs: [request.configURL] + [request.seedLibraryURL].compactMap { $0 }
+    )
     let executions: [LeniaCampaignJobExecution]
     switch request.executionMode {
     case .local:
@@ -326,6 +345,12 @@ func executeCampaignPhase(
         executions = try await pool.execute(jobs: jobs)
     }
     let execution = aggregateCampaignExecutions(executions, metricsTransform: metricsTransform)
+    let strayBackends = execution.runs.compactMap(\.actualBackend).filter { $0 != phaseBackend.rawValue }
+    guard strayBackends.isEmpty else {
+        throw ValidationError(
+            "Campaign phase \(request.runID) recorded runs on \(Set(strayBackends).sorted()) although its receipt names \(phaseBackend.rawValue)."
+        )
+    }
     try writeCampaignBundle(
         request: request,
         jobs: jobs,
@@ -333,6 +358,7 @@ func executeCampaignPhase(
         outputURL: request.outputURL,
         logger: logger
     )
+    try receipt.finish()
     let failed = execution.runs.filter { $0.status == .failed }
     guard failed.isEmpty else {
         let details = failed.map { "\($0.runID) on \($0.workerID ?? "no worker"): \($0.errorMessage ?? "")" }

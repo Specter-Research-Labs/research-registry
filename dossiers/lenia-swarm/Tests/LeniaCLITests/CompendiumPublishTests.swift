@@ -321,6 +321,7 @@ private func makeAtlasRunLayout(at runDir: URL) throws {
     try fm.createDirectory(at: runDir.appendingPathComponent("library", isDirectory: true), withIntermediateDirectories: true)
     try fm.createDirectory(at: runDir.appendingPathComponent("overall", isDirectory: true), withIntermediateDirectories: true)
     try fm.createDirectory(at: runDir.appendingPathComponent("exports", isDirectory: true), withIntermediateDirectories: true)
+    try writeFixtureReceipt(in: runDir)
 }
 
 private func installAtlasRenderConfigs(at runDir: URL) throws {

@@ -1195,6 +1195,20 @@ func computeFlowWithParams(
     return F
 }
 
+/// The 2022 colab reference mixes parameters from one fixed PRNG key, so colab-mode configs omit mix_seed and replay this value.
+let flowLenia2022ColabMixSeed = 42
+
+func requiredMixSeed(_ mixSeed: Int?, colabMode: Bool, mixMode: String) -> Int {
+    if colabMode {
+        precondition(mixSeed == nil, "parameter_embedding.mix_seed must be omitted when implementation.mode == \"flowlenia_2022_colab\".")
+        return flowLenia2022ColabMixSeed
+    }
+    guard let mixSeed else {
+        preconditionFailure("parameter_embedding.mix_seed is required for \(mixMode) mixing when implementation.mode != \"flowlenia_2022_colab\".")
+    }
+    return mixSeed
+}
+
 private func reintegrationParamsBatched(
     _ A: MLXArray,
     _ P: MLXArray,
@@ -1334,7 +1348,7 @@ private func reintegrationParamsBatched(
         }
         let logitStack = MLX.stacked(logitList, axis: 0)
         let nPStack = MLX.stacked(nPList, axis: 0)
-        let seed = mixSeed ?? 42
+        let seed = requiredMixSeed(mixSeed, colabMode: flowLenia2022ColabCompat, mixMode: mixMode)
         var logits = logitStack
         logits = logits - logits.max(axis: 0, keepDims: true)
         let key = MLXRandom.key(UInt64(seed) + UInt64(mixStep))
@@ -1343,7 +1357,7 @@ private func reintegrationParamsBatched(
     case "stoch":
         let logitStack = MLX.stacked(logitList, axis: 0)
         let nPStack = MLX.stacked(nPList, axis: 0)
-        let seed = mixSeed ?? 42
+        let seed = requiredMixSeed(mixSeed, colabMode: flowLenia2022ColabCompat, mixMode: mixMode)
         var logits = logitStack
         if flowLenia2022ColabCompat {
             logits = MLX.log(logits + eps)
@@ -1360,7 +1374,7 @@ private func reintegrationParamsBatched(
     case "stoch_gene_wise":
         let logitStack = MLX.stacked(logitList, axis: 0)
         let nPStack = MLX.stacked(nPList, axis: 0)
-        let seed = mixSeed ?? 42
+        let seed = requiredMixSeed(mixSeed, colabMode: flowLenia2022ColabCompat, mixMode: mixMode)
         var logits = logitStack
         logits = logits - logits.max(axis: 0, keepDims: true)
         finalP = selectParamsGeneWiseFromNeighborhoodStack(
@@ -1371,7 +1385,7 @@ private func reintegrationParamsBatched(
         )
     case "energy":
         let nPStack = MLX.stacked(nPList, axis: 0)
-        let seed = mixSeed ?? 42
+        let seed = requiredMixSeed(mixSeed, colabMode: flowLenia2022ColabCompat, mixMode: mixMode)
         var logits = MLX.stacked(velocityLogitList!, axis: 0)
         logits = logits - logits.max(axis: 0, keepDims: true)
         let key = MLXRandom.key(UInt64(seed) + UInt64(mixStep))

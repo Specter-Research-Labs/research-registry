@@ -1,4 +1,5 @@
 import Foundation
+import LeniaCore
 import XCTest
 
 private let leniaCLITestSupportRoot = URL(fileURLWithPath: #filePath)
@@ -70,6 +71,21 @@ func makeRunLayout(at runDir: URL) throws {
     try fm.createDirectory(at: runDir.appendingPathComponent("library", isDirectory: true), withIntermediateDirectories: true)
     try fm.createDirectory(at: runDir.appendingPathComponent("overall", isDirectory: true), withIntermediateDirectories: true)
     try fm.createDirectory(at: runDir.appendingPathComponent("exports", isDirectory: true), withIntermediateDirectories: true)
+    try writeFixtureReceipt(in: runDir)
+}
+
+/// Fixture runs are indexed like real ones, so they carry a receipt issued by the stamped debug LeniaCLI.
+@discardableResult
+func writeFixtureReceipt(in runDir: URL, backend: FlowLeniaComputeBackend = .mlx) throws -> RunReceiptSession {
+    try RunReceiptSession.begin(
+        directory: runDir,
+        executableURL: try leniaCLIExecutableURL(),
+        argv: ["fixture"],
+        backend: backend,
+        config: ["fixture": runDir.lastPathComponent],
+        seeds: [],
+        inputs: []
+    )
 }
 
 func countJSONLLines(at url: URL) throws -> Int {
@@ -87,4 +103,16 @@ func decodeSingleJSONL<T: Decodable>(_ type: T.Type, from url: URL) throws -> T 
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .deferredToDate
     return try decoder.decode(T.self, from: Data(line.utf8))
+}
+
+/// In-process cluster actors need a build info, but the xctest host is not a stamped LeniaCLI.
+func testBuildInfo(cEngineSha256: String = String(repeating: "c", count: 64)) -> LeniaBuildInfo {
+    LeniaBuildInfo(
+        sourceCommit: String(repeating: "0", count: 40),
+        dirty: false,
+        binarySha256: String(repeating: "b", count: 64),
+        swiftVersion: "test",
+        cEngineSha256: cEngineSha256,
+        sourcePatchSha256: nil
+    )
 }

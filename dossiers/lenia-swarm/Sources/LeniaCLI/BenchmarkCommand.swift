@@ -517,7 +517,7 @@ private func selectedComputeBackends(_ value: String) throws -> [FlowLeniaComput
     switch normalized {
     case "all":
         return FlowLeniaComputeBackend.allCases
-    case "mlx", "mlx-swift":
+    case "mlx":
         return [.mlx]
     case "metal-full":
         return [.metalFull]
@@ -531,7 +531,7 @@ private func selectedSandboxBackends(_ value: String) throws -> [FlowSandboxBack
     switch normalized {
     case "all":
         return FlowSandboxBackend.allCases
-    case "mlx", "mlx-swift":
+    case "mlx":
         return [.mlx]
     case "metal-full":
         return [.metalFull]

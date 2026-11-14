@@ -102,10 +102,10 @@ public func resolveImplementationSettings(
         guard let gradientBoundary = implementation.gradient_boundary,
               let alphaMode = implementation.alpha_mode,
               let kernelProfile = implementation.kernel_profile,
+              let growthProfile = implementation.growth_profile,
               let flowClip = implementation.flow_clip else {
-            fatalError("implementation.mode=custom requires gradient_boundary, alpha_mode, kernel_profile, and flow_clip.")
+            fatalError("implementation.mode=custom requires gradient_boundary, alpha_mode, kernel_profile, growth_profile, and flow_clip.")
         }
-        let growthProfile = implementation.growth_profile ?? "gaussian"
         validateImplementationValues(
             gradientBoundary: gradientBoundary,
             alphaMode: alphaMode,

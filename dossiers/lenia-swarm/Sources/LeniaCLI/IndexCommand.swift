@@ -25,6 +25,9 @@ struct IndexCommand: ParsableCommand {
     @Flag(name: .long, help: "Include results.jsonl (not just library/exports)")
     var includeResults: Bool = false
 
+    @Option(name: .customLong("engine-id"), help: "Engine id of legacy run directories that predate receipt.json; must agree with any receipt present")
+    var legacyEngineID: String?
+
     @OptionGroup
     var warehouseRefresh: WarehouseRefreshOptions
 
@@ -35,7 +38,8 @@ struct IndexCommand: ParsableCommand {
         let resolvedPlan = try resolveCompendiumIngestPlan(
             outputRoots: outputRoots,
             runDirs: runDirs,
-            dbPath: dbPath
+            dbPath: dbPath,
+            legacyEngineID: legacyEngineID
         )
         let plan = CompendiumIngestPlan(
             runInputs: resolvedPlan.runInputs,
@@ -124,7 +128,8 @@ final class SQLiteIndexer {
             runName: input.runId,
             runDir: runDirStored,
             hostId: input.hostId,
-            outputRoot: input.outputRoot?.path
+            outputRoot: input.outputRoot?.path,
+            provenance: input.provenance
         )
 
         try ingestRunArtifacts(
@@ -132,6 +137,7 @@ final class SQLiteIndexer {
             runKey: input.runKey,
             campaignId: nil,
             runDir: runDir,
+            provenance: input.provenance,
             includeResults: includeResults,
             resultsCandidates: ["overall/results.jsonl", "results.jsonl"],
             activityPath: "overall/activity.jsonl"
@@ -151,6 +157,7 @@ final class SQLiteIndexer {
                     runKey: input.runKey,
                     campaignId: campaign.lastPathComponent,
                     runDir: runDir,
+                    provenance: input.provenance,
                     includeResults: includeResults,
                     resultsCandidates: ["results.jsonl"],
                     activityPath: "activity.jsonl"
@@ -187,12 +194,13 @@ final class SQLiteIndexer {
         runKey: String,
         campaignId: String?,
         runDir: URL,
+        provenance: CompendiumRunProvenance,
         includeResults: Bool,
         resultsCandidates: [String],
         activityPath: String?
     ) throws {
         if let libraryIndex = existingArtifact(in: directory, relativePath: "library/index.jsonl") {
-            try ingestLibraryIndex(path: libraryIndex, runKey: runKey, runDir: runDir)
+            try ingestLibraryIndex(path: libraryIndex, runKey: runKey, runDir: runDir, provenance: provenance)
         }
         if let exportsIndex = existingArtifact(in: directory, relativePath: "exports/index.jsonl") {
             try ingestExportIndex(path: exportsIndex, runKey: runKey, runDir: runDir)
@@ -202,7 +210,7 @@ final class SQLiteIndexer {
         }
         if includeResults,
            let resultsURL = firstExistingArtifact(in: directory, relativePaths: resultsCandidates) {
-            try ingestResults(path: resultsURL, runKey: runKey, campaignId: campaignId, runDir: runDir)
+            try ingestResults(path: resultsURL, runKey: runKey, campaignId: campaignId, runDir: runDir, provenance: provenance)
         }
         if let activityPath,
            let activityURL = existingArtifact(in: directory, relativePath: activityPath) {
@@ -678,7 +686,7 @@ final class SQLiteIndexer {
         let maxConcurrency = allFlowReplays ? 1 : min(max(ProcessInfo.processInfo.activeProcessorCount / 2, 1), 4)
         if maxConcurrency == 1 || pending.count == 1 {
             for item in pending {
-                let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID, backendRequest: "auto")
+                let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID, backendRequest: replaySourceBackendRequest)
                 try FileManager.default.createDirectory(at: item.artifactDirectory, withIntermediateDirectories: true)
                 try Self.persistCanonicalizationArtifacts(
                     directory: item.artifactDirectory,
@@ -712,7 +720,7 @@ final class SQLiteIndexer {
                     }
 
                     do {
-                        let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID, backendRequest: "auto")
+                        let execution = try executeReplayResolvedInput(item.resolvedInput, runID: item.backfillRunID, backendRequest: replaySourceBackendRequest)
                         try FileManager.default.createDirectory(at: item.artifactDirectory, withIntermediateDirectories: true)
                         try Self.persistCanonicalizationArtifacts(
                             directory: item.artifactDirectory,
@@ -1251,8 +1259,8 @@ final class SQLiteIndexer {
             "source_input_path": researchMetadataValue(resolvedInput.inputPath.path),
             "source_run_id": researchMetadataValue(resolvedInput.sourceRunId),
             "source_creature_id": researchMetadataValue(resolvedInput.sourceCreature.id.uuidString),
-            "source_mode": researchMetadataValue(resolvedInput.sourceMode ?? "unknown"),
-            "source_algorithm": researchMetadataValue(resolvedInput.sourceAlgorithm ?? "unknown"),
+            "source_mode": researchMetadataValue((resolvedInput.sourceMode as Any?) ?? NSNull()),
+            "source_algorithm": researchMetadataValue((resolvedInput.sourceAlgorithm as Any?) ?? NSNull()),
             "config_hash": researchMetadataValue(execution.configHash),
         ]
         try replayEncoder().encode(manifest).write(to: directory.appendingPathComponent("canonicalization.json"))
@@ -1430,7 +1438,10 @@ final class SQLiteIndexer {
                 indexed_at TEXT NOT NULL,
                 config_hash TEXT,
                 source_mode TEXT,
-                source_algorithm TEXT
+                source_algorithm TEXT,
+                engine_id TEXT NOT NULL,
+                source_commit TEXT,
+                receipt_sha256 TEXT
             )
         """)
 
@@ -1540,7 +1551,10 @@ final class SQLiteIndexer {
                 metrics_json TEXT NOT NULL,
                 params_json TEXT NOT NULL,
                 sweep_json TEXT,
-                worker_id TEXT
+                worker_id TEXT,
+                engine_id TEXT NOT NULL,
+                source_commit TEXT,
+                receipt_sha256 TEXT
             )
         """)
 
@@ -1830,15 +1844,18 @@ final class SQLiteIndexer {
         runDir: String,
         hostId: String?,
         outputRoot: String?,
+        provenance: CompendiumRunProvenance,
         configHash: String? = nil,
         sourceMode: String? = nil,
         sourceAlgorithm: String? = nil
     ) throws {
+        try requireConsistentRunProvenance(runKey: runKey, provenance: provenance)
         let indexedAt = formatter.string(from: Date())
         let stmt = try db.prepare("""
             INSERT INTO runs (
-                run_id, run_name, host_id, output_root, run_dir, indexed_at, config_hash, source_mode, source_algorithm
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                run_id, run_name, host_id, output_root, run_dir, indexed_at, config_hash, source_mode, source_algorithm,
+                engine_id, source_commit, receipt_sha256
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(run_id) DO UPDATE SET
                 run_name = excluded.run_name,
                 host_id = excluded.host_id,
@@ -1859,7 +1876,25 @@ final class SQLiteIndexer {
         db.bindText(stmt, index: 7, value: configHash)
         db.bindText(stmt, index: 8, value: sourceMode)
         db.bindText(stmt, index: 9, value: sourceAlgorithm)
+        db.bindText(stmt, index: 10, value: provenance.engineID)
+        db.bindText(stmt, index: 11, value: provenance.sourceCommit)
+        db.bindText(stmt, index: 12, value: provenance.receiptSha256)
         try db.step(stmt)
+    }
+
+    /// A run key indexed once keeps its engine and receipt; re-ingesting it from another engine or receipt is a different run.
+    private func requireConsistentRunProvenance(runKey: String, provenance: CompendiumRunProvenance) throws {
+        let stmt = try db.prepare("SELECT engine_id, receipt_sha256 FROM runs WHERE run_id = ?")
+        defer { sqlite3_finalize(stmt) }
+        db.bindText(stmt, index: 1, value: runKey)
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return }
+        let engineID = String(cString: sqlite3_column_text(stmt, 0))
+        let receiptSha256 = sqlite3_column_type(stmt, 1) == SQLITE_NULL ? nil : String(cString: sqlite3_column_text(stmt, 1))
+        guard engineID == provenance.engineID, receiptSha256 == provenance.receiptSha256 else {
+            throw ValidationError(
+                "Run \(runKey) is already indexed from engine \(engineID) (receipt \(receiptSha256 ?? "none")); refusing to merge engine \(provenance.engineID) (receipt \(provenance.receiptSha256 ?? "none")). Index it under a new run id or rebuild."
+            )
+        }
     }
 
     private func ensureCampaign(_ campaignId: String, runKey: String) throws {
@@ -1893,7 +1928,7 @@ final class SQLiteIndexer {
         }
     }
 
-    private func ingestLibraryIndex(path: URL, runKey: String, runDir: URL) throws {
+    private func ingestLibraryIndex(path: URL, runKey: String, runDir: URL, provenance runProvenance: CompendiumRunProvenance) throws {
         try withDecodedJSONLLines(
             path: path,
             configureDecoder: { $0.dateDecodingStrategy = .deferredToDate }
@@ -2068,6 +2103,7 @@ final class SQLiteIndexer {
                 runDir: provenance.runDir,
                 hostId: provenance.hostId,
                 outputRoot: provenance.outputRoot,
+                provenance: runProvenance,
                 configHash: provenance.configHash,
                 sourceMode: provenance.sourceMode,
                 sourceAlgorithm: provenance.sourceAlgorithm
@@ -2273,7 +2309,7 @@ final class SQLiteIndexer {
         }
     }
 
-    private func ingestResults(path: URL, runKey: String, campaignId: String?, runDir: URL) throws {
+    private func ingestResults(path: URL, runKey: String, campaignId: String?, runDir: URL, provenance: CompendiumRunProvenance) throws {
         try withDecodedJSONLLines(path: path) { (results: [SimulationResultData]) in
             if let campaignId = campaignId {
                 try ensureCampaign(campaignId, runKey: runKey)
@@ -2283,8 +2319,9 @@ final class SQLiteIndexer {
                 INSERT OR REPLACE INTO results (
                     id, run_id, campaign_id, seed, init_seed, score, filters_passed,
                     backend, implementation_json, score_weights_json,
-                    metrics_json, params_json, sweep_json, worker_id
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    metrics_json, params_json, sweep_json, worker_id,
+                    engine_id, source_commit, receipt_sha256
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """)
             defer { sqlite3_finalize(stmt) }
             for result in results {
@@ -2312,6 +2349,9 @@ final class SQLiteIndexer {
                 db.bindText(stmt, index: 12, value: paramsJSON)
                 db.bindText(stmt, index: 13, value: sweepJSON)
                 db.bindText(stmt, index: 14, value: result.workerId)
+                db.bindText(stmt, index: 15, value: provenance.engineID)
+                db.bindText(stmt, index: 16, value: provenance.sourceCommit)
+                db.bindText(stmt, index: 17, value: provenance.receiptSha256)
 
                 try db.step(stmt)
                 try upsertSpecimenFromResult(

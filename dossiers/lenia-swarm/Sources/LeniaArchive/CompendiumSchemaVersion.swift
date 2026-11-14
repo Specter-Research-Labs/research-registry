@@ -1,1 +1,1 @@
-public let compendiumSchemaVersion = 15
+public let compendiumSchemaVersion = 16

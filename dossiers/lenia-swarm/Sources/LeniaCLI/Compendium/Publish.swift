@@ -484,7 +484,7 @@ struct CompendiumPublishCommand: ParsableCommand {
         outputURL: URL,
         creatureDirURL: URL
     ) throws -> AtlasRenderedMedia {
-        let resolvedBackend = try resolveReplaySearchBackend(requestValue: "auto", baseConfig: baseConfig)
+        let resolvedBackend = try resolveReplaySearchBackend(requestValue: replaySourceBackendRequest, baseConfig: baseConfig)
         let replayBaseConfig = baseConfigBySettingBackend(baseConfig, backend: resolvedBackend)
         let runtimeConfig = try loadRuntimeConfig(from: JSONEncoder().encode(replayBaseConfig))
         let frames = try captureReplayFrames(

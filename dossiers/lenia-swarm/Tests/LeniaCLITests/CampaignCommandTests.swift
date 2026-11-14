@@ -368,6 +368,7 @@ func runTinyCampaignPhase(
         runID: runID,
         backendRequest: "mlx",
         executionMode: executionMode,
+        executableURL: try leniaCLIExecutableURL(),
         logger: Logger(label: "CampaignCommandTests.\(phase.name)")
     )
 }

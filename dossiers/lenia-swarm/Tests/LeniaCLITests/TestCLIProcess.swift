@@ -26,7 +26,7 @@ private let leniaCLITestPackageRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
 
-private func leniaCLIExecutableURL() throws -> URL {
+func leniaCLIExecutableURL() throws -> URL {
     let candidates = [
         leniaCLITestPackageRoot.appendingPathComponent(".build/debug/LeniaCLI"),
         leniaCLITestPackageRoot.appendingPathComponent(".build/arm64-apple-macosx/debug/LeniaCLI"),

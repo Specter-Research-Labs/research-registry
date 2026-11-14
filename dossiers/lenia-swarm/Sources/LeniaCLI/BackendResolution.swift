@@ -95,29 +95,26 @@ func baseConfigDataByApplyingOverrides(_ data: Data, overrides: [String: Any]) t
     return try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
 }
 
+/// Replays run on the engine the source record names unless the caller names another one,
+/// so a replay never moves a record to a different engine behind the caller's back.
 func resolveReplaySearchBackend(requestValue: String, baseConfig: LeniaBaseConfig) throws -> FlowLeniaComputeBackend {
-    switch try SimulationJobBackendRequest(configValue: requestValue) {
-    case .explicit(let backend):
-        guard isSearchBackendCompatible(backend: backend, config: baseConfig) else {
-            throw ValidationError("Requested backend \(backend.rawValue) is not compatible with this replay config.")
+    let backend: FlowLeniaComputeBackend
+    if requestValue == replaySourceBackendRequest {
+        do {
+            backend = try FlowLeniaComputeBackend(configValue: baseConfig.backend)
+        } catch {
+            throw ValidationError("Source record names backend '\(baseConfig.backend)', which is not a concrete engine; pass --backend mlx, metal-full or cpu.")
         }
-        return backend
-    case .auto:
-        if hostHasMetalDevice(),
-           isSearchBackendCompatible(backend: .metalFull, config: baseConfig) {
-            return .metalFull
-        }
-        return try FlowLeniaComputeBackend(configValue: baseConfig.backend)
+    } else {
+        backend = try FlowLeniaComputeBackend(configValue: requestValue)
     }
+    guard isSearchBackendCompatible(backend: backend, config: baseConfig) else {
+        throw ValidationError("Backend \(backend.rawValue) is not compatible with this replay config.")
+    }
+    return backend
 }
 
-func resolveReplaySimulatorBackend(runtimeConfig: LeniaRuntimeConfig) throws -> FlowLeniaComputeBackend {
-    if hostHasMetalDevice(),
-       isFlowLeniaSimulatorMetalBackendCompatible(runtimeConfig) {
-        return .metalFull
-    }
-    return runtimeConfig.backend
-}
+let replaySourceBackendRequest = "source"
 
 func baseConfigBySettingBackend(_ baseConfig: LeniaBaseConfig, backend: FlowLeniaComputeBackend) -> LeniaBaseConfig {
     LeniaBaseConfig(

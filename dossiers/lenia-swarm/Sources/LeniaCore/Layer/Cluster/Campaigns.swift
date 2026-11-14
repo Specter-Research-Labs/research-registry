@@ -579,30 +579,26 @@ private func resolvedEcologyBackend(
     for capabilities: WorkerBackendCapabilities,
     requestValue: String,
     config: LeniaBaseConfig
-) -> FlowLeniaComputeBackend? {
-    guard let request = try? SimulationJobBackendRequest(configValue: requestValue) else {
+) throws -> FlowLeniaComputeBackend? {
+    let backend = try clusterBackend(forRequest: requestValue)
+    guard capabilities.canonicalFlowLeniaBackends.contains(backend) else {
         return nil
     }
-    switch request {
-    case .explicit(let backend):
-        return capabilities.canonicalFlowLeniaBackends.contains(backend) ? backend : nil
-    case .auto:
-        if capabilities.canonicalFlowLeniaBackends.contains(.metalFull),
-           isSearchBackendCompatible(backend: .metalFull, config: config) {
-            return .metalFull
-        }
+    if try SimulationJobBackendRequest(configValue: requestValue) == .auto,
+       !isSearchBackendCompatible(backend: backend, config: config) {
         return nil
     }
+    return backend
 }
 
 public func materializeCampaignJob(
     _ job: LeniaCampaignJob,
     for capabilities: WorkerBackendCapabilities
-) -> LeniaCampaignJob? {
+) throws -> LeniaCampaignJob? {
     switch job.executor {
     case .search:
         guard let payload = job.search,
-              let materializedJob = materializeSimulationJob(payload.simulationJob, for: capabilities) else {
+              let materializedJob = try materializeSimulationJob(payload.simulationJob, for: capabilities) else {
             return nil
         }
         let materializedPayload = LeniaCampaignSearchJobPayload(
@@ -614,7 +610,7 @@ public func materializeCampaignJob(
         return job.with(search: materializedPayload)
     case .ecology2025:
         guard let payload = job.ecology,
-              let backend = resolvedEcologyBackend(for: capabilities, requestValue: job.backendRequest, config: payload.baseConfig) else {
+              let backend = try resolvedEcologyBackend(for: capabilities, requestValue: job.backendRequest, config: payload.baseConfig) else {
             return nil
         }
         if payload.baseConfig.backend == backend.rawValue {
@@ -633,11 +629,24 @@ public func materializeCampaignJob(
     }
 }
 
+/// The backend every worker resolves this job to, so a phase can record one engine for all its jobs.
+public func campaignJobBackend(_ job: LeniaCampaignJob) throws -> FlowLeniaComputeBackend {
+    switch job.executor {
+    case .search:
+        guard let payload = job.search else {
+            throw WorkerError.invalidConfig("Search campaign job \(job.runID) is missing its payload.")
+        }
+        return try clusterBackend(forRequest: backendRequestValue(for: payload.simulationJob))
+    case .ecology2025:
+        return try clusterBackend(forRequest: job.backendRequest)
+    }
+}
+
 public func workerSupportsCampaignJob(
     _ status: WorkerStatus,
     job: LeniaCampaignJob
-) -> Bool {
-    materializeCampaignJob(job, for: status.capabilities) != nil
+) throws -> Bool {
+    try materializeCampaignJob(job, for: status.capabilities) != nil
 }
 
 public func failedLeniaCampaignJobExecution(
@@ -664,7 +673,7 @@ public func executeLeniaCampaignJob(
     #if canImport(Metal)
     try LeniaMetalLibrarySupport.ensureAvailable()
     #endif
-    guard let materializedJob = materializeCampaignJob(job, for: capabilities) else {
+    guard let materializedJob = try materializeCampaignJob(job, for: capabilities) else {
         throw WorkerError.invalidConfig("No compatible backend available for campaign job \(job.runID).")
     }
     switch materializedJob.executor {

@@ -62,6 +62,16 @@ public class LeniaNode: ObservableObject {
         let searchConfigPath = config.searchConfigPath
         let outputRootPath = config.outputRootPath
 
+        let buildInfo: LeniaBuildInfo
+        do {
+            buildInfo = try LeniaBuildInfo.loadVerified(executableURL: try LeniaBuildInfo.runningExecutableURL())
+        } catch {
+            appState?.connectionState = .error(
+                "Cannot verify this build: \(error.localizedDescription) Install with `make install-app`, which records it."
+            )
+            return
+        }
+
         // Start Cluster System
         let system = await ClusterSystem("LeniaHive") { settings in
             settings.bindHost = bindHost
@@ -82,7 +92,8 @@ public class LeniaNode: ObservableObject {
                 logger: LeniaLogging.makeLogger(label: "LeniaStudio.Controller"),
                 baseConfigPath: baseConfigPath,
                 searchConfigPath: searchConfigPath,
-                outputRootPath: outputRootPath
+                outputRootPath: outputRootPath,
+                buildInfo: buildInfo
             )
             if started {
                 appState?.connectionState = .connected(role: .host)
@@ -92,7 +103,7 @@ public class LeniaNode: ObservableObject {
         case .join(let controllerHost, let controllerPort):
             // Worker mode: create worker and join cluster
             let localWorkerId = LeniaWorker.generateWorkerId()
-            let worker = LeniaWorker(actorSystem: system, workerId: localWorkerId)
+            let worker = LeniaWorker(actorSystem: system, workerId: localWorkerId, buildInfo: buildInfo)
             self.worker = worker
 
             appState?.localWorkerId = localWorkerId
@@ -222,7 +233,8 @@ public class LeniaNode: ObservableObject {
         logger: Logger,
         baseConfigPath: String?,
         searchConfigPath: String?,
-        outputRootPath: String?
+        outputRootPath: String?,
+        buildInfo: LeniaBuildInfo
     ) async -> Bool {
         let trimmedBase = baseConfigPath?.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedSearch = searchConfigPath?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -315,6 +327,7 @@ public class LeniaNode: ObservableObject {
                     outputDir: outputDir,
                     seedsPerJob: 5,
                     runContext: runContext,
+                    buildInfo: buildInfo,
                     logger: logger,
                     eventContinuation: eventContinuation
                 )
@@ -328,6 +341,7 @@ public class LeniaNode: ObservableObject {
                     outputDir: outputDir,
                     seedsPerJob: 5,
                     runContext: runContext,
+                    buildInfo: buildInfo,
                     logger: logger,
                     eventContinuation: eventContinuation
                 )
@@ -373,6 +387,8 @@ public class LeniaNode: ObservableObject {
             appState?.updateProgress(jobs: completed, totalJobs: total, seeds: seeds, totalSeeds: totalSeeds, rate: rate)
         case .finished:
             appState?.markSearchComplete()
+        case .failed(let message):
+            appState?.connectionState = .error(message)
         case .workerListUpdated(let workers):
             appState?.updateWorkerList(workers)
         case .creatureDiscovered(let creature):

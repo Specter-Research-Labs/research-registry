@@ -137,7 +137,7 @@ final class FlowLeniaMetalPhantom {
         )
     }
 
-    private static let kernelSource = """
+    static let kernelSource = """
     #include <metal_stdlib>
     using namespace metal;
 

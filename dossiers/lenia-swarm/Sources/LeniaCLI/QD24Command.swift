@@ -126,6 +126,14 @@ struct QD24Command: AsyncParsableCommand {
             }
         }
 
+        let receipt = try beginPaperRunReceipt(
+            outputDirectory: outputDirectoryURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            configFiles: try configDirectoryFiles(in: configDirectoryURL),
+            extraInputs: [],
+            backend: .mlx,
+            seeds: [seed]
+        )
         let runner = LeniaBreeder2024Runner(
             configs: bundle,
             logger: logger,
@@ -185,6 +193,7 @@ struct QD24Command: AsyncParsableCommand {
         default:
             throw ValidationError("--algorithm must be one of: me, aurora")
         }
+        try receipt.finish()
 
         let resolvedPromotion = try promoteIfConfigured(
             options: promotion,

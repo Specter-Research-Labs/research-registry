@@ -112,12 +112,22 @@ struct Sensorimotor24Command: AsyncParsableCommand {
         logger.info("Evaluation rollouts: \(bundle.training.evaluationAfterStep.rollouts)")
         logger.info("============================================================")
 
+        let receipt = try beginPaperRunReceipt(
+            outputDirectory: outputDirectoryURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            configFiles: try configDirectoryFiles(in: configDirectoryURL),
+            extraInputs: (resolvedSeedLibrary.map { [URL(fileURLWithPath: $0).standardizedFileURL] } ?? [])
+                + (try resolvedQDConfigDir.map { try configDirectoryFiles(in: URL(fileURLWithPath: $0, isDirectory: true)).map(\.url) } ?? []),
+            backend: .mlx,
+            seeds: [seed]
+        )
         let runner = SensorimotorLenia2024Runner(
             configs: bundle,
             logger: logger,
             seedInitialization: seedInitialization
         )
         let summary = try runner.run(seed: UInt64(seed), outputDirectory: outputDirectoryURL, runId: resolvedRunId)
+        try receipt.finish()
 
         logger.info("Sensorimotor 2024 complete")
         logger.info("History count: \(summary.historyCount)")

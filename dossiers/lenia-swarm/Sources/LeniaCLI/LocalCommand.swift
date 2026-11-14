@@ -178,6 +178,10 @@ struct LocalCommand: AsyncParsableCommand {
                 baseConfigData: baseConfigData,
                 searchConfigData: searchConfigData
             )
+            let receipt = try resumeRunReceipt(directory: runDirURL, backend: resolvedBackend)
+            guard existingSummary.provenance == receipt.provenance else {
+                throw ValidationError("summary.json provenance disagrees with receipt.json in \(runDirURL.path).")
+            }
             logger.info("Existing completed run found; skipping simulation and retrying promotion from \(runDirURL.path)")
             try promoteLocalRunIfConfigured(
                 promotion: promotion,
@@ -202,8 +206,19 @@ struct LocalCommand: AsyncParsableCommand {
             steps: parsedSearchConfig.steps
         )
         let isResuming = loadedCheckpoint != nil
-        if !isResuming {
+        let receipt: RunReceiptSession
+        if isResuming {
+            receipt = try resumeRunReceipt(directory: runDirURL, backend: resolvedBackend)
+        } else {
             try validateFreshLocalRunDirectory(runDirURL)
+            receipt = try beginRunReceipt(
+                directory: runDirURL,
+                executableURL: try LeniaBuildInfo.runningExecutableURL(),
+                backend: resolvedBackend,
+                config: ResolvedRunConfig(parts: [("base", baseConfigData), ("search", searchConfigData)]),
+                seeds: seeds,
+                inputs: [baseConfigURL, searchConfigURL]
+            )
         }
 
         try prepareLocalRunInputFiles(
@@ -394,9 +409,11 @@ struct LocalCommand: AsyncParsableCommand {
             framesDir: framesDirPath,
             framesColorDir: framesColorDirPath,
             frameStride: framesEnabled ? frameStride : nil,
-            includeWarmupFrames: framesEnabled ? includeWarmupFrames : nil
+            includeWarmupFrames: framesEnabled ? includeWarmupFrames : nil,
+            provenance: receipt.provenance
         )
         try writeResearchJSON(summary, to: summaryURL, prettyPrinted: true)
+        try receipt.finish()
 
         logger.info("Local run complete (duration=\(String(format: "%.2f", checkpoint.durationSeconds))s, results=\(resultCount))")
 
@@ -425,6 +442,7 @@ private struct LocalRunSummary: Codable {
     let framesColorDir: String?
     let frameStride: Int?
     let includeWarmupFrames: Bool?
+    let provenance: RunProvenance
 }
 
 private struct LocalRunCheckpoint: Codable {

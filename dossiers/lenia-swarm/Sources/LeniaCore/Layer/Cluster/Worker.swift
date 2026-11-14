@@ -64,12 +64,18 @@ public distributed actor LeniaWorker {
     private var currentJobId: String?
     private var qd2024MAPElitesCache: [String: LeniaBreeder2024WorkerAssetCacheEntry] = [:]
     private let backendCapabilities: WorkerBackendCapabilities
+    private let engineIDs: [String: String]
 
-    public init(actorSystem: ClusterSystem, workerId: String? = nil) {
+    public init(actorSystem: ClusterSystem, workerId: String? = nil, buildInfo: LeniaBuildInfo) {
         self.actorSystem = actorSystem
         self._workerId = workerId ?? Self.generateWorkerId()
         self.hostname = ProcessInfo.processInfo.hostName
-        self.backendCapabilities = Self.detectBackendCapabilities()
+        let capabilities = Self.detectBackendCapabilities()
+        self.backendCapabilities = capabilities
+        self.engineIDs = LeniaEngineIdentity.engineIDs(
+            for: capabilities.canonicalSearchBackends + capabilities.canonicalFlowLeniaBackends,
+            buildInfo: buildInfo
+        )
         self.logger = LeniaLogging.makeLogger(
             label: "LeniaSwarm.Worker.\(self._workerId)",
             extraMetadata: ["worker_id": .string(self._workerId)]
@@ -178,9 +184,14 @@ public distributed actor LeniaWorker {
         )
 
         do {
-            guard let materializedJob = materializeSimulationJob(job, for: backendCapabilities) else {
+            guard let materializedJob = try materializeSimulationJob(job, for: backendCapabilities) else {
                 throw WorkerError.invalidConfig(
                     "Worker \(workerId) does not support requested backend '\(backendRequestValue(for: job))'."
+                )
+            }
+            guard let engineID = engineIDs[materializedJob.baseConfig.backend] else {
+                throw WorkerError.invalidConfig(
+                    "Worker \(workerId) has no engine id for backend '\(materializedJob.baseConfig.backend)'."
                 )
             }
             // Use searchConfig directly from job (no parsing needed)
@@ -314,7 +325,8 @@ public distributed actor LeniaWorker {
                 count: materializedJob.count,
                 results: allResults,
                 errorMessage: nil,
-                durationSeconds: duration
+                durationSeconds: duration,
+                engineID: engineID
             )
 
         } catch {
@@ -343,7 +355,8 @@ public distributed actor LeniaWorker {
                 count: job.count,
                 results: [],
                 errorMessage: error.localizedDescription,
-                durationSeconds: duration
+                durationSeconds: duration,
+                engineID: nil
             )
         }
     }
@@ -415,7 +428,8 @@ public distributed actor LeniaWorker {
             currentJob: currentJobId,
             jobsCompleted: jobsCompleted,
             totalSeedsProcessed: totalSeedsProcessed,
-            isAvailable: currentJobId == nil
+            isAvailable: currentJobId == nil,
+            engineIDs: engineIDs
         )
     }
 

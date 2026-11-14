@@ -115,6 +115,28 @@ struct Ecology25Command: AsyncParsableCommand {
         guard let resolvedOutput else {
             throw ValidationError("--output is required unless --validate-only is set.")
         }
+        let outputDirectoryURL = URL(fileURLWithPath: resolvedOutput, isDirectory: true)
+        let configFiles = try configDirectoryFiles(in: URL(fileURLWithPath: resolvedConfigDir, isDirectory: true))
+        let overrides: [String: Any] = [
+            "backend": (runtimeOverrides.backend as Any?) ?? NSNull(),
+            "border": (runtimeOverrides.border as Any?) ?? NSNull(),
+            "parameter_mix": (runtimeOverrides.parameterMix as Any?) ?? NSNull(),
+            "parameter_mix_seed": (runtimeOverrides.parameterMixSeed as Any?) ?? NSNull(),
+            "clears_parameter_mix_seed": runtimeOverrides.clearsParameterMixSeed,
+        ]
+        let receipt = try beginRunReceipt(
+            directory: outputDirectoryURL,
+            executableURL: try LeniaBuildInfo.runningExecutableURL(),
+            backend: resolvedBackend,
+            config: ResolvedRunConfig(
+                parts: try configFiles.map { ($0.name, try Data(contentsOf: $0.url)) }
+                    + [("runtime_overrides", try JSONSerialization.data(withJSONObject: overrides, options: [.sortedKeys]))]
+            ),
+            seeds: [],
+            inputs: configFiles.map(\.url)
+                + (resolvedSeedLibrary.map { [URL(fileURLWithPath: $0).standardizedFileURL] } ?? [])
+                + (try resolvedQDConfigDir.map { try configDirectoryFiles(in: URL(fileURLWithPath: $0, isDirectory: true)).map(\.url) } ?? [])
+        )
         if evaluateSeedsIndividually {
             guard !ecologySeeds.isEmpty else {
                 throw ValidationError("--evaluate-seeds-individually requires --seed-library.")
@@ -122,10 +144,11 @@ struct Ecology25Command: AsyncParsableCommand {
             try runExactSeedEvaluations(
                 seeds: ecologySeeds,
                 bundle: bundle,
-                outputDirectory: URL(fileURLWithPath: resolvedOutput, isDirectory: true),
+                outputDirectory: outputDirectoryURL,
                 runtimeOverrides: runtimeOverrides,
                 logger: logger
             )
+            try receipt.finish()
             return
         }
         let runner = FlowLeniaEcology2025Runner(
@@ -134,7 +157,8 @@ struct Ecology25Command: AsyncParsableCommand {
             curatedSeeds: ecologySeeds,
             runtimeOverrides: runtimeOverrides
         )
-        _ = try runner.run(outputDirectory: URL(fileURLWithPath: resolvedOutput, isDirectory: true))
+        _ = try runner.run(outputDirectory: outputDirectoryURL)
+        try receipt.finish()
     }
 }
 
