@@ -129,10 +129,6 @@ def local_runtime_logs_root() -> Path:
     return _local_runtime_root("logs", tmp_family="runtime-logs")
 
 
-def local_runtime_log_archives_root() -> Path:
-    return _local_runtime_root("log-archives", tmp_family="runtime-logs")
-
-
 def local_runtime_artifacts_root() -> Path:
     return _local_runtime_root("artifacts", tmp_family="runtime-artifacts")
 

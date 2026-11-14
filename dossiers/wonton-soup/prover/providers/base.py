@@ -517,34 +517,3 @@ class GoalAwareTacticProvider(TacticProvider):
         if total <= 0:
             return []
         return [(t, (w / total)) for t, w, _ in top]
-
-
-class AesopTacticProvider(TacticProvider):
-    def __init__(self, search_tactic: str = "aesop?"):
-        self.search_tactic = search_tactic
-
-    def describe(self) -> str:
-        return f"{self.__class__.__name__}(search={self.search_tactic})"
-
-    def set_seed(self, seed: int) -> None:
-        """Suggestions come from Lean's `aesop?`, which does not sample."""
-
-    async def suggest_tactics_with_probs_async(
-        self,
-        goal: LeanGoal,
-        mvar_id: str,
-        adapter: LeanAdapter,
-        n: int = 10,
-    ) -> list[tuple[str, float]]:
-        try:
-            suggestions = await adapter.get_tactic_suggestions(mvar_id, self.search_tactic)
-        except LeanInteractionException as exc:
-            goal_type = goal.type.strip()
-            raise RuntimeError(
-                f"{self.search_tactic} failed for {mvar_id} ({goal_type}). Lean reported: {exc}"
-            ) from exc
-        if not suggestions:
-            return []
-        trimmed = suggestions[:n]
-        uniform_prob = 1.0 / len(trimmed)
-        return [(tactic, uniform_prob) for tactic in trimmed]

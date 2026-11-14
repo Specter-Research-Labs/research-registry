@@ -5,7 +5,6 @@ import pytest
 
 from prover.goal_signature import GoalSignatureConfig
 from prover.mcts import mcts_search
-from prover.providers.base import AesopTacticProvider
 
 
 @dataclass
@@ -71,21 +70,3 @@ def test_mcts_provider_exception_is_a_run_error():
                 goal_sig_config=goal_sig_config,
             )
         )
-
-
-class NoSuggestionAdapter:
-    async def get_tactic_suggestions(
-        self,
-        mvar_id: str,
-        search_tactic: str = "aesop?",
-    ) -> list[str]:
-        _ = (mvar_id, search_tactic)
-        return []
-
-
-def test_aesop_provider_returns_empty_on_no_suggestions():
-    provider = AesopTacticProvider()
-    adapter = NoSuggestionAdapter()
-    goal = FakeGoal(mvar_id="root", type="P", type_expr=None, hypotheses=[])
-    result = asyncio.run(provider.suggest_tactics_with_probs_async(goal, "root", adapter, n=10))
-    assert result == []

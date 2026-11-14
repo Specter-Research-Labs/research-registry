@@ -938,6 +938,5 @@ def test_run_corpus_resume_preserves_existing_goal_cache(
     saved_goal_cache = GoalCache.load(run_dir / "goal_cache.json")
     assert saved_goal_cache.mvar_to_sig == original_goal_cache.mvar_to_sig
     assert tuple(saved_goal_cache.entries) == tuple(original_goal_cache.entries)
-    sig = saved_goal_cache.get_sig("resume-mvar")
-    assert sig is not None
+    sig = saved_goal_cache.mvar_to_sig["resume-mvar"]
     assert saved_goal_cache.entries[sig].occurrences["resume-mvar"].outcomes == {3: [True]}

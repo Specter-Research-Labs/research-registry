@@ -118,15 +118,3 @@ def tree_edit_distance(t1: OrderedTree, t2: OrderedTree) -> int:
                         fd[di][dj] = best
 
     return td[n1 - 1][n2 - 1]
-
-
-def normalized_tree_edit_distance(t1: OrderedTree, t2: OrderedTree) -> float:
-    """Return TED normalized to [0, 1] via dist / (|t1| + |t2|)."""
-
-    labels1, _ = _postorder_labels_and_leftmost(t1)
-    labels2, _ = _postorder_labels_and_leftmost(t2)
-    denom = len(labels1) + len(labels2)
-    if denom == 0:
-        return 0.0
-    return tree_edit_distance(t1, t2) / denom
-

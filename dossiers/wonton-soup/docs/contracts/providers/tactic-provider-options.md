@@ -30,12 +30,6 @@ CLI-exposed providers (`orchestrator/lean_inputs.py`, `PROVIDER_CHOICES`):
 - `internlm`
 - `heuristic`
 
-Internal-only provider (implemented but not exposed via `--provider`):
-
-- `AesopTacticProvider` (`prover/providers/base.py`)
-  - Used as a programmatic helper, not a named CLI provider.
-  - Wraps `adapter.get_tactic_suggestions(..., search_tactic="aesop?")` and returns uniform weights over suggestions.
-
 ## Construction Path and Easy-Tactic Gate
 
 Provider construction happens in `create_provider(...)` (`orchestrator/lean_inputs.py`):
