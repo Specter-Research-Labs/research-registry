@@ -21,6 +21,10 @@ Inputs:
 
 Build output goes under `dossiers/wonton-soup/paper/artifacts/`.
 
+The follow-up and basin-width runs behind the followup figures were driven by
+`scripts/followup_run_program.sh` and `scripts/basin_width_experiment_v1.sh`.
+Both print their `wonton.py` commands as a dry run unless given `--execute`.
+
 ## Build Figures
 
 ```bash
@@ -34,6 +38,10 @@ Expected artifacts:
 - `paper/artifacts/fig17-followup-provider-splits.svg`
 - `paper/artifacts/fig16-ged-bimodality.svg`
 - `paper/artifacts/fig18-followup-basins.svg`
+
+The protocol and tree diagrams in `docs/figures/out/` are TikZ sources under
+`docs/figures/src/`, rebuilt with `uv run python docs/figures/build.py` from
+the dossier root.
 
 ## Compile
 
