@@ -16,10 +16,6 @@ def _base_args(*, backend):
         limit=None,
         sample=None,
         seed=None,
-        wild_only=False,
-        with_interventions=False,
-        trace_mcts=False,
-        no_trace_mcts=False,
     )
 
 
@@ -43,24 +39,6 @@ def _base_args(*, backend):
             "lean",
             {},
             "`run --backend lean` is unsupported",
-        ),
-        (
-            "_validate_lean_args",
-            "lean",
-            {"sample": 10},
-            "--seed is required when --sample is set",
-        ),
-        (
-            "_validate_lean_args",
-            "lean",
-            {"sample": 10, "seed": 123, "limit": 5},
-            "Use --sample or --limit, not both",
-        ),
-        (
-            "_validate_lean_args",
-            "lean",
-            {"trace_mcts": True, "no_trace_mcts": True},
-            "--trace-mcts and --no-trace-mcts are mutually exclusive",
         ),
     ],
 )

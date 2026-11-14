@@ -15,7 +15,6 @@ from analysis.lake.db import (
     connect,
     ensure_schema,
     root_id_for_path,
-    run_key_for,
     run_key_for_run_dir,
 )
 from analysis.lake.export_parquet import export_parquet
@@ -228,8 +227,8 @@ def _seed_v5_nested_duplicate_lake(
 ) -> tuple[str, Path]:
     parent_rid = root_id_for_path(parent_root)
     child_rid = root_id_for_path(child_root)
-    legacy_parent_key = run_key_for(parent_rid, "campaign-a/run-1")
-    legacy_child_key = run_key_for(child_rid, "run-1")
+    legacy_parent_key = f"v5-{parent_rid}-campaign-a/run-1"
+    legacy_child_key = f"v5-{child_rid}-run-1"
     run_payload = json.dumps(
         {"run_id": "run-1", "provider": "reprover", "backend": "lean", "mode": "dev"}
     )

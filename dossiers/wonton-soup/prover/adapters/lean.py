@@ -516,9 +516,6 @@ class LeanAdapter:
             raise KeyError(f"Unknown mvar_id: {mvar_id}")
         return self.states[mvar_id].branch.is_solved
 
-    def get_proof_term(self) -> ExprDAG | None:
-        return self.completed_proof_term
-
     async def replay_solution_path(
         self,
         theorem_with_sorry: str,

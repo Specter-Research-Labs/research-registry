@@ -379,33 +379,13 @@ def _auto_sync_paths(paths: list[Path], *, reason: str) -> None:
             break
 
 
-def _validate_sampling_args(args, *, allow_limit_with_sample: bool) -> None:
-    if args.sample is None:
-        return
-    if args.seed is None:
-        _die("--seed is required when --sample is set")
-    if not allow_limit_with_sample and args.limit is not None:
-        _die("Use --sample or --limit, not both")
-
-
-def _validate_lean_flag_conflicts(args) -> None:
-    if args.wild_only and args.with_interventions:
-        _die("--wild-only and --with-interventions are mutually exclusive")
-    if args.trace_mcts and args.no_trace_mcts:
-        _die("--trace-mcts and --no-trace-mcts are mutually exclusive")
-
-
 def _validate_backend_args(args) -> None:
     if args.backend == Backend.lean:
         _die("`run --backend lean` is unsupported")
     if _is_set(args.limit):
         _die("--limit is not valid for --backend coq")
-    _validate_sampling_args(args, allow_limit_with_sample=True)
-
-
-def _validate_lean_args(args) -> None:
-    _validate_sampling_args(args, allow_limit_with_sample=False)
-    _validate_lean_flag_conflicts(args)
+    if args.sample is not None and args.seed is None:
+        _die("--seed is required when --sample is set")
 
 
 def _has_ymd_prefix(value: str) -> bool:
