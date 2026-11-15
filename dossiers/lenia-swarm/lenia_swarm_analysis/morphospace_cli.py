@@ -49,6 +49,7 @@ from lenia_swarm_analysis.morphospace.ingest_embryomaker import (
     ingest_embryomaker_snapshots,
 )
 from lenia_swarm_analysis.morphospace.ingest_reference_bundle import import_reference_bundle
+from lenia_swarm_analysis.morphospace.motion_census import motion_census
 from lenia_swarm_analysis.morphospace.promote_results import promote_results_jsonl
 from lenia_swarm_analysis.morphospace.provenance import parse_pool_engines
 from lenia_swarm_analysis.morphospace.regeneration import (
@@ -1177,6 +1178,33 @@ def _build_parser() -> argparse.ArgumentParser:
             assessments=[p.resolve() for p in args.assessment],
             output_path=args.output.resolve(),
             legacy_engine_id=args.engine_id,
+        )
+    )
+
+    census = subparsers.add_parser(
+        "motion-census",
+        help="Classify torus replays as translating, stationary or other motion and join creature verdicts",
+    )
+    census.add_argument("--replay-root", required=True, type=Path, action="append")
+    census.add_argument("--index", required=True, type=Path)
+    census.add_argument("--sweep", required=True, type=Path, action="append")
+    census.add_argument(
+        "--members",
+        required=True,
+        type=Path,
+        help="collect-requalification-members output whose original.motion_class is the prior class",
+    )
+    census.add_argument("--output", required=True, type=Path)
+    census.add_argument("--workers", required=True, type=int)
+    _add_json(census)
+    census.set_defaults(
+        handler=lambda args: motion_census(
+            replay_roots=[p.resolve() for p in args.replay_root],
+            index_path=args.index.resolve(),
+            sweeps=[p.resolve() for p in args.sweep],
+            members_path=args.members.resolve(),
+            output_path=args.output.resolve(),
+            workers=int(args.workers),
         )
     )
 

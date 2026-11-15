@@ -161,7 +161,8 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
                 initialInitPatchValues: initialInitPatchValues,
                 initialKernelParams: initialKernelParams,
                 paramRanges: mapConfig.paramRanges,
-                obstacleField: mapConfig.obstacleField
+                obstacleField: mapConfig.obstacleField,
+                lesion: mapConfig.lesion
             )
         }
 
@@ -353,7 +354,8 @@ struct FlowMapElitesCommand: AsyncParsableCommand {
 
             let batch = try engine.evaluateMAPElitesCandidates(
                 candidates,
-                descriptorNames: descriptorNames
+                descriptorNames: descriptorNames,
+                lesion: mapConfig.lesion
             )
             evaluations += batch.count
             var improved = 0
@@ -563,6 +565,20 @@ private func validateFlowMapElitesConfig(_ config: FlowMAPElitesConfig) throws -
     }
     guard !config.descriptors.isEmpty else {
         throw ValidationError("MAP-Elites descriptors must not be empty.")
+    }
+    let usesLesion = config.descriptors.contains { $0.name == "lesion_displacement" }
+    if let lesion = config.lesion {
+        guard usesLesion else {
+            throw ValidationError("MAP-Elites lesion is set but no descriptor is lesion_displacement.")
+        }
+        guard lesion.step > 0, lesion.size > 0, lesion.window > 0 else {
+            throw ValidationError("MAP-Elites lesion step, size and window must be > 0.")
+        }
+        if config.obstacleField?.enabled == true {
+            throw ValidationError("MAP-Elites lesion probe runs on an empty torus; obstacle_field must be off.")
+        }
+    } else if usesLesion {
+        throw ValidationError("MAP-Elites descriptor lesion_displacement requires a lesion config with step, size and window.")
     }
     for descriptor in config.descriptors {
         guard descriptor.bins > 0 else {

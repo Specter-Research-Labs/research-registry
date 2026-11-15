@@ -572,6 +572,21 @@ public struct FlowMAPElitesDescriptorConfig: Codable {
     }
 }
 
+/// The standard perturbation behind the `lesion_displacement` descriptor: at `step`, a square
+/// of side `size` cells centred on the body's torus mass centre is zeroed, and the lesioned and
+/// unlesioned copies are stepped `window` more steps.
+public struct FlowMAPElitesLesionConfig: Codable, Equatable {
+    public let step: Int
+    public let size: Int
+    public let window: Int
+
+    public init(step: Int, size: Int, window: Int) {
+        self.step = step
+        self.size = size
+        self.window = window
+    }
+}
+
 public struct FlowMAPElitesConfig: Codable {
     public let outputDir: String
     public let generations: Int
@@ -591,6 +606,7 @@ public struct FlowMAPElitesConfig: Codable {
     public let initialKernelParams: KernelParams?
     public let paramRanges: [String: [Float]]?
     public let obstacleField: ESObstacleFieldConfig?
+    public let lesion: FlowMAPElitesLesionConfig?
 
     enum CodingKeys: String, CodingKey {
         case outputDir = "output_dir"
@@ -611,6 +627,7 @@ public struct FlowMAPElitesConfig: Codable {
         case initialKernelParams = "initial_kernel_params"
         case paramRanges = "param_ranges"
         case obstacleField = "obstacle_field"
+        case lesion
     }
 
     public init(
@@ -631,7 +648,8 @@ public struct FlowMAPElitesConfig: Codable {
         initialInitPatchValues: [Float]?,
         initialKernelParams: KernelParams? = nil,
         paramRanges: [String: [Float]]?,
-        obstacleField: ESObstacleFieldConfig?
+        obstacleField: ESObstacleFieldConfig?,
+        lesion: FlowMAPElitesLesionConfig?
     ) {
         self.outputDir = outputDir
         self.generations = generations
@@ -651,6 +669,7 @@ public struct FlowMAPElitesConfig: Codable {
         self.initialKernelParams = initialKernelParams
         self.paramRanges = paramRanges
         self.obstacleField = obstacleField
+        self.lesion = lesion
     }
 
     public func asESConfig(outputDir overrideOutputDir: String? = nil) -> ESConfig {
@@ -3710,8 +3729,13 @@ public final class EvolutionEngine {
 
     public func evaluateMAPElitesCandidates(
         _ candidates: [[Float]],
-        descriptorNames: [String]
+        descriptorNames: [String],
+        lesion: FlowMAPElitesLesionConfig?
     ) throws -> [FlowMAPElitesCandidateEvaluation] {
+        let usesLesion = descriptorNames.contains("lesion_displacement")
+        guard usesLesion == (lesion != nil) else {
+            throw ConfigError.invalidConfig("Flow MAP-Elites lesion config and the lesion_displacement descriptor must be given together.")
+        }
         guard !candidates.isEmpty else { return [] }
         let evalStart = evaluationCounter
         evaluationCounter += candidates.count
@@ -3723,11 +3747,21 @@ public final class EvolutionEngine {
             paramsBatch: paramsBatch,
             evaluationStart: evalStart
         )
+        let lesionDisplacements = try lesion.map {
+            try lesionDisplacementBatch(candidates: candidates, paramsBatch: paramsBatch, lesion: $0)
+        }
         let fitnesses = fitnessValues(from: evaluation.measurements)
-        return try zip(zip(candidates, fitnesses), evaluation.measurements).map { pair, measurement in
-            let (candidate, fitness) = pair
+        return try zip(zip(candidates, fitnesses), evaluation.measurements).enumerated().map { index, item in
+            let ((candidate, fitness), measurement) = item
             var descriptors: [String: Float] = [:]
             for name in descriptorNames {
+                if name == "lesion_displacement" {
+                    guard let value = lesionDisplacements![index] else {
+                        throw ConfigError.invalidConfig("Flow MAP-Elites descriptor 'lesion_displacement' is undefined for candidate \(index): the lesioned or unlesioned copy has no mass to centre.")
+                    }
+                    descriptors[name] = value
+                    continue
+                }
                 guard let value = mapElitesDescriptorValue(
                     name: name,
                     measurement: measurement,
@@ -3803,6 +3837,130 @@ public final class EvolutionEngine {
             return measurement.momentAnisotropy
         default:
             return nil
+        }
+    }
+
+    /// Torus distance, in cells, between the mass centres of a lesioned and an unlesioned copy of
+    /// each candidate `lesion.window` steps after the lesion. Stepped on the cpu engine whatever
+    /// backend scores fitness, because the cpu engine is the deterministic reference replay runs on.
+    /// Nil for a candidate whose lesion-time, control or lesioned field holds no mass.
+    func lesionDisplacementBatch(
+        candidates: [[Float]],
+        paramsBatch: [ResolvedParams],
+        lesion: FlowMAPElitesLesionConfig
+    ) throws -> [Float?] {
+        guard config.border == "torus" else {
+            throw ConfigError.invalidConfig("Flow MAP-Elites lesion probe measures torus distance; border must be torus, got \(config.border).")
+        }
+        guard runtimeConfig.chemotaxis?.enabled != true,
+              runtimeConfig.food?.enabled != true,
+              esConfig.obstacleField?.enabled != true else {
+            throw ConfigError.invalidConfig("Flow MAP-Elites lesion probe runs on an empty torus; chemotaxis, food and obstacle_field must be off.")
+        }
+        guard lesion.size < min(config.sx, config.sy) else {
+            throw ConfigError.invalidConfig("Flow MAP-Elites lesion size \(lesion.size) must be smaller than the \(config.sx) x \(config.sy) grid.")
+        }
+        let pop = candidates.count
+        let matterWeights = metalMatterWeights()
+        let runner = makeFlowLeniaFieldRunner(
+            backend: .cpu,
+            config: config,
+            kernels: compilePopulationKernels(
+                paramsBatch: paramsBatch,
+                config: config,
+                c0: runtimeConfig.c0,
+                c1: runtimeConfig.c1
+            ),
+            batchCount: pop,
+            wallPotential: nil,
+            matterWeights: matterWeights,
+            reintegrateParams: false,
+            parameterMix: runtimeConfig.parameterEmbedding.mix,
+            mixSeed: nil
+        )
+        func centres() -> [SIMD2<Double>?] {
+            Self.torusMassCentres(runner.materializeMassMap(channelWeights: matterWeights))
+        }
+        runner.reset(
+            mass: buildStateBatch(candidates),
+            params: buildConstantParameterFieldBatch(paramsBatch.map(\.h)),
+            wallMask: nil,
+            staticChannelFields: [],
+            food: nil,
+            mixStep: 0
+        )
+        runner.step(count: lesion.step)
+        let (mass, params) = runner.materializeState()
+        let lesionCentres = centres()
+        runner.step(count: lesion.window)
+        let controlCentres = centres()
+
+        var lesioned = mass.asArray(Float.self)
+        let (sx, sy, channels) = (config.sx, config.sy, config.channels)
+        for (b, centre) in lesionCentres.enumerated() {
+            guard let centre else { continue }
+            let x0 = Int((centre.x - Double(lesion.size) / 2).rounded(.down))
+            let y0 = Int((centre.y - Double(lesion.size) / 2).rounded(.down))
+            for dx in 0..<lesion.size {
+                let x = ((x0 + dx) % sx + sx) % sx
+                for dy in 0..<lesion.size {
+                    let y = ((y0 + dy) % sy + sy) % sy
+                    let offset = ((b * sx + x) * sy + y) * channels
+                    for c in 0..<channels {
+                        lesioned[offset + c] = 0
+                    }
+                }
+            }
+        }
+        runner.reset(
+            mass: MLXArray(lesioned).reshaped(mass.shape),
+            params: params,
+            wallMask: nil,
+            staticChannelFields: [],
+            food: nil,
+            mixStep: 0
+        )
+        runner.step(count: lesion.window)
+        let lesionedCentres = centres()
+
+        return (0..<pop).map { b in
+            guard lesionCentres[b] != nil, let control = controlCentres[b], let cut = lesionedCentres[b] else {
+                return nil
+            }
+            let dx = abs(control.x - cut.x).truncatingRemainder(dividingBy: Double(sx))
+            let dy = abs(control.y - cut.y).truncatingRemainder(dividingBy: Double(sy))
+            let wx = min(dx, Double(sx) - dx)
+            let wy = min(dy, Double(sy) - dy)
+            return Float((wx * wx + wy * wy).squareRoot())
+        }
+    }
+
+    /// Circular-mean mass centre per batch element of a [batch, sx, sy] mass map, in cell
+    /// indices, because a linear centroid is wrong for a body straddling the torus seam.
+    static func torusMassCentres(_ massMap: MLXArray) -> [SIMD2<Double>?] {
+        let (batch, sx, sy) = (massMap.shape[0], massMap.shape[1], massMap.shape[2])
+        let values = massMap.asArray(Float.self)
+        return (0..<batch).map { b in
+            var total = 0.0
+            var cosX = 0.0, sinX = 0.0, cosY = 0.0, sinY = 0.0
+            for x in 0..<sx {
+                let ax = 2 * Double.pi * Double(x) / Double(sx)
+                for y in 0..<sy {
+                    let m = Double(values[(b * sx + x) * sy + y])
+                    let ay = 2 * Double.pi * Double(y) / Double(sy)
+                    total += m
+                    cosX += m * cos(ax)
+                    sinX += m * sin(ax)
+                    cosY += m * cos(ay)
+                    sinY += m * sin(ay)
+                }
+            }
+            guard total > 0 else { return nil }
+            func wrapped(_ s: Double, _ c: Double, _ side: Int) -> Double {
+                let position = atan2(s, c) / (2 * Double.pi) * Double(side)
+                return position < 0 ? position + Double(side) : position
+            }
+            return SIMD2(wrapped(sinX, cosX, sx), wrapped(sinY, cosY, sy))
         }
     }
 

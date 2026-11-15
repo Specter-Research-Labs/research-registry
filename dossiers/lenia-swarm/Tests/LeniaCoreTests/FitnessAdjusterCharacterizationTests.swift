@@ -189,7 +189,7 @@ final class FitnessAdjusterCharacterizationTests: XCTestCase {
             includeParent: true
         )
 
-        let evaluations = try engine.evaluateMAPElitesCandidates(candidates, descriptorNames: [])
+        let evaluations = try engine.evaluateMAPElitesCandidates(candidates, descriptorNames: [], lesion: nil)
 
         XCTAssertEqual(evaluations.count, 1)
         XCTAssertTrue(evaluations[0].fitness.isFinite)
