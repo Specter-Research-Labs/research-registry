@@ -37,6 +37,16 @@ final class CapacityPilotEnsembleTests: XCTestCase {
         XCTAssertEqual(record.entries.map(\.direction), Self.pinnedDirections)
     }
 
+    func testPerturbationDrawsBodyCellsOverANearZeroBackground() throws {
+        var background = [Float](repeating: 1e-9, count: 64)
+        background[40] = 1
+        background[41] = 2
+        for member in 1...8 {
+            let record = try CapacityPilotPerturbation(seed: 9, member: member, cells: 2).apply(background).record
+            XCTAssertEqual(Set(record.entries.map(\.index)), [40, 41])
+        }
+    }
+
     func testPerturbationNeedsEnoughPositiveEntries() {
         XCTAssertThrowsError(try CapacityPilotPerturbation(seed: 0, member: 1, cells: 2).apply([0, 1, 0])) { error in
             XCTAssertTrue("\(error.localizedDescription)".contains("needs 2 positive entries"))
@@ -95,6 +105,6 @@ final class CapacityPilotEnsembleTests: XCTestCase {
     #endif
 
     /// Computed outside Swift from the documented SplitMix64 scheme.
-    private static let pinnedIndices = [25, 43]
+    private static let pinnedIndices = [40, 52]
     private static let pinnedDirections = ["down", "up"]
 }
