@@ -46,9 +46,24 @@ public struct CapacityPilotPerturbation: Sendable {
                 state &+= 0x9E37_79B9_7F4A_7C15
                 return Self.mix(state)
             }
+            // Draws are mass-weighted because a uniform draw lands on the near-zero background, where one
+            // ulp is absorbed within 32 steps and the member reproduces member 0 bit for bit.
+            var cumulative: [Double] = []
+            cumulative.reserveCapacity(positive.count)
+            var total = 0.0
+            for index in positive {
+                total += Double(values[index])
+                cumulative.append(total)
+            }
             var chosen = Set<Int>()
             while entries.count < cells {
-                let index = positive[Int(next().multipliedFullWidth(by: UInt64(positive.count)).high)]
+                let target = Double(next() >> 11) * 0x1p-53 * total
+                var low = 0, high = positive.count - 1
+                while low < high {
+                    let mid = (low + high) / 2
+                    if cumulative[mid] > target { high = mid } else { low = mid + 1 }
+                }
+                let index = positive[low]
                 guard chosen.insert(index).inserted else { continue }
                 let up = next() & 1 == 1
                 result[index] = up ? values[index].nextUp : values[index].nextDown
