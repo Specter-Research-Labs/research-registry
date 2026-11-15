@@ -1725,6 +1725,34 @@ def lean_distributed_sweep(
     _run_lean_variants(_build_lean_distributed_sweep_variants(locals()), summarize=not agent)
 
 
+@lean_app.command("closer-null")
+def lean_closer_null(
+    jobs: str = typer.Option(
+        ..., "--jobs", help="JSONL of {job, theorem, statement} with {name} for the declaration"
+    ),
+    out: str = typer.Option(..., "--out", help="JSONL of attempts; rows already there are kept"),
+    lean_project: str = typer.Option(..., "--lean-project"),
+    shard: int = typer.Option(..., "--shard", min=0, help="This process takes jobs shard::shards"),
+    shards: int = typer.Option(..., "--shards", min=1),
+) -> None:
+    """Try each fixed closer at every theorem's root and after `intros`, kernel-checking closes."""
+
+    import asyncio
+
+    from analysis.closer_null import run_null
+
+    counts = asyncio.run(
+        run_null(
+            Path(jobs).expanduser().resolve(),
+            Path(out).expanduser().resolve(),
+            Path(lean_project).expanduser().resolve(),
+            shard,
+            shards,
+        )
+    )
+    print(json.dumps(dict(sorted(counts.items()))))
+
+
 @corpus_app.command("build-lean-mathlib")
 def corpus_build_lean_mathlib(
     corpus_id: str = typer.Option("mathlib4", "--corpus-id"),
@@ -2250,6 +2278,28 @@ def lake_ingest_verdicts(
         count = ingest_replay_verdicts(conn, path)
     print(f"Lake DB: {db_path}")
     print(f"Ingested {count} replay verdicts from {path}")
+
+
+@lake_app.command("checked-outcomes")
+def lake_checked_outcomes(
+    out: str = typer.Option(..., "--out", help="Parquet path for the per-row outcomes"),
+    db: str | None = typer.Option(
+        None,
+        "--db",
+        help="DuckDB path (default: canonical local Wonton lake)",
+    ),
+) -> None:
+    """Label every wild and intervention row as checked, self-citing, failed or unverified."""
+
+    from analysis.lake.checked_outcomes import OUTCOMES, write_outcomes
+
+    path = Path(os.path.expanduser(out)).resolve()
+    with _open_lake_db(db) as (conn, db_path):
+        counts = write_outcomes(conn, path)
+    print(f"Lake DB: {db_path}")
+    print(f"Wrote {sum(counts.values())} rows to {path}")
+    for outcome in OUTCOMES:
+        print(f"  {outcome}: {counts[outcome]}")
 
 
 @lake_app.command("score-k")

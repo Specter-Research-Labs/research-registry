@@ -9,7 +9,7 @@ dependencies = [
     "numpy>=1.26",
     "psutil>=6.1",
     "scipy>=1.11",
-    "duckdb>=1.1.0",
+    "duckdb>=1.5",
     "datasets>=4.4.2",
     # InternLM2 step-prover remote modeling code imports einops.
     "einops>=0.8.0",

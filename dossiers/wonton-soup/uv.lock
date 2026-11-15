@@ -1634,7 +1634,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "datasets", specifier = ">=4.4.2" },
-    { name = "duckdb", specifier = ">=1.1.0" },
+    { name = "duckdb", specifier = ">=1.5" },
     { name = "einops", specifier = ">=0.8.0" },
     { name = "leantree", git = "https://github.com/Specter-Research-Labs/leantree.git?rev=aab7c3840552629d4cc16fb8e4af474a9c80067b" },
     { name = "marimo", marker = "extra == 'analysis'", specifier = ">=0.10" },
