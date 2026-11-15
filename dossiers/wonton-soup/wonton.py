@@ -2252,6 +2252,28 @@ def lake_ingest_verdicts(
     print(f"Ingested {count} replay verdicts from {path}")
 
 
+@lake_app.command("checked-outcomes")
+def lake_checked_outcomes(
+    out: str = typer.Option(..., "--out", help="Parquet path for the per-row outcomes"),
+    db: str | None = typer.Option(
+        None,
+        "--db",
+        help="DuckDB path (default: canonical local Wonton lake)",
+    ),
+) -> None:
+    """Label every wild and intervention row as checked, self-citing, failed or unverified."""
+
+    from analysis.lake.checked_outcomes import OUTCOMES, write_outcomes
+
+    path = Path(os.path.expanduser(out)).resolve()
+    with _open_lake_db(db) as (conn, db_path):
+        counts = write_outcomes(conn, path)
+    print(f"Lake DB: {db_path}")
+    print(f"Wrote {sum(counts.values())} rows to {path}")
+    for outcome in OUTCOMES:
+        print(f"  {outcome}: {counts[outcome]}")
+
+
 @lake_app.command("score-k")
 def lake_score_k(
     ref_id: str = typer.Option(..., "--ref-id"),
