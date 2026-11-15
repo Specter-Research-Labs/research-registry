@@ -241,11 +241,14 @@ final class FlowLeniaBackendConformanceTests: XCTestCase {
                 "CONFORMANCE config=\(configName) step=\(step)"
                     + " mass_rel_rms=\(sample.mass.relativeRMS) mass_max_abs=\(sample.mass.maxAbs)"
                     + " potential_rel_rms=\(sample.potential.relativeRMS) potential_max_abs=\(sample.potential.maxAbs)"
+                    + " flow_rel_rms=\(sample.flow.relativeRMS) flow_max_abs=\(sample.flow.maxAbs)"
                     + " metal_ulp_mass_rel_rms=\(sample.metalULP.relativeRMS)"
             )
         }
         XCTAssertLessThan(trace[0].mass.relativeRMS, 1e-6)
         XCTAssertLessThan(trace[0].potential.relativeRMS, 1e-6)
+        // The flow differences gradients of U and mass, so it amplifies the potential's float32 error.
+        XCTAssertLessThan(trace[0].flow.relativeRMS, 1e-5)
         let unsaturated = trace.filter { $0.metalULP.relativeRMS < 1e-2 }
         XCTAssertGreaterThan(unsaturated.count, 10)
         let worstRatio = unsaturated.map { $0.mass.relativeRMS / $0.metalULP.relativeRMS }.max()!
@@ -276,6 +279,7 @@ final class FlowLeniaBackendConformanceTests: XCTestCase {
         let step: Int
         let mass: FieldError
         let potential: FieldError
+        let flow: FieldError
         let metalULP: FieldError
     }
 
@@ -329,6 +333,7 @@ final class FlowLeniaBackendConformanceTests: XCTestCase {
                 step: step,
                 mass: FieldError(cpu.materializeMass().asArray(Float.self), metalMass),
                 potential: FieldError(cpu.materializeLastPotential(), metal.materializeLastPotential()),
+                flow: FieldError(cpu.materializeLastFlow(), metal.materializeLastFlow()),
                 metalULP: FieldError(metalPerturbed.materializeMass().asArray(Float.self), metalMass)
             ))
         }
